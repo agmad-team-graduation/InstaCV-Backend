@@ -1,4 +1,4 @@
-package com.Graduation.InstaCv.dto.request;
+package com.Graduation.InstaCv.data.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

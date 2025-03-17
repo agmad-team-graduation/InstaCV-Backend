@@ -1,6 +1,6 @@
 package com.Graduation.InstaCv.security;
 
-import com.Graduation.InstaCv.model.User;
+import com.Graduation.InstaCv.data.model.User;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;

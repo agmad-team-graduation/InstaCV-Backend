@@ -1,6 +1,6 @@
 package com.Graduation.InstaCv.repository;
 
-import com.Graduation.InstaCv.model.User;
+import com.Graduation.InstaCv.data.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

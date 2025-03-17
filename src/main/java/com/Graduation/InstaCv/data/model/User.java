@@ -1,11 +1,9 @@
-package com.Graduation.InstaCv.model;
+package com.Graduation.InstaCv.data.model;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 

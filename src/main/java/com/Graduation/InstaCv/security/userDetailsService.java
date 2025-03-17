@@ -1,6 +1,6 @@
 package com.Graduation.InstaCv.security;
 
-import com.Graduation.InstaCv.model.User;
+import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

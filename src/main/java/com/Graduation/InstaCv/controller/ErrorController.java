@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.controller;
 
-import com.Graduation.InstaCv.dto.response.ApiErrorResponse;
+import com.Graduation.InstaCv.exceptions.JobNotFoundException;
+import com.Graduation.InstaCv.data.dto.response.ApiErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,9 +9,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
-
-
-import java.util.List;
 
 
 @RestController
@@ -53,5 +51,14 @@ public class ErrorController {
                 .message("Incorrect username or password")
                 .build();
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(JobNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleJobNotFound(JobNotFoundException ex) {
+        ApiErrorResponse error = ApiErrorResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 }

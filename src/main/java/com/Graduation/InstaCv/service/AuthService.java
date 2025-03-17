@@ -1,7 +1,7 @@
 package com.Graduation.InstaCv.service;
 
 
-import com.Graduation.InstaCv.dto.request.LoginRequest;
+import com.Graduation.InstaCv.data.dto.request.LoginRequest;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
