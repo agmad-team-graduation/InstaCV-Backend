@@ -1,11 +1,10 @@
 package com.Graduation.InstaCv.service;
 
-import com.Graduation.InstaCv.dto.request.RegistrationRequest;
-import com.Graduation.InstaCv.model.User;
+import com.Graduation.InstaCv.data.dto.request.RegistrationRequest;
+import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.IUserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

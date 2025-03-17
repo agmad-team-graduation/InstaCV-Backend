@@ -1,6 +1,6 @@
 package com.Graduation.InstaCv.service.Interfaces;
 
-import com.Graduation.InstaCv.dto.request.LoginRequest;
+import com.Graduation.InstaCv.data.dto.request.LoginRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public interface IAuthService {

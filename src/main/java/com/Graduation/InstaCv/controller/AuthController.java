@@ -1,14 +1,13 @@
 package com.Graduation.InstaCv.controller;
 
 
-import com.Graduation.InstaCv.dto.request.LoginRequest;
-import com.Graduation.InstaCv.dto.request.RegistrationRequest;
-import com.Graduation.InstaCv.dto.response.LoginResponse;
-import com.Graduation.InstaCv.dto.response.RegisterResponse;
-import com.Graduation.InstaCv.model.User;
+import com.Graduation.InstaCv.data.dto.request.LoginRequest;
+import com.Graduation.InstaCv.data.dto.request.RegistrationRequest;
+import com.Graduation.InstaCv.data.dto.response.LoginResponse;
+import com.Graduation.InstaCv.data.dto.response.RegisterResponse;
+import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import com.Graduation.InstaCv.service.UserService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;

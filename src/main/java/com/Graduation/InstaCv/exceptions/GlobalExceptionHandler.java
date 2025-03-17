@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.exceptions;
 
-import com.Graduation.InstaCv.dto.response.ApiErrorResponse;
+import com.Graduation.InstaCv.exceptions.JobNotFoundException;
+import com.Graduation.InstaCv.data.dto.response.ApiErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,4 +45,14 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-} 
+
+    // Handle JobNotFoundException
+    @ExceptionHandler(JobNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleJobNotFound(JobNotFoundException ex) {
+        ApiErrorResponse error = ApiErrorResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+}

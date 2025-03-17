@@ -1,14 +1,12 @@
 package com.Graduation.InstaCv.config;
 
 
-import com.Graduation.InstaCv.model.User;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.security.JwtAuthenticationFilter;
 import com.Graduation.InstaCv.security.userDetailsService;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,8 +16,6 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 public class SecurityConfig {
@@ -36,7 +32,11 @@ public class SecurityConfig {
 
     private static final String[] WHITELIST_URLS = {
             "/api/v1/auth/login",
-            "/api/v1/auth/register"
+            "/api/v1/auth/register",
+            // TODO: Remove unnecessary endpoints from the whitelist
+            "/api/v1/jobs/add",
+            "/api/v1/jobs/*",
+            "/api/v1/jobs/analyze/*",
     };
 
 
