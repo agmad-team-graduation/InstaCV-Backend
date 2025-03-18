@@ -34,9 +34,8 @@ public class SecurityConfig {
             "/api/v1/auth/login",
             "/api/v1/auth/register",
             // TODO: Remove unnecessary endpoints from the whitelist
-            "/api/v1/jobs/add",
-            "/api/v1/jobs/*",
-            "/api/v1/jobs/analyze/*",
+            "/api/v1/jobs/**",
+//            "/api/v1/profiles/**",
     };
 
 
