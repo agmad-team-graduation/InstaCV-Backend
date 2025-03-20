@@ -1,13 +1,20 @@
 package com.Graduation.InstaCv.controller;
 
 
+import com.Graduation.InstaCv.data.dto.JobDto;
 import com.Graduation.InstaCv.data.model.Job;
+import com.Graduation.InstaCv.exceptions.JobNotFoundException;
+import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.service.JobService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -15,30 +22,41 @@ import java.util.concurrent.CompletableFuture;
 public class JobController {
     private final JobService jobService;
 //    private final JobMapper jobMapper;
+    private final Mapper<Job, JobDto> jobMapper ;
+
 
     @PostMapping("/add")
-    public ResponseEntity<Job> addJob(@RequestBody Job job) {
-        // TODO: Implement this method, to add the job to the database
-        // TODO: And replace the direct usage of Job, with DTOs (JobAddRequest, JobResponse), and a Mapper
-        Job addedJob = jobService.addJob(Job.builder()
-                .title("Software Engineer")
-                .description("We are looking for a software engineer to join our team," +
-                        " you will be responsible for developing and maintaining high-quality software products." +
-                        "Skills: Java, Spring Boot, Angular, React, Node.js, SQL, NoSQL, Docker, Kubernetes, " +
-                        "AWS, Azure, GCP. Soft skills: Teamwork, Communication, Problem-solving, Time management.")
-                .company("Google")
-                .build());
-        return ResponseEntity.ok(addedJob);
+    public ResponseEntity<JobDto> addJob(@RequestBody JobDto job) {
+        Job jobE = jobMapper.mapFrom(job);
+        Job SavedJob = jobService.addJob(jobE);
+        return new ResponseEntity<>(jobMapper.mapTo(SavedJob), HttpStatus.CREATED);
+
+    }
+    @GetMapping("/jobs")
+    public List<JobDto> getAllJobs(){
+        List<Job> jobsEntity = jobService.getJobs();
+        List<JobDto>jobs = jobsEntity.stream().map(jobMapper::mapTo).collect(Collectors.toList());
+        return jobs;
     }
 
     // get job by id
     @GetMapping("/{jobId}")
-    public Job getJob(@PathVariable Long jobId) {
-        return jobService.getJob(jobId);
+    public ResponseEntity<Object> getJob(@PathVariable Long jobId) {
+        try {
+            Job jobFound = jobService.getJob(jobId);
+            return new ResponseEntity<>(jobMapper.mapTo(jobFound), HttpStatus.OK);
+        } catch (JobNotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
-
+    @DeleteMapping("/{jobId}")
+    public ResponseEntity DeleteJob(@PathVariable Long jobId){
+        jobService.delete(jobId);
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
     @GetMapping("/analyze/{jobId}")
     public CompletableFuture<ResponseEntity<Job>> analyzeJob(@PathVariable Long jobId) {
         return jobService.analyzeJob(jobId).thenApply(ResponseEntity::ok);
     }
+
 }
