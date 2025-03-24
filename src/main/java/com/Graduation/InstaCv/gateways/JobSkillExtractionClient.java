@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "JobSkillExtractionClient", url = "http://localhost:8000")
+@FeignClient(name = "JobSkillExtractionClient", url = "${job.skill.extraction.url}")
 public interface JobSkillExtractionClient {
     @PostMapping("/predict_knowledge")
     JobKnowledgeResponse extractKnowledge(@RequestBody JobSkillExtractionRequest request);
