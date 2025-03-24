@@ -8,5 +8,5 @@ import java.util.concurrent.CompletableFuture;
 public interface IJobService {
     Job addJob(Job job);
     Job getJob(Long jobId);
-    CompletableFuture<Job> analyzeJob(Long jobId) throws JobNotFoundException;
+    CompletableFuture<Job> analyzeJob(Long jobId, boolean forceAnalyze) throws JobNotFoundException;
 }

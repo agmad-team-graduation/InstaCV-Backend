@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -14,30 +16,44 @@ class TextInput(BaseModel):
     jobDescription: str
 
 
-@app.post("/predict_knowledge")
-def predict_knowledge(input_data: TextInput):
-    predictions = knowledge_nlp(input_data.jobDescription)
+def convert_from_numpy(predictions):
     for pred in predictions:
         for key, value in pred.items():
             if isinstance(value, (np.float32, np.int32, np.int64)):  # Handle NumPy numeric types
                 pred[key] = float(value)
-    results = []
+    return predictions
+
+
+def merge_BI_and_get_results(predictions):
+    results, curSkill, curScore, curNoWords = [], "", 0, 0
     for pred in predictions:
-        results.append(pred['word'])
-    return {"knowledge_predictions": results}
+        if pred['entity_group'] == 'B':
+            if curSkill:
+                results.append({"name": curSkill, "confidence": curScore / curNoWords})  # Average confidence
+            curSkill, curScore, curNoWords = pred['word'], pred['score'], 1
+        else:
+            curSkill += " " + pred['word']
+            curScore += pred['score']
+            curNoWords += 1
+    if curSkill:
+        results.append({"name": curSkill, "confidence": curScore / curNoWords})
+    return results
+
+
+@app.post("/predict_knowledge")
+def predict_knowledge(input_data: TextInput):
+    predictions = knowledge_nlp(input_data.jobDescription)
+    predictions = convert_from_numpy(predictions)
+    # print(json.dumps(predictions, indent=2))
+    return {"knowledge_predictions": merge_BI_and_get_results(predictions)}
 
 
 @app.post("/predict_skills")
 def predict_skills(input_data: TextInput):
     predictions = skill_nlp(input_data.jobDescription)
-    for pred in predictions:
-        for key, value in pred.items():
-            if isinstance(value, (np.float32, np.int32, np.int64)):  # Handle NumPy numeric types
-                pred[key] = float(value)
-    results = []
-    for pred in predictions:
-        results.append(pred['word'])
-    return {"skills_predictions": results}
+    predictions = convert_from_numpy(predictions)
+    # print(json.dumps(predictions, indent=2))
+    return {"skills_predictions": merge_BI_and_get_results(predictions)}
 
 # Run with:
 # uvicorn main:app --host 0.0.0.0 --port 8000

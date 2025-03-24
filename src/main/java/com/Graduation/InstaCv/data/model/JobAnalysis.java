@@ -18,11 +18,11 @@ public class JobAnalysis {
     @ElementCollection
     @CollectionTable(name = "jobs_hard_skills", joinColumns = @JoinColumn(name = "job_id"))
     @Column(name = "skill")
-    private List<String> hardSkills;
+    private List<JobSkill> hardSkills;
 
     @ElementCollection
     @CollectionTable(name = "jobs_soft_skills", joinColumns = @JoinColumn(name = "job_id"))
     @Column(name = "skill")
-    private List<String> softSkills;
+    private List<JobSkill> softSkills;
 }
 
