@@ -2,6 +2,7 @@ package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
+import com.Graduation.InstaCv.data.model.JobSkill;
 import com.Graduation.InstaCv.exceptions.JobNotFoundException;
 //import com.Graduation.InstaCv.repository.JobAnalysisRepository;
 import com.Graduation.InstaCv.data.model.Job;
@@ -53,10 +54,11 @@ public class JobService implements IJobService {
     }
 
     private Job updateJobWithAnalysis(Job job, List<String> hardSkills, List<String> softSkills) {
-        job.setJobAnalysis(JobAnalysis.builder()
-                .hardSkills(hardSkills)
-                .softSkills(softSkills)
-                .build());
+        job.setJobAnalysis(
+                JobAnalysis.builder()
+                        .hardSkills(hardSkills.stream().map(JobSkill::new).toList())
+                        .softSkills(softSkills.stream().map(JobSkill::new).toList())
+                        .build());
         job.setAnalyzed(true);
         return job;
     }
