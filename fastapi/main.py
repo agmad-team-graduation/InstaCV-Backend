@@ -44,7 +44,7 @@ def merge_BI_and_get_results(predictions):
 def predict_knowledge(input_data: TextInput):
     predictions = knowledge_nlp(input_data.jobDescription)
     predictions = convert_from_numpy(predictions)
-    print(json.dumps(predictions, indent=2))
+    # print(json.dumps(predictions, indent=2))
     return {"knowledge_predictions": merge_BI_and_get_results(predictions)}
 
 
@@ -52,7 +52,7 @@ def predict_knowledge(input_data: TextInput):
 def predict_skills(input_data: TextInput):
     predictions = skill_nlp(input_data.jobDescription)
     predictions = convert_from_numpy(predictions)
-    print(json.dumps(predictions, indent=2))
+    # print(json.dumps(predictions, indent=2))
     return {"skills_predictions": merge_BI_and_get_results(predictions)}
 
 # Run with:
