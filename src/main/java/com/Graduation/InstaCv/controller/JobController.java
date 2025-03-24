@@ -25,7 +25,7 @@ public class JobController {
                 .description("We are looking for a software engineer to join our team," +
                         " you will be responsible for developing and maintaining high-quality software products." +
                         "Skills: Java, Spring Boot, Angular, React, Node.js, SQL, NoSQL, Docker, Kubernetes, " +
-                        "AWS, Azure, GCP. Soft skills: Teamwork, Communication, Problem-solving, Time management.")
+                        "AWS, Azure, GCP, Strong Data Analysis Skills. Soft skills: Teamwork, Communication, Problem-solving, Time management.")
                 .company("Google")
                 .build());
         return ResponseEntity.ok(addedJob);
@@ -38,7 +38,9 @@ public class JobController {
     }
 
     @GetMapping("/analyze/{jobId}")
-    public CompletableFuture<ResponseEntity<Job>> analyzeJob(@PathVariable Long jobId) {
-        return jobService.analyzeJob(jobId).thenApply(ResponseEntity::ok);
+    public CompletableFuture<ResponseEntity<Job>> analyzeJob(
+            @PathVariable Long jobId,
+            @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
+        return jobService.analyzeJob(jobId, forceAnalyze).thenApply(ResponseEntity::ok);
     }
 }

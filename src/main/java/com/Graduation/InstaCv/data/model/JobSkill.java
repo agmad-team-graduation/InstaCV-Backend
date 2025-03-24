@@ -13,4 +13,6 @@ import lombok.NoArgsConstructor;
 public class JobSkill {
     @Column(name = "skill")
     private String name;
+    @Column(name = "model_confidence")
+    private float modelConfidence;
 }
