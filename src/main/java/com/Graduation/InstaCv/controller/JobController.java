@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class JobController {
     private final JobService jobService;
 //    private final JobMapper jobMapper;
-    private final Mapper<Job, JobDto> jobMapper ;
+    private final Mapper<Job, JobDto> jobMapper;
 
 
     @PostMapping("/add")
@@ -41,13 +41,9 @@ public class JobController {
 
     // get job by id
     @GetMapping("/{jobId}")
-    public ResponseEntity<Object> getJob(@PathVariable Long jobId) {
-        try {
-            Job jobFound = jobService.getJob(jobId);
-            return new ResponseEntity<>(jobMapper.mapTo(jobFound), HttpStatus.OK);
-        } catch (JobNotFoundException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<JobDto> getJob(@PathVariable Long jobId) {
+        Job jobFound = jobService.getJob(jobId);
+        return new ResponseEntity<>(jobMapper.mapTo(jobFound), HttpStatus.OK);
     }
     @DeleteMapping("/{jobId}")
     public ResponseEntity DeleteJob(@PathVariable Long jobId){
