@@ -20,20 +20,20 @@ public class ProfileController {
     private final Mapper<User, UserDto> userMapper;
 
     @GetMapping("/{userId}")
-    public UserDto getProfile(@PathVariable UUID userId) {
+    public UserDto getProfile(@PathVariable Long userId) {
         User user = profileService.getProfile(userId);
         return userMapper.mapTo(user);
     }
 
     @PostMapping("/create/{userId}")
-    public UserDto createProfile(@PathVariable UUID userId, @RequestBody ProfileDto profileDto) {
+    public UserDto createProfile(@PathVariable Long userId, @RequestBody ProfileDto profileDto) {
         Profile profile = profileMapper.mapFrom(profileDto);
         User updatedUser = profileService.fullUpdateProfile(userId, profile);
         return userMapper.mapTo(updatedUser);
     }
 
     @PostMapping("/full-update/{userId}")
-    public UserDto fullUpdateProfile(@PathVariable UUID userId, ProfileDto profile) {
+    public UserDto fullUpdateProfile(@PathVariable Long userId, ProfileDto profile) {
         return createProfile(userId, profile);
     }
 }

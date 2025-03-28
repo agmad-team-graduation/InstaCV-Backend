@@ -52,7 +52,7 @@ public class userDetails implements UserDetails{
         return true;
     }
 
-    public UUID getId() {
+    public Long getId() {
         return user.getId();
     }
 }

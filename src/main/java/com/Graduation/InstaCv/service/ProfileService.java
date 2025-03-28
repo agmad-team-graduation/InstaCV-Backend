@@ -16,13 +16,13 @@ public class ProfileService implements IProfileService {
     private UserRepository userRepository;
 
     @Override
-    public User getProfile(UUID userId) {
+    public User getProfile(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
     }
 
     @Override
-    public User fullUpdateProfile(UUID userId, Profile profile) {
+    public User fullUpdateProfile(Long userId, Profile profile) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
         user.setProfile(profile);

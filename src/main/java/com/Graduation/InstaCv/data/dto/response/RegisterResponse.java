@@ -12,7 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegisterResponse {
-    private UUID id;
+    private Long id;
     private String name;
     private String email;
 }
