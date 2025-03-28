@@ -1,8 +1,36 @@
+version: "3.8"
+
 services:
   db:
     image: postgres
+    container_name: postgres_db
     ports:
       - "5433:5432"
     restart: always
     environment:
-      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: postgres  # Change as needed
+      POSTGRES_USER: postgres    # Change as needed
+      POSTGRES_PASSWORD: 1234  # Change as needed
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persist database data
+
+  fastapi:
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./fastapi:/app  # Mount local FastAPI code
+      - huggingface_cache:/root/.cache/huggingface  # Persist Hugging Face model cache
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://myuser:mypassword@db:5432/mydatabase  # Connection string
+
+volumes:
+  postgres_data:  # Volume to store PostgreSQL data
+  huggingface_cache:  # Volume to cache Hugging Face models
