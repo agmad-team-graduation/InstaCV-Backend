@@ -6,6 +6,6 @@ import com.Graduation.InstaCv.data.model.profile.Profile;
 import java.util.UUID;
 
 public interface IProfileService {
-    User getProfile(UUID userId);
-    User fullUpdateProfile(UUID userId, Profile profile);
+    User getProfile(Long userId);
+    User fullUpdateProfile(Long userId, Profile profile);
 }

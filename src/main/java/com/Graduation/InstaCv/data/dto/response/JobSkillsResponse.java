@@ -13,5 +13,5 @@ import java.util.List;
 @AllArgsConstructor
 public class JobSkillsResponse {
     @JsonAlias("skills_predictions")
-    private List<String> skillsPredictions;
+    private List<ExtractedJobSkillResponse> skillsPredictions;
 }

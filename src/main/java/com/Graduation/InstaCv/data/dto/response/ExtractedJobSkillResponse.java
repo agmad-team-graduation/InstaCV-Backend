@@ -1,4 +1,4 @@
-package com.Graduation.InstaCv.data.dto.request;
+package com.Graduation.InstaCv.data.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class JobDescriptionSkillExtractionRequest {
-    private String jobDescription;
+public class ExtractedJobSkillResponse {
+    private String name;
+    private float confidence;
 }

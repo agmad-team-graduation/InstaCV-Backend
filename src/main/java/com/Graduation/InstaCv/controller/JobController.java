@@ -45,6 +45,7 @@ public class JobController {
         Job jobFound = jobService.getJob(jobId);
         return new ResponseEntity<>(jobMapper.mapTo(jobFound), HttpStatus.OK);
     }
+
     @DeleteMapping("/{jobId}")
     public ResponseEntity DeleteJob(@PathVariable Long jobId){
         jobService.delete(jobId);
@@ -54,5 +55,4 @@ public class JobController {
     public CompletableFuture<ResponseEntity<Job>> analyzeJob(@PathVariable Long jobId) {
         return jobService.analyzeJob(jobId).thenApply(ResponseEntity::ok);
     }
-
 }
