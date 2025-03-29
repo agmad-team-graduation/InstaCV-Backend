@@ -5,7 +5,7 @@ services:
     image: postgres
     container_name: postgres_db
     ports:
-      - "5433:5432"
+      - "5433:5432"  # Exposing the DB on host port 5433
     restart: always
     environment:
       POSTGRES_DB: postgres
@@ -27,10 +27,6 @@ services:
       - ./fastapi:/app
       - huggingface_cache:/root/.cache/huggingface
     restart: always
-    depends_on:
-      - db
-    environment:
-      DATABASE_URL: postgresql://myuser:mypassword@db:5432/mydatabase
 
 volumes:
   postgres_data:
