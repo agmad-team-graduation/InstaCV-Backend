@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.service;
 
+import com.Graduation.InstaCv.data.dto.response.ExtractedJobSkillResponse;
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
 import com.Graduation.InstaCv.data.model.JobSkill;
@@ -16,15 +17,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 @Service
 @AllArgsConstructor
 public class JobService implements IJobService {
     private final JobRepository jobRepository;
     private final JobSkillService jobSkillService;
+    private final Mapper<JobSkill, ExtractedJobSkillResponse> jobSkillMapper;
 
     @Override
     public Job addJob(Job job) {
@@ -54,6 +53,7 @@ public class JobService implements IJobService {
     public void delete(Long jobId) {
         jobRepository.deleteById(jobId);
     }
+
     private CompletableFuture<Job> analyzeIfNeeded(Job job, boolean forceAnalyze) {
         if (job.isAnalyzed() && !forceAnalyze) return CompletableFuture.completedFuture(job);
 

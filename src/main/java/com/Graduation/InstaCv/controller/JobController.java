@@ -3,7 +3,6 @@ package com.Graduation.InstaCv.controller;
 
 import com.Graduation.InstaCv.data.dto.JobDto;
 import com.Graduation.InstaCv.data.model.Job;
-import com.Graduation.InstaCv.exceptions.JobNotFoundException;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.service.JobService;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -21,9 +19,7 @@ import java.util.stream.Collectors;
 @RequestMapping(path = "/api/v1/jobs")
 public class JobController {
     private final JobService jobService;
-//    private final JobMapper jobMapper;
     private final Mapper<Job, JobDto> jobMapper;
-
 
     @PostMapping("/add")
     public ResponseEntity<JobDto> addJob(@RequestBody JobDto job) {
@@ -32,11 +28,11 @@ public class JobController {
         return new ResponseEntity<>(jobMapper.mapTo(SavedJob), HttpStatus.CREATED);
 
     }
+
     @GetMapping("/jobs")
-    public List<JobDto> getAllJobs(){
+    public List<JobDto> getAllJobs() {
         List<Job> jobsEntity = jobService.getJobs();
-        List<JobDto>jobs = jobsEntity.stream().map(jobMapper::mapTo).collect(Collectors.toList());
-        return jobs;
+        return jobsEntity.stream().map(jobMapper::mapTo).collect(Collectors.toList());
     }
 
     // get job by id
@@ -47,12 +43,15 @@ public class JobController {
     }
 
     @DeleteMapping("/{jobId}")
-    public ResponseEntity DeleteJob(@PathVariable Long jobId){
+    public ResponseEntity<Void> DeleteJob(@PathVariable Long jobId) {
         jobService.delete(jobId);
-        return new ResponseEntity(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
     @GetMapping("/analyze/{jobId}")
-    public CompletableFuture<ResponseEntity<Job>> analyzeJob(@PathVariable Long jobId) {
-        return jobService.analyzeJob(jobId).thenApply(ResponseEntity::ok);
+    public CompletableFuture<ResponseEntity<Job>> analyzeJob(
+            @PathVariable Long jobId,
+            @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
+        return jobService.analyzeJob(jobId, forceAnalyze).thenApply(ResponseEntity::ok);
     }
 }
