@@ -11,7 +11,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDto {
-    private UUID id;
+    private Long id;
     private String name;
     private String email;
     private ProfileDto profile;

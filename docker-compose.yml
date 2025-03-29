@@ -1,8 +1,33 @@
+version: "3.8"
+
 services:
   db:
     image: postgres
+    container_name: postgres_db
     ports:
-      - "5433:5432"
+      - "5433:5432"  # Exposing the DB on host port 5433
     restart: always
     environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  fastapi:
+#    network_mode: host
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./fastapi:/app
+      - huggingface_cache:/root/.cache/huggingface
+    restart: always
+
+volumes:
+  postgres_data:
+  huggingface_cache:
