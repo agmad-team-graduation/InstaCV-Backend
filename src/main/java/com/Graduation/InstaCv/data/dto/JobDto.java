@@ -15,6 +15,6 @@ public class JobDto {
     private String title;
     private String company;
     private String description;
-//    private boolean isAnalyzed = false;
-//    private JobAnalysis jobAnalysis;
+    private boolean isAnalyzed = false;
+    private JobAnalysis jobAnalysis;
 }
