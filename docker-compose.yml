@@ -18,13 +18,14 @@ services:
     build:
       context: ./fastapi
       dockerfile: Dockerfile
+      network: host
     container_name: fastapi_app
     ports:
       - "8000:8000"
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./fastapi:/app  # Mount local FastAPI code
-      - huggingface_cache:/root/.cache/huggingface  # Persist Hugging Face model cache
+      - huggingface_cache:/root/.cache/hugingface  # Persist Hugging Face model cache
     restart: always
     depends_on:
       - db
