@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -41,6 +42,16 @@ public class JobService implements IJobService {
         return jobRepository.findById(jobId)
                 .map(job -> analyzeIfNeeded(job, forceAnalyze))
                 .orElseThrow(() -> new JobNotFoundException("Job with ID " + jobId + " not found"));
+    }
+
+    @Override
+    public List<Job> getJobs() {
+        return jobRepository.findAll();
+    }
+
+    @Override
+    public void delete(Long jobId) {
+        jobRepository.deleteById(jobId);
     }
 
     private CompletableFuture<Job> analyzeIfNeeded(Job job, boolean forceAnalyze) {
