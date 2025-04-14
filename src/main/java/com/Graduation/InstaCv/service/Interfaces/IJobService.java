@@ -8,8 +8,14 @@ import java.util.concurrent.CompletableFuture;
 
 public interface IJobService {
     Job addJob(Job job);
+
     Job getJob(Long jobId);
+
     List<Job> getJobs();
+
     void delete(Long jobId);
+
     CompletableFuture<Job> analyzeJob(Long jobId, boolean forceAnalyze) throws JobNotFoundException;
+
+    Job AnalyzeJobMatching(Long jobId, Long userId);
 }

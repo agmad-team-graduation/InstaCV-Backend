@@ -8,11 +8,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Data
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,8 +26,8 @@ public class User {
     @Column(updatable = false, name = "created_at")
     private LocalDateTime createdAt;
     @Column(name = "is_profile_created")
-    private boolean isProfileCreated = false;
-    @Embedded
+    private Boolean isProfileCreated = false;
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Profile profile;
     @PrePersist
     public void prePersist() {

@@ -14,8 +14,7 @@ public class JobMapper implements Mapper<Job, JobDto> {
                 .title(job.getTitle())
                 .company(job.getCompany())
                 .description(job.getDescription())
-                .isAnalyzed(job.isAnalyzed())
-                .jobAnalysis(job.getJobAnalysis())
+                .isAnalyzed(job.getIsAnalyzed())
                 .build();
     }
 
@@ -26,8 +25,7 @@ public class JobMapper implements Mapper<Job, JobDto> {
                 .title(jobDto.getTitle())
                 .company(jobDto.getCompany())
                 .description(jobDto.getDescription())
-                .isAnalyzed(jobDto.isAnalyzed())
-                .jobAnalysis(jobDto.getJobAnalysis())
+                .isAnalyzed(jobDto.getIsAnalyzed())
                 .build();
     }
-} 
+}

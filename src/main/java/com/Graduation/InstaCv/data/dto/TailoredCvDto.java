@@ -3,7 +3,7 @@ package com.Graduation.InstaCv.data.dto;
 import com.Graduation.InstaCv.data.model.profile.Education;
 import com.Graduation.InstaCv.data.model.profile.Experience;
 import com.Graduation.InstaCv.data.model.profile.PersonalDetails;
-import com.Graduation.InstaCv.data.model.profile.Skill;
+import com.Graduation.InstaCv.data.model.profile.UserSkill;
 import com.Graduation.InstaCv.data.model.profile.Project;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,9 +24,9 @@ public class TailoredCvDto {
     private PersonalDetails personalDetails;
     private List<Education> education;
     private List<Experience> experience;
-    private List<Skill> skills;
+    private List<UserSkill> skills;
     private List<Project> projects;
     private String summary;
     private LocalDateTime createdAt;
     private Integer matchScore;
-} 
+}

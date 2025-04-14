@@ -24,7 +24,7 @@ public class TailoredCvMapper implements Mapper<TailoredCv, TailoredCvDto> {
                 .projects(tailoredCv.getProjects())
                 .summary(tailoredCv.getSummary())
                 .createdAt(tailoredCv.getCreatedAt())
-                .matchScore(tailoredCv.getMatchScore())
+//                .matchScore(tailoredCv.getMatchScore())
                 .build();
     }
 
@@ -41,7 +41,7 @@ public class TailoredCvMapper implements Mapper<TailoredCv, TailoredCvDto> {
                 .projects(tailoredCvDto.getProjects())
                 .summary(tailoredCvDto.getSummary())
                 .createdAt(tailoredCvDto.getCreatedAt())
-                .matchScore(tailoredCvDto.getMatchScore())
+//                .matchScore(tailoredCvDto.getMatchScore())
                 .build();
     }
-} 
+}

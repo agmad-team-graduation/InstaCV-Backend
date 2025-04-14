@@ -47,4 +47,4 @@ public class CvController {
         TailoredCv tailoredCv = cvGenerationService.getCvByUserIdAndJobId(userId, jobId);
         return ResponseEntity.ok(cvMapper.mapTo(tailoredCv));
     }
-} 
+}

@@ -26,7 +26,7 @@ public class ProfileService implements IProfileService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
         user.setProfile(profile);
-        user.setProfileCreated(true);
+        user.setIsProfileCreated(true);
         return userRepository.save(user);
     }
 }

@@ -16,6 +16,6 @@ public class ProfileDto {
     private PersonalDetails personalDetails;
     private List<Education> educationList;
     private List<Experience> experienceList;
-    private List<Skill> skills;
+    private List<UserSkill> userSkills;
     private List<Project> projects;
 }

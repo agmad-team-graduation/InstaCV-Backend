@@ -13,7 +13,7 @@ public class ProfileMapper implements Mapper<Profile, ProfileDto> {
                 .personalDetails(profile.getPersonalDetails())
                 .educationList(profile.getEducationList())
                 .experienceList(profile.getExperienceList())
-                .skills(profile.getSkills())
+                .userSkills(profile.getUserSkills())
                 .projects(profile.getProjects())
                 .build();
     }
@@ -24,7 +24,7 @@ public class ProfileMapper implements Mapper<Profile, ProfileDto> {
                 .personalDetails(profileDto.getPersonalDetails())
                 .educationList(profileDto.getEducationList())
                 .experienceList(profileDto.getExperienceList())
-                .skills(profileDto.getSkills())
+                .userSkills(profileDto.getUserSkills())
                 .projects(profileDto.getProjects())
                 .build();
     }
