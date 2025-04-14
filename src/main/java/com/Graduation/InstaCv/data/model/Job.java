@@ -2,6 +2,7 @@ package com.Graduation.InstaCv.data.model;
 
 import com.Graduation.InstaCv.data.enums.SkillType;
 import com.Graduation.InstaCv.data.model.profile.Profile;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,15 +20,18 @@ public class Job {
     private Long id;
     @ManyToOne(optional = false)
     @JoinColumn(name = "profile_id")
+    @ToString.Exclude
+    @JsonIgnore
     private Profile profile;
     private String title;
     private String company;
     @Column(nullable = false, length = 2048)
     private String description;
-    private Boolean isAnalyzed = false;
-    private Boolean isMatchingAnalyzed = false;
+    private boolean isAnalyzed = false;
+    private boolean isMatchingAnalyzed = false;
     // This is the refactor of JobAnalysis object
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<JobSkill> jobSkills;
     @OneToOne(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     private SkillMatchingAnalysis skillMatchingAnalysis;
@@ -39,6 +43,12 @@ public class Job {
     public List<JobSkill> getHardSkills() {
         return jobSkills.stream()
                 .filter(jobSkill -> jobSkill.getSkillType() == SkillType.HARD)
+                .toList();
+    }
+
+    public List<JobSkill> getSoftSkills() {
+        return jobSkills.stream()
+                .filter(jobSkill -> jobSkill.getSkillType() == SkillType.SOFT)
                 .toList();
     }
 }

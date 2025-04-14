@@ -2,11 +2,9 @@ package com.Graduation.InstaCv.data.model;
 
 
 import com.Graduation.InstaCv.data.model.profile.UserSkill;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 
 @Entity
@@ -22,6 +20,8 @@ public class MatchedSkill {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "analysis_id")
+    @JsonIgnore
+    @ToString.Exclude
     private SkillMatchingAnalysis skillMatchingAnalysis;
 
     @ManyToOne(optional = false)

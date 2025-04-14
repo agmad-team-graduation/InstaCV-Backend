@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.data.model;
 
 import com.Graduation.InstaCv.data.model.profile.Profile;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,8 +27,9 @@ public class User {
     @Column(updatable = false, name = "created_at")
     private LocalDateTime createdAt;
     @Column(name = "is_profile_created")
-    private Boolean isProfileCreated = false;
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private boolean isProfileCreated = false;
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonBackReference // To prevent infinite loop
     private Profile profile;
     @PrePersist
     public void prePersist() {

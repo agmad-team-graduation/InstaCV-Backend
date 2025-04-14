@@ -48,12 +48,12 @@ public class CvGenerationService implements ICvGenerationService {
                 .orElseThrow(() -> new JobNotFoundException("Job not found with id: " + jobId));
 
         // Make sure job is analyzed
-        if (!job.getIsAnalyzed()) {
+        if (!job.isAnalyzed()) {
             job = jobService.analyzeJob(jobId, false).join();
         }
 
         // Make sure job is matching-analyzed
-        if (!job.getIsMatchingAnalyzed()) {
+        if (!job.isMatchingAnalyzed()) {
             job = jobService.AnalyzeJobMatching(jobId, userId);
         }
 
@@ -71,10 +71,10 @@ public class CvGenerationService implements ICvGenerationService {
                 .map(String::toLowerCase)
                 .collect(Collectors.toSet());
 
-//        Set<String> requiredSoftSkills = job.getJobAnalysis().getSoftSkills().stream()
-//                .map(JobSkill::getSkill)
-//                .map(String::toLowerCase)
-//                .collect(Collectors.toSet());
+        Set<String> requiredSoftSkills = job.getSoftSkills().stream()
+                .map(JobSkill::getSkill)
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
 
         List<MatchedSkill> matchedSkills = job.getSkillMatchingAnalysis().getMatchedSkills();
         matchedSkills.sort(Comparator.comparing(MatchedSkill::getSimilarity).reversed());

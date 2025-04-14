@@ -1,11 +1,9 @@
 package com.Graduation.InstaCv.data.model;
 
 import com.Graduation.InstaCv.data.model.profile.Project;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -22,6 +20,8 @@ public class MatchedProject {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "analysis_id")
+    @JsonIgnore
+    @ToString.Exclude
     private ProjectsMatchingAnalysis projectsMatchingAnalysis;
 
     @ManyToOne(optional = false)

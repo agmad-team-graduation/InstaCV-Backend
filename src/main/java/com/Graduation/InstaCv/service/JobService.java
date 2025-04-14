@@ -3,7 +3,9 @@ package com.Graduation.InstaCv.service;
 import com.Graduation.InstaCv.data.dto.response.ExtractedJobSkillResponse;
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
+import com.Graduation.InstaCv.data.enums.SkillType;
 import com.Graduation.InstaCv.data.model.*;
+import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.exceptions.JobNotFoundException;
 //import com.Graduation.InstaCv.repository.JobAnalysisRepository;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
@@ -27,7 +29,8 @@ public class JobService implements IJobService {
     private final Mapper<JobSkill, ExtractedJobSkillResponse> jobSkillMapper;
 
     @Override
-    public Job addJob(Job job) {
+    public Job addJob(Job job, Profile profile) {
+        job.setProfile(profile);
         return jobRepository.save(job);
     }
 
@@ -53,7 +56,7 @@ public class JobService implements IJobService {
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
         analyzeIfNeeded(job, false);
         job.setSkillMatchingAnalysis(jobSkillService.analyzeMatching(job, user));
-        job.setIsMatchingAnalyzed(true);
+        job.setMatchingAnalyzed(true);
         return jobRepository.save(job);
     }
 
@@ -68,7 +71,7 @@ public class JobService implements IJobService {
     }
 
     private CompletableFuture<Job> analyzeIfNeeded(Job job, boolean forceAnalyze) {
-        if (job.getIsAnalyzed() && !forceAnalyze) return CompletableFuture.completedFuture(job);
+        if (job.isAnalyzed() && !forceAnalyze) return CompletableFuture.completedFuture(job);
 
         CompletableFuture<JobKnowledgeResponse> knowledgePredictions = jobSkillService.extractKnowledge(job.getDescription());
         CompletableFuture<JobSkillsResponse> skillsPredictions = jobSkillService.extractSkills(job.getDescription());
@@ -82,12 +85,19 @@ public class JobService implements IJobService {
         List<JobSkill> hardSkills = knowledge.getKnowledgePredictions().stream()
                 .map(jobSkillMapper::mapFrom)
                 .toList();
+        hardSkills.forEach(jobSkill -> jobSkill.setSkillType(SkillType.HARD));
+
         List<JobSkill> softSkills = skills.getSkillsPredictions().stream()
                 .map(jobSkillMapper::mapFrom)
                 .toList();
-        // TODO: Think about handling soft skills
-        job.setJobSkills(hardSkills);
-        job.setIsAnalyzed(true);
+        softSkills.forEach(jobSkill -> jobSkill.setSkillType(SkillType.SOFT));
+
+        List<JobSkill> allSkills = new java.util.ArrayList<>(hardSkills);
+        allSkills.addAll(softSkills);
+        job.setJobSkills(allSkills);
+        job.setAnalyzed(true);
+
+        job.getJobSkills().forEach(jobSkill -> jobSkill.setJob(job));
         return job;
     }
 }

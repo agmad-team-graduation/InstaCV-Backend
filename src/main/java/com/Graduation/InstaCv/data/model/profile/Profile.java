@@ -2,6 +2,8 @@ package com.Graduation.InstaCv.data.model.profile;
 
 import com.Graduation.InstaCv.data.model.Job;
 import com.Graduation.InstaCv.data.model.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +22,9 @@ public class Profile {
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonManagedReference
+    @ToString.Exclude
+    @JsonIgnore
     private User user;
 
     @Embedded

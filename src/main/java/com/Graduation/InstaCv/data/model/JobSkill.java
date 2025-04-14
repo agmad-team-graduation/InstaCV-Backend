@@ -1,11 +1,9 @@
 package com.Graduation.InstaCv.data.model;
 
 import com.Graduation.InstaCv.data.enums.SkillType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "job_skills")
@@ -20,6 +18,8 @@ public class JobSkill {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "job_id")
+    @JsonIgnore
+    @ToString.Exclude
     private Job job;
 
     @Column(name = "job_skill", nullable = false)
