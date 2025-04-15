@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.data.model;
 
+import com.Graduation.InstaCv.data.model.Github.GithubProfile;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,6 +30,7 @@ public class User {
     private boolean isProfileCreated = false;
     @Embedded
     private Profile profile;
+
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();

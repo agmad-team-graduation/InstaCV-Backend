@@ -33,7 +33,7 @@ public class GithubService {
 
     public String getAuthorizationUrl() {
         return "https://github.com/login/oauth/authorize?client_id=" + clientId +
-                "&scope=user,repo&redirect_uri=http://localhost:8080/api/github/callback";
+                "&scope=user,repo&redirect_uri=http://localhost:8080/api/github/test/callback";
     }
 
     public String getAccessToken(String code) {
