@@ -3,7 +3,6 @@ package com.Graduation.InstaCv.mappers.Impl;
 import com.Graduation.InstaCv.data.dto.UserDto;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.mappers.Mapper;
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 

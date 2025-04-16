@@ -8,8 +8,6 @@ import com.Graduation.InstaCv.service.Interfaces.IProfileService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @Service
 @AllArgsConstructor
 public class ProfileService implements IProfileService {

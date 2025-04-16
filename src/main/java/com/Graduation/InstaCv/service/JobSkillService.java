@@ -7,11 +7,8 @@ import com.Graduation.InstaCv.data.dto.request.MatchingSkillsRequest;
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
 import com.Graduation.InstaCv.data.model.*;
-//import com.Graduation.InstaCv.data.model.SkillMatchingAnalysis;
 import com.Graduation.InstaCv.gateways.JobSkillExtractionClient;
-//import com.Graduation.InstaCv.gateways.SkillMatchingClient;
 import com.Graduation.InstaCv.gateways.SkillMatchingClient;
-import com.Graduation.InstaCv.mappers.Impl.BaseSkillMapper;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.service.Interfaces.IJobSkillService;
 import lombok.AllArgsConstructor;
@@ -49,9 +46,7 @@ public class JobSkillService implements IJobSkillService {
                 .similarityThreshold(0.7f).build();
         SkillMatchingAnalysis skillMatchingAnalysis = skillMatchingClient.matchSkills(request);
         skillMatchingAnalysis.setJob(job);
-        skillMatchingAnalysis.getMatchedSkills().forEach(matchedSkill -> {
-            matchedSkill.setSkillMatchingAnalysis(skillMatchingAnalysis);
-        });
+        skillMatchingAnalysis.getMatchedSkills().forEach(matchedSkill -> matchedSkill.setSkillMatchingAnalysis(skillMatchingAnalysis));
         return skillMatchingAnalysis;
     }
 }

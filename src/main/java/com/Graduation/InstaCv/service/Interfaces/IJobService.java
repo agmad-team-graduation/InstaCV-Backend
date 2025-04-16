@@ -2,8 +2,6 @@ package com.Graduation.InstaCv.service.Interfaces;
 
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.data.model.Job;
-import com.Graduation.InstaCv.service.ProfileService;
-
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 

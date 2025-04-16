@@ -10,7 +10,6 @@ import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.repository.TailoredCvRepository;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.ICvGenerationService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
