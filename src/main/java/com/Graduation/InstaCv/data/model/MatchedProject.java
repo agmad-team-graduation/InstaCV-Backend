@@ -22,6 +22,7 @@ public class MatchedProject {
     @JoinColumn(name = "analysis_id")
     @JsonIgnore
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private ProjectsMatchingAnalysis projectsMatchingAnalysis;
 
     @ManyToOne(optional = false)

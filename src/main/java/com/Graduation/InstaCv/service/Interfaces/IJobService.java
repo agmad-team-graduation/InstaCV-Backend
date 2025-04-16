@@ -1,7 +1,6 @@
 package com.Graduation.InstaCv.service.Interfaces;
 
 import com.Graduation.InstaCv.data.model.profile.Profile;
-import com.Graduation.InstaCv.exceptions.JobNotFoundException;
 import com.Graduation.InstaCv.data.model.Job;
 import com.Graduation.InstaCv.service.ProfileService;
 
@@ -17,7 +16,7 @@ public interface IJobService {
 
     void delete(Long jobId);
 
-    CompletableFuture<Job> analyzeJob(Long jobId, boolean forceAnalyze) throws JobNotFoundException;
+    CompletableFuture<Job> analyzeJob(Long jobId, boolean forceAnalyze);
 
     Job AnalyzeJobMatching(Long jobId, Long userId);
 }

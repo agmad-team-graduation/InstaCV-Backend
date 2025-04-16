@@ -22,6 +22,7 @@ public class MatchedSkill {
     @JoinColumn(name = "analysis_id")
     @JsonIgnore
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private SkillMatchingAnalysis skillMatchingAnalysis;
 
     @ManyToOne(optional = false)

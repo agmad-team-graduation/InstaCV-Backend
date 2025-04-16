@@ -4,24 +4,20 @@ import com.Graduation.InstaCv.data.model.profile.Project;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "project_skills")
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class ProjectSkill {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+@SuperBuilder
+public class ProjectSkill extends BaseSkill {
     @ManyToOne(optional = false)
     @JoinColumn(name = "project_id")
     @JsonIgnore
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Project project;
-
-    @Column(name = "project_skill", nullable = false)
-    private String skill;
 }

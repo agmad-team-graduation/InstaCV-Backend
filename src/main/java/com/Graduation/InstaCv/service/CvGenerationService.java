@@ -5,12 +5,12 @@ import com.Graduation.InstaCv.data.model.JobSkill;
 import com.Graduation.InstaCv.data.model.MatchedSkill;
 import com.Graduation.InstaCv.data.model.TailoredCv;
 import com.Graduation.InstaCv.data.model.profile.*;
-import com.Graduation.InstaCv.exceptions.JobNotFoundException;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.repository.TailoredCvRepository;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.ICvGenerationService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +27,7 @@ public class CvGenerationService implements ICvGenerationService {
     private final JobService jobService;
 
     @Override
+//    @Transactional
     public TailoredCv generateCv(Long userId, Long jobId) {
         // Check if CV already exists for this user and job
         Optional<TailoredCv> existingCv = tailoredCvRepository.findByUserIdAndJobId(userId, jobId);
@@ -45,16 +46,18 @@ public class CvGenerationService implements ICvGenerationService {
 
         // Get job
         Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new JobNotFoundException("Job not found with id: " + jobId));
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
 
         // Make sure job is analyzed
         if (!job.isAnalyzed()) {
             job = jobService.analyzeJob(jobId, false).join();
+            jobRepository.save(job);
         }
 
         // Make sure job is matching-analyzed
         if (!job.isMatchingAnalyzed()) {
             job = jobService.AnalyzeJobMatching(jobId, userId);
+            jobRepository.save(job);
         }
 
         // Start building tailored CV

@@ -22,6 +22,7 @@ public class Experience {
     @JoinColumn(name = "profile_id")
     @ToString.Exclude
     @JsonIgnore
+    @EqualsAndHashCode.Exclude
     private Profile profile;
 
     @Column(name = "job_title")

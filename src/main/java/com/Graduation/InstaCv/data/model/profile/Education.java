@@ -23,6 +23,7 @@ public class Education {
     @JoinColumn(name = "profile_id")
     @ToString.Exclude
     @JsonIgnore
+    @EqualsAndHashCode.Exclude
     private Profile profile;
 
     private String degree;

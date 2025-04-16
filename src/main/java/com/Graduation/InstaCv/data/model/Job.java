@@ -22,6 +22,7 @@ public class Job {
     @JoinColumn(name = "profile_id")
     @ToString.Exclude
     @JsonIgnore
+    @EqualsAndHashCode.Exclude
     private Profile profile;
     private String title;
     private String company;
@@ -32,7 +33,7 @@ public class Job {
     // This is the refactor of JobAnalysis object
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private List<JobSkill> jobSkills;
+    private List<JobSkill> jobSkills = List.of();
     @OneToOne(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     private SkillMatchingAnalysis skillMatchingAnalysis;
     @OneToOne(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)

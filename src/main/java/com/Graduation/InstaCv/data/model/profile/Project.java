@@ -23,6 +23,7 @@ public class Project {
     @JoinColumn(name = "profile_id")
     @ToString.Exclude
     @JsonIgnore
+    @EqualsAndHashCode.Exclude
     private Profile profile;
 
     @Column(nullable = false)

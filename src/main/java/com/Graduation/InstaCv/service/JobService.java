@@ -6,8 +6,6 @@ import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
 import com.Graduation.InstaCv.data.enums.SkillType;
 import com.Graduation.InstaCv.data.model.*;
 import com.Graduation.InstaCv.data.model.profile.Profile;
-import com.Graduation.InstaCv.exceptions.JobNotFoundException;
-//import com.Graduation.InstaCv.repository.JobAnalysisRepository;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.repository.JobRepository;
@@ -37,7 +35,7 @@ public class JobService implements IJobService {
     @Override
     public Job getJob(Long jobId) {
         return jobRepository.findById(jobId)
-                .orElseThrow(() -> new JobNotFoundException("Job with ID " + jobId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Job with ID " + jobId + " not found"));
     }
 
     @Override
@@ -45,7 +43,7 @@ public class JobService implements IJobService {
     public CompletableFuture<Job> analyzeJob(Long jobId, boolean forceAnalyze) {
         return jobRepository.findById(jobId)
                 .map(job -> analyzeIfNeeded(job, forceAnalyze))
-                .orElseThrow(() -> new JobNotFoundException("Job with ID " + jobId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Job with ID " + jobId + " not found"));
     }
 
     @Override
@@ -54,7 +52,7 @@ public class JobService implements IJobService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
-        analyzeIfNeeded(job, false);
+        job = analyzeIfNeeded(job, false).join();
         job.setSkillMatchingAnalysis(jobSkillService.analyzeMatching(job, user));
         job.setMatchingAnalyzed(true);
         return jobRepository.save(job);
@@ -92,9 +90,11 @@ public class JobService implements IJobService {
                 .toList();
         softSkills.forEach(jobSkill -> jobSkill.setSkillType(SkillType.SOFT));
 
-        List<JobSkill> allSkills = new java.util.ArrayList<>(hardSkills);
-        allSkills.addAll(softSkills);
-        job.setJobSkills(allSkills);
+        // Clear and add new skills, instead of directly setting to avoid orphan removal error
+        job.getJobSkills().clear();
+        job.getJobSkills().addAll(hardSkills);
+        job.getJobSkills().addAll(softSkills);
+
         job.setAnalyzed(true);
 
         job.getJobSkills().forEach(jobSkill -> jobSkill.setJob(job));

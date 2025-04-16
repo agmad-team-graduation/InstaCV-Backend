@@ -2,11 +2,9 @@ package com.Graduation.InstaCv.data.model;
 
 
 import com.Graduation.InstaCv.data.model.profile.UserSkill;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -24,6 +22,9 @@ public class SkillMatchingAnalysis {
 
     @OneToOne
     @JoinColumn(name = "job_id", nullable = false)
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Job job;
 
     @OneToMany(mappedBy = "skillMatchingAnalysis", cascade = CascadeType.ALL, orphanRemoval = true)

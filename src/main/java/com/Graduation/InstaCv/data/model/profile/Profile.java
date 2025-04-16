@@ -25,6 +25,7 @@ public class Profile {
     @JsonManagedReference
     @ToString.Exclude
     @JsonIgnore
+    @EqualsAndHashCode.Exclude
     private User user;
 
     @Embedded
