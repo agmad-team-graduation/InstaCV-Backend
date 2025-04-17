@@ -29,7 +29,8 @@ public class Job {
     @Column(nullable = false, length = 2048)
     private String description;
     private boolean isAnalyzed = false;
-    private boolean isMatchingAnalyzed = false;
+    private boolean isSkillMatchingAnalyzed = false;
+    private boolean isProjectMatchingAnalyzed = false;
     // This is the refactor of JobAnalysis object
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore

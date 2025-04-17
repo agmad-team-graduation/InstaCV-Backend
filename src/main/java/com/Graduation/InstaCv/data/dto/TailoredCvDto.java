@@ -28,5 +28,4 @@ public class TailoredCvDto {
     private List<Project> projects;
     private String summary;
     private LocalDateTime createdAt;
-    private Integer matchScore;
 }

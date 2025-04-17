@@ -41,4 +41,10 @@ public class SkillMatchingAnalysis {
             inverseJoinColumns = @JoinColumn(name = "user_skill_id")
     )
     private List<UserSkill> unmatchedUserSkills;
+
+    public Float getMatchedSkillsPercentage() {
+        if (matchedSkills == null || job.getJobSkills() == null || job.getJobSkills().isEmpty())
+            return null;
+        return (float) matchedSkills.size() / job.getJobSkills().size() * 100;
+    }
 }

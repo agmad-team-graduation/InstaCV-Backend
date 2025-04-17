@@ -3,6 +3,7 @@ package com.Graduation.InstaCv.service.Interfaces;
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
 import com.Graduation.InstaCv.data.model.Job;
+import com.Graduation.InstaCv.data.model.ProjectsMatchingAnalysis;
 import com.Graduation.InstaCv.data.model.SkillMatchingAnalysis;
 import com.Graduation.InstaCv.data.model.User;
 
@@ -13,5 +14,7 @@ public interface IJobSkillService {
 
     CompletableFuture<JobSkillsResponse> extractSkills(String jobDescription);
 
-    SkillMatchingAnalysis analyzeMatching(Job job, User user);
+    SkillMatchingAnalysis analyzeSkillsMatching(Job job, User user);
+
+    ProjectsMatchingAnalysis analyzeProjectsMatching(Job job, User user);
 }

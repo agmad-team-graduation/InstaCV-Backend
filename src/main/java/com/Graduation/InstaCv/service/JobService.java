@@ -47,14 +47,27 @@ public class JobService implements IJobService {
     }
 
     @Override
-    public Job AnalyzeJobMatching(Long jobId, Long userId) {
+    public Job analyzeJobMatching(Long jobId, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
         job = analyzeIfNeeded(job, false).join();
-        job.setSkillMatchingAnalysis(jobSkillService.analyzeMatching(job, user));
-        job.setMatchingAnalyzed(true);
+        job.setSkillMatchingAnalysis(jobSkillService.analyzeSkillsMatching(job, user));
+        job.setSkillMatchingAnalyzed(true);
+        return jobRepository.save(job);
+    }
+
+    @Override
+    public Job analyzeProjectsMatching(Long jobId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
+        job = analyzeIfNeeded(job, false).join();
+        job.setProjectMatchingAnalysis(jobSkillService.analyzeProjectsMatching(job, user));
+        job.getProjectMatchingAnalysis().setJob(job);
+        job.setProjectMatchingAnalyzed(true);
         return jobRepository.save(job);
     }
 

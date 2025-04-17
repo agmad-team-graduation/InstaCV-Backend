@@ -4,9 +4,12 @@ import com.Graduation.InstaCv.data.dto.BaseSkillDto;
 import com.Graduation.InstaCv.data.dto.request.JobSkillExtractionRequest;
 //import com.Graduation.InstaCv.data.dto.request.MatchingSkillsRequest;
 import com.Graduation.InstaCv.data.dto.request.MatchingSkillsRequest;
+import com.Graduation.InstaCv.data.dto.request.ProjectWithSkillsRequest;
+import com.Graduation.InstaCv.data.dto.request.ProjectsMatchingRequest;
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
 import com.Graduation.InstaCv.data.model.*;
+import com.Graduation.InstaCv.data.model.profile.Project;
 import com.Graduation.InstaCv.gateways.JobSkillExtractionClient;
 import com.Graduation.InstaCv.gateways.SkillMatchingClient;
 import com.Graduation.InstaCv.mappers.Mapper;
@@ -23,6 +26,7 @@ public class JobSkillService implements IJobSkillService {
     private final JobSkillExtractionClient jobSkillClient;
     private final SkillMatchingClient skillMatchingClient;
     private final Mapper<BaseSkill, BaseSkillDto> jobSkillMapper;
+    private final Mapper<Project, ProjectWithSkillsRequest> projectMapper;
 
     @Override
     public CompletableFuture<JobKnowledgeResponse> extractKnowledge(String description) {
@@ -39,7 +43,7 @@ public class JobSkillService implements IJobSkillService {
     }
 
     @Override
-    public SkillMatchingAnalysis analyzeMatching(Job job, User user) {
+    public SkillMatchingAnalysis analyzeSkillsMatching(Job job, User user) {
         MatchingSkillsRequest request = MatchingSkillsRequest.builder()
                 .jobSkills(job.getHardSkills().stream().map(jobSkillMapper::mapTo).toList())
                 .userSkills(user.getProfile().getUserSkills().stream().map(jobSkillMapper::mapTo).toList())
@@ -48,5 +52,19 @@ public class JobSkillService implements IJobSkillService {
         skillMatchingAnalysis.setJob(job);
         skillMatchingAnalysis.getMatchedSkills().forEach(matchedSkill -> matchedSkill.setSkillMatchingAnalysis(skillMatchingAnalysis));
         return skillMatchingAnalysis;
+    }
+
+    @Override
+    public ProjectsMatchingAnalysis analyzeProjectsMatching(Job job, User user) {
+        ProjectsMatchingRequest request = ProjectsMatchingRequest.builder()
+                .jobSkills(job.getHardSkills().stream().map(jobSkillMapper::mapTo).toList())
+                .projects(user.getProfile().getProjects().stream().map(projectMapper::mapTo).toList())
+                .similarityThreshold(0.7f).build();
+        ProjectsMatchingAnalysis projectsMatchingAnalysis = skillMatchingClient.matchProjectsSkills(request);
+        projectsMatchingAnalysis.getAllAnalyzedProjects().forEach(matchedProject -> {
+            matchedProject.setProjectsMatchingAnalysis(projectsMatchingAnalysis);
+            matchedProject.getMatchedSkills().forEach(matchedSkill -> matchedSkill.setMatchedProject(matchedProject));
+        });
+        return projectsMatchingAnalysis;
     }
 }

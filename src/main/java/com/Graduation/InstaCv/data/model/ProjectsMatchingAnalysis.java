@@ -1,11 +1,8 @@
 package com.Graduation.InstaCv.data.model;
 
-import com.Graduation.InstaCv.data.model.profile.Project;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -22,18 +19,25 @@ public class ProjectsMatchingAnalysis {
     private Long id;
 
     @OneToOne
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
     @OneToMany(mappedBy = "projectsMatchingAnalysis", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MatchedProject> matchedProjects;
+    private List<MatchedProject> allAnalyzedProjects;
 
-    @ManyToMany
-    @JoinTable(
-            name = "unmatched_projects_map",
-            joinColumns = @JoinColumn(name = "analysis_id"),
-            inverseJoinColumns = @JoinColumn(name = "project_id")
-    )
-    private List<Project> unMatchedProjects;
+    public List<MatchedProject> getProjectsMatchedWithSkills() {
+        return allAnalyzedProjects.stream()
+                .filter(matchedProject -> matchedProject.getMatchedSkillsCount() > 0)
+                .toList();
+    }
+
+    public List<MatchedProject> getProjectMatchedWithNoSkills() {
+        return allAnalyzedProjects.stream()
+                .filter(matchedProject -> matchedProject.getMatchedSkillsCount() == 0)
+                .toList();
+    }
 }
 

@@ -31,5 +31,5 @@ public class MatchedProject {
 
     @OneToMany(mappedBy = "matchedProject", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MatchedProjectSkill> matchedSkills;
-    private Float similarity;
+    private Long matchedSkillsCount;
 }
