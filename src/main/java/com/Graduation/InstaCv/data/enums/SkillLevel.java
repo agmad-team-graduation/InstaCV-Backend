@@ -8,3 +8,4 @@ public enum SkillLevel {
     PROFICIENT,
     EXPERT
 }
+

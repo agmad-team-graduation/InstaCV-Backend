@@ -1,7 +1,7 @@
 package com.Graduation.InstaCv.mappers.Impl;
 
 import com.Graduation.InstaCv.data.dto.TailoredCvDto;
-import com.Graduation.InstaCv.data.model.TailoredCv;
+import com.Graduation.InstaCv.data.model.CV.TailoredCv;
 import com.Graduation.InstaCv.mappers.Mapper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -24,7 +24,6 @@ public class TailoredCvMapper implements Mapper<TailoredCv, TailoredCvDto> {
                 .projects(tailoredCv.getProjects())
                 .summary(tailoredCv.getSummary())
                 .createdAt(tailoredCv.getCreatedAt())
-                .matchScore(tailoredCv.getMatchScore())
                 .build();
     }
 
@@ -41,7 +40,6 @@ public class TailoredCvMapper implements Mapper<TailoredCv, TailoredCvDto> {
                 .projects(tailoredCvDto.getProjects())
                 .summary(tailoredCvDto.getSummary())
                 .createdAt(tailoredCvDto.getCreatedAt())
-                .matchScore(tailoredCvDto.getMatchScore())
                 .build();
     }
-} 
+}

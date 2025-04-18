@@ -16,11 +16,11 @@ public class JobSkillMapper implements Mapper<JobSkill, ExtractedJobSkillRespons
     @PostConstruct
     public void setupMapper() {
         modelMapper.createTypeMap(JobSkill.class, ExtractedJobSkillResponse.class)
-                .addMapping(JobSkill::getName, ExtractedJobSkillResponse::setName)
+                .addMapping(JobSkill::getSkill, ExtractedJobSkillResponse::setName)
                 .addMapping(JobSkill::getModelConfidence, ExtractedJobSkillResponse::setConfidence);
 
         modelMapper.createTypeMap(ExtractedJobSkillResponse.class, JobSkill.class)
-                .addMapping(ExtractedJobSkillResponse::getName, JobSkill::setName)
+                .addMapping(ExtractedJobSkillResponse::getName, JobSkill::setSkill)
                 .addMapping(ExtractedJobSkillResponse::getConfidence, JobSkill::setModelConfidence);
     }
 

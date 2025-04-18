@@ -5,7 +5,7 @@ services:
     image: postgres
     container_name: postgres_db
     ports:
-      - "5433:5432"  # Exposing the DB on host port 5433
+      - "5433:5432"
     restart: always
     environment:
       POSTGRES_DB: postgres
@@ -14,15 +14,35 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  fastapi:
-#    network_mode: host
+  fastapi_base:
     build:
       context: ./fastapi
       dockerfile: Dockerfile
-    container_name: fastapi_app
+    image: my-fastapi-base:latest
+    command: echo "Base image built"
+    volumes:
+      - huggingface_cache:/root/.cache/huggingface
+    deploy:
+      replicas: 0  # Don't run this service; just build the image
+    restart: "no"
+
+  skills_extraction:
+    image: my-fastapi-base:latest
+    container_name: skills_extraction_app
     ports:
       - "8000:8000"
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn skills_extraction.skills_extraction:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./fastapi:/app
+      - huggingface_cache:/root/.cache/huggingface
+    restart: always
+
+  semantic_similarity:
+    image: my-fastapi-base:latest
+    container_name: semantic_similarity_app
+    ports:
+      - "8001:8001"
+    command: uvicorn semantic_similarity.semantic_similarity:app --host 0.0.0.0 --port 8001 --reload
     volumes:
       - ./fastapi:/app
       - huggingface_cache:/root/.cache/huggingface
