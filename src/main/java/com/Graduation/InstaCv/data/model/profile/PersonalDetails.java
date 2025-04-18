@@ -14,12 +14,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class PersonalDetails {
-    @Column(name = "profile_full_name")
+    @Column(name = "full_name")
     private String fullName;
-    @Column(name="profile_email")
+    @Column(name="email")
     private String email;
-    @Column(name="profile_phone")
+    @Column(name="phone")
     private String phone;
-    @Column(name="profile_address")
+    @Column(name="address")
     private String address;
 }

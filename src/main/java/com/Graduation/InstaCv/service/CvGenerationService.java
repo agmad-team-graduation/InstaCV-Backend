@@ -1,13 +1,21 @@
 package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.model.*;
+import com.Graduation.InstaCv.data.model.CV.EducationCv;
+import com.Graduation.InstaCv.data.model.CV.ExperienceCv;
+import com.Graduation.InstaCv.data.model.CV.ProjectCv;
+import com.Graduation.InstaCv.data.model.CV.TailoredCv;
+import com.Graduation.InstaCv.data.model.CV.skills.UserSkillCv;
 import com.Graduation.InstaCv.data.model.profile.*;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
+import com.Graduation.InstaCv.mappers.Impl.CV.UserSkillCvMapper;
+import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.repository.TailoredCvRepository;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.ICvGenerationService;
 import lombok.RequiredArgsConstructor;
+import org.mapstruct.control.MappingControl;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,6 +29,12 @@ public class CvGenerationService implements ICvGenerationService {
     private final JobRepository jobRepository;
     private final TailoredCvRepository tailoredCvRepository;
     private final JobService jobService;
+
+    private final Mapper<UserSkillCv, UserSkill> userSkillCvMapper;
+    private final Mapper<ExperienceCv, Experience> experienceCvMapper;
+    private final Mapper<EducationCv, Education> educationCvMapper;
+    private final Mapper<ProjectCv, Project> projectCvMapper;
+
 
     @Override
 //    @Transactional
@@ -76,28 +90,32 @@ public class CvGenerationService implements ICvGenerationService {
                 .map(MatchedSkill::getUserSkill)
                 .toList();
 
-        tailoredCv.setSkills(tailoredSkills);
+        // convert to UserSkillCv
+        tailoredCv.setSkills(tailoredSkills.stream().map(userSkillCvMapper::mapFrom).toList());
 
         // Sort experiences by date
         List<Experience> tailoredExperience = profile.getExperienceList().stream()
                 .sorted(Comparator.comparing(Experience::getStartDate).reversed())
-                .collect(Collectors.toList());
+                .toList();
 
-        tailoredCv.setExperience(tailoredExperience);
+        // Convert to ExperienceCv
+        tailoredCv.setExperience(tailoredExperience.stream().map(experienceCvMapper::mapFrom).toList());
 
         // Sort education by date
         List<Education> tailoredEducation = profile.getEducationList().stream()
                 .sorted(Comparator.comparing(Education::getStartDate).reversed())
-                .collect(Collectors.toList());
+                .toList();
 
-        tailoredCv.setEducation(tailoredEducation);
+        // Convert to EducationCv
+        tailoredCv.setEducation(tailoredEducation.stream().map(educationCvMapper::mapFrom).toList());
 
         // Include relevant projects
         List<Project> tailoredProjects = job.getProjectMatchingAnalysis().getProjectsMatchedWithSkills()
                 .stream().sorted(Comparator.comparing(MatchedProject::getMatchedSkillsCount).reversed())
                 .map(MatchedProject::getProject).toList();
 
-        tailoredCv.setProjects(tailoredProjects);
+        // Convert to ProjectCv
+        tailoredCv.setProjects(tailoredProjects.stream().map(projectCvMapper::mapFrom).toList());
 
         // Generate summary
         String summary = generateProfileSummary(profile, job);
