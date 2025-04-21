@@ -14,8 +14,6 @@ import java.util.logging.Logger;
 @RestController
 @RequestMapping("/api/github/test")
 public class GithubController {
-
-    private static final Logger logger = Logger.getLogger(GithubController.class.getName());
     private final GithubService githubService;
 
     @Autowired
@@ -41,15 +39,8 @@ public class GithubController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> profile(@RequestParam String accessToken) {
-        try {
-            GithubProfile profile = githubService.getUserProfile(accessToken);
-            return ResponseEntity.ok(profile);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            logger.severe("Error in test profile: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-        }
+    public ResponseEntity<GithubProfile> profile(@RequestParam String accessToken) {
+        GithubProfile profile = githubService.getUserProfile(accessToken);
+        return ResponseEntity.ok(profile);
     }
 }

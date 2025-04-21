@@ -7,6 +7,7 @@ import com.Graduation.InstaCv.data.dto.request.AccessTokenRequest;
 import com.Graduation.InstaCv.data.dto.response.AccessTokenResponse;
 import com.Graduation.InstaCv.data.model.Github.GithubProfile;
 import com.Graduation.InstaCv.data.model.Github.GithubRepository;
+import com.Graduation.InstaCv.exceptions.FetchErrorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -123,12 +124,9 @@ public class GithubService {
             return profile;
 
         } catch (WebClientResponseException e) {
-            logger.error("Error fetching data from GitHub API: Status code: {}, Response body: {}",
-                    e.getStatusCode(), e.getResponseBodyAsString(), e);
-            throw new RuntimeException("GitHub API error: " + e.getMessage(), e);
+            throw new FetchErrorException("Error fetching GitHub profile: " + e.getMessage(), e);
         } catch (Exception e) {
-            logger.error("Unexpected error occurred while fetching GitHub profile", e);
-            throw new RuntimeException("Unexpected error occurred: " + e.getMessage(), e);
+            throw new FetchErrorException("Unexpected error fetching GitHub profile: " + e.getMessage(), e);
         }
     }
 
@@ -144,8 +142,6 @@ public class GithubService {
                     .block();
         } catch (WebClientResponseException e) {
             if (e.getStatusCode().is4xxClientError()) {
-                logger.warn("README not found for repo: {}/{}. Status code: {}",
-                        owner, repo, e.getStatusCode());
                 return "";
             }
             logger.error("Error fetching README for repo: {}/{}. Status code: {}, Response body: {}",
