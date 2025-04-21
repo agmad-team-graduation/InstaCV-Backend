@@ -1,13 +1,11 @@
 package com.Graduation.InstaCv.data.model;
 
-import com.Graduation.InstaCv.data.model.Github.GithubProfile;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Data

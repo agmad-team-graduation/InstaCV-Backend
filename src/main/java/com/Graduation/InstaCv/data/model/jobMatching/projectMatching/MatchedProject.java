@@ -1,4 +1,4 @@
-package com.Graduation.InstaCv.data.model;
+package com.Graduation.InstaCv.data.model.jobMatching.projectMatching;
 
 import com.Graduation.InstaCv.data.model.profile.Project;
 import com.fasterxml.jackson.annotation.JsonIgnore;

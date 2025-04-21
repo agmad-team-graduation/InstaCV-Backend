@@ -1,21 +1,20 @@
-package com.Graduation.InstaCv.data.model.Github;
+package com.Graduation.InstaCv.data.model.github;
 
 import java.util.List;
-import java.util.Map;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GithubRepository {
+public class GithubProfile {
+    private String username;
     private String name;
-    private String description;
-    private List<String> languages;
-    private String readmeContent;
+    private String bio;
+    private String avatarUrl;
+    private List<GithubRepository> repositories;
 }

@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AccessTokenResponse {
-    private String access_token;
+public class GithubAuthLink {
+    private String authLink;
 }

@@ -1,5 +1,7 @@
 package com.Graduation.InstaCv.data.model;
 
+import com.Graduation.InstaCv.data.model.profile.ProjectSkill;
+import com.Graduation.InstaCv.data.model.job.JobSkill;
 import com.Graduation.InstaCv.data.model.profile.UserSkill;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

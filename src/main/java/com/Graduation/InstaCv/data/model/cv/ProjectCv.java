@@ -1,6 +1,6 @@
-package com.Graduation.InstaCv.data.model.CV;
+package com.Graduation.InstaCv.data.model.cv;
 
-import com.Graduation.InstaCv.data.model.CV.skills.ProjectSkillCv;
+import com.Graduation.InstaCv.data.model.cv.skills.ProjectSkillCv;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;

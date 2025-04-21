@@ -1,46 +1,32 @@
 package com.Graduation.InstaCv.controller;
 
 
-import com.Graduation.InstaCv.data.model.Github.GithubProfile;
+import com.Graduation.InstaCv.data.dto.response.GithubAccessTokenResponse;
+import com.Graduation.InstaCv.data.dto.response.GithubAuthLink;
+import com.Graduation.InstaCv.data.model.github.GithubProfile;
 import com.Graduation.InstaCv.service.GithubService;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
-import java.util.logging.Logger;
-
 @RestController
 @RequestMapping("/api/github/test")
+@AllArgsConstructor
 public class GithubController {
     private final GithubService githubService;
 
-    @Autowired
-    public GithubController(GithubService githubService) {
-        this.githubService = githubService;
-    }
-
     @GetMapping("/authorize")
-    public ResponseEntity<String> authorize() {
-        String authUrl = githubService.getAuthorizationUrl();
-        return ResponseEntity.ok(authUrl);
+    public ResponseEntity<GithubAuthLink> authorize() {
+        return ResponseEntity.ok(githubService.getAuthorizationUrl());
     }
 
     @GetMapping("/callback")
-    public ResponseEntity<Map<String, String>> callback(@RequestParam String code) {
-        String accessToken = githubService.getAccessToken(code);
-
-        Map<String, String> response = new HashMap<>();
-        response.put("access_token", accessToken);
-        response.put("message", "GitHub authorization successful");
-
-        return ResponseEntity.ok(response);
+    public ResponseEntity<GithubAccessTokenResponse> callback(@RequestParam String code) {
+        return ResponseEntity.ok(githubService.getAccessToken(code));
     }
 
     @GetMapping("/profile")
     public ResponseEntity<GithubProfile> profile(@RequestParam String accessToken) {
-        GithubProfile profile = githubService.getUserProfile(accessToken);
-        return ResponseEntity.ok(profile);
+        return ResponseEntity.ok(githubService.getUserProfile(accessToken));
     }
 }

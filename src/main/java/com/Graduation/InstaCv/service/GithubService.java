@@ -1,17 +1,20 @@
 package com.Graduation.InstaCv.service;
 
 
-import com.Graduation.InstaCv.data.dto.GithubRepoDto;
-import com.Graduation.InstaCv.data.dto.GithubUserDto;
+import com.Graduation.InstaCv.data.dto.response.GithubRepoResponse;
+import com.Graduation.InstaCv.data.dto.response.GithubUserResponse;
 import com.Graduation.InstaCv.data.dto.request.AccessTokenRequest;
-import com.Graduation.InstaCv.data.dto.response.AccessTokenResponse;
-import com.Graduation.InstaCv.data.model.Github.GithubProfile;
-import com.Graduation.InstaCv.data.model.Github.GithubRepository;
+import com.Graduation.InstaCv.data.dto.response.GithubAccessTokenResponse;
+import com.Graduation.InstaCv.data.dto.response.GithubAuthLink;
+import com.Graduation.InstaCv.data.model.github.GithubProfile;
+import com.Graduation.InstaCv.data.model.github.GithubRepository;
 import com.Graduation.InstaCv.exceptions.FetchErrorException;
+import com.Graduation.InstaCv.gateways.github.GithubApiClient;
+import com.Graduation.InstaCv.gateways.github.GithubAuthClient;
+import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -21,6 +24,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class GithubService {
+
+    private final GithubAuthClient githubAuthClient;
+    private final GithubApiClient githubApiClient;
     private final WebClient.Builder webClientBuilder;
 
     @Value("${github.client.id}")
@@ -28,128 +34,91 @@ public class GithubService {
 
     @Value("${github.client.secret}")
     private String clientSecret;
+    @Value("${github.callback.url}")
+    private String callbackUrl;
 
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
 
-    public GithubService(WebClient.Builder webClientBuilder) {
+    public GithubService(GithubAuthClient githubAuthClient, GithubApiClient githubApiClient, WebClient.Builder webClientBuilder) {
+        this.githubAuthClient = githubAuthClient;
+        this.githubApiClient = githubApiClient;
         this.webClientBuilder = webClientBuilder;
     }
 
-    public String getAuthorizationUrl() {
-        return "https://github.com/login/oauth/authorize?client_id=" + clientId +
-                "&scope=user,repo&redirect_uri=http://localhost:8080/api/github/test/callback";
+    public GithubAuthLink getAuthorizationUrl() {
+        return GithubAuthLink.builder()
+                .authLink("https://github.com/login/oauth/authorize?client_id=" + clientId +
+                        "&scope=user,repo&redirect_uri=" + callbackUrl)
+                .build();
     }
 
-    public String getAccessToken(String code) {
-        AccessTokenRequest requestDto = new AccessTokenRequest(clientId, clientSecret, code);
-
-        return webClientBuilder.build()
-                .post()
-                .uri("https://github.com/login/oauth/access_token")
-                .header("Accept", "application/json")
-                .bodyValue(requestDto)
-                .retrieve()
-                .bodyToMono(AccessTokenResponse.class)
-                .map(AccessTokenResponse::getAccess_token)
-                .block();
+    public GithubAccessTokenResponse getAccessToken(String code) {
+        AccessTokenRequest requestDto = AccessTokenRequest.builder()
+                .clientId(clientId)
+                .clientSecret(clientSecret)
+                .code(code)
+                .build();
+        return githubAuthClient.getAccessToken(requestDto);
     }
 
     public GithubProfile getUserProfile(String accessToken) {
         try {
-            // Fetch user details
-            GithubUserDto userDetails = webClientBuilder.build()
-                    .get()
-                    .uri("https://api.github.com/user")
-                    .header("Authorization", "token " + accessToken)
-                    .retrieve()
-                    .bodyToMono(GithubUserDto.class)
-                    .block();
-
-            if (userDetails == null) {
-                throw new RuntimeException("Failed to retrieve user details from GitHub");
-            }
-
-            // Fetch repositories
-            List<GithubRepoDto> repos = webClientBuilder.build()
-                    .get()
-                    .uri("https://api.github.com/user/repos")
-                    .header("Authorization", "token " + accessToken)
-                    .retrieve()
-                    .bodyToFlux(GithubRepoDto.class)
-                    .collectList()
-                    .block();
-
-            if (repos == null) {
-                throw new RuntimeException("Failed to retrieve repositories from GitHub");
-            }
-
-            // Convert DTOs to domain objects
-            GithubProfile profile = GithubProfile.builder().
-                    username(userDetails.getLogin())
-                    .name(userDetails.getName())
-                    .bio(userDetails.getBio())
-                    .avatarUrl(userDetails.getAvatar_url())
-                    .build();
-
-            List<GithubRepository> repositories = repos.stream()
+            String tokenHeader = "token " + accessToken;
+            GithubUserResponse userDetails = githubApiClient.getUser(tokenHeader);
+            List<GithubRepoResponse> repos = githubApiClient.getRepos(tokenHeader);
+            List<GithubRepository> reposWithLanguagesAndReadme = repos.stream()
                     .map(repo -> {
-                        // Fetch languages and extract keys directly
-                        List<String> languageList = new ArrayList<>(
-                                Objects.requireNonNull(
-                                        webClientBuilder.build()
-                                                .get()
-                                                .uri(repo.getLanguages_url())
-                                                .header("Authorization", "token " + accessToken)
-                                                .retrieve()
-                                                .bodyToMono(new ParameterizedTypeReference<Map<String, Long>>() {
-                                                })
-                                                .block()
-                                ).keySet()
-                        );
-
-                        // Fetch README content
-                        String readmeContent = getReadmeContent(accessToken, userDetails.getLogin(), repo.getName());
-
-                        // Create repository object
+                        List<String> languages = getLanguagesFromClient(tokenHeader, repo.getFullName());
+                        String readmeContent = getReadmeFromClient(tokenHeader, repo.getFullName());
                         return GithubRepository.builder()
                                 .name(repo.getName())
                                 .description(repo.getDescription())
-                                .languages(languageList)
+                                .languages(languages)
                                 .readmeContent(readmeContent)
                                 .build();
-                    })
-                    .collect(Collectors.toList());
+                    }).collect(Collectors.toList());
 
-            profile.setRepositories(repositories);
-            return profile;
-
-        } catch (WebClientResponseException e) {
-            throw new FetchErrorException("Error fetching GitHub profile: " + e.getMessage(), e);
+            return GithubProfile.builder()
+                    .username(userDetails.getLogin())
+                    .name(userDetails.getName())
+                    .bio(userDetails.getBio())
+                    .avatarUrl(userDetails.getAvatar_url())
+                    .repositories(reposWithLanguagesAndReadme)
+                    .build();
         } catch (Exception e) {
-            throw new FetchErrorException("Unexpected error fetching GitHub profile: " + e.getMessage(), e);
+            logger.error("Error fetching GitHub profile", e);
+            throw new FetchErrorException("Failed to fetch GitHub profile", e);
         }
     }
 
-    private String getReadmeContent(String accessToken, String owner, String repo) {
+    private String getReadmeFromClient(String tokenHeader, String fullName) {
         try {
             return webClientBuilder.build()
                     .get()
-                    .uri("https://api.github.com/repos/" + owner + "/" + repo + "/readme")
-                    .header("Authorization", "token " + accessToken)
+                    .uri("https://api.github.com/repos/" + fullName + "/readme")
+                    .header("Authorization", tokenHeader)
                     .header("Accept", "application/vnd.github.v3.raw")
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
-        } catch (WebClientResponseException e) {
-            if (e.getStatusCode().is4xxClientError()) {
-                return "";
-            }
-            logger.error("Error fetching README for repo: {}/{}. Status code: {}, Response body: {}",
-                    owner, repo, e.getStatusCode(), e.getResponseBodyAsString(), e);
+        } catch (WebClientResponseException.NotFound e) {
+            logger.warn("README not found for repo: {}", fullName);
             return "";
         } catch (Exception e) {
-            logger.error("Error fetching README for repo: {}/{}", owner, repo, e);
+            logger.error("Error fetching README for repo: {}, error: {}", fullName, e.getMessage());
             return "";
+        }
+    }
+
+    private List<String> getLanguagesFromClient(String tokenHeader, String fullName) {
+        try {
+            return new ArrayList<>(githubApiClient.getLanguages(tokenHeader, fullName).keySet());
+        } catch (FeignException.FeignClientException.NotFound e) {
+            logger.warn("Languages not found for repository: {}", fullName);
+            return Collections.emptyList();
+        } catch (Exception e) {
+            logger.error("Error fetching languages for repository: {}", fullName, e);
+            throw new FetchErrorException("Failed to fetch languages", e);
         }
     }
 }
