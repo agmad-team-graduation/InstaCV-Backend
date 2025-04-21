@@ -1,28 +1,48 @@
 package com.Graduation.InstaCv.data.model.profile;
 
+import com.Graduation.InstaCv.data.model.Job;
+import com.Graduation.InstaCv.data.model.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.List;
 
-@Embeddable
-@Data
+@Entity
+@Table(name = "profiles")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Data
 public class Profile {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonManagedReference
+    @ToString.Exclude
+    @JsonIgnore
+    @EqualsAndHashCode.Exclude
+    private User user;
+
     @Embedded
     private PersonalDetails personalDetails;
-    @ElementCollection
-    @CollectionTable(name = "user_education", joinColumns = @JoinColumn(name = "user_id"))
+
+    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Education> educationList;
-    @ElementCollection
-    @CollectionTable(name = "user_experience", joinColumns = @JoinColumn(name = "user_id"))
+
+    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Experience> experienceList;
-    @ElementCollection
-    @CollectionTable(name = "user_skills", joinColumns = @JoinColumn(name = "user_id"))
-    private List<Skill> skills;
-    @ElementCollection
-    @CollectionTable(name = "user_projects", joinColumns = @JoinColumn(name = "user_id"))
+
+    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserSkill> userSkills;
+
+    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Project> projects;
+
+    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Job> addedJobs;
 }

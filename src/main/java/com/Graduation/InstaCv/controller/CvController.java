@@ -2,7 +2,7 @@ package com.Graduation.InstaCv.controller;
 
 import com.Graduation.InstaCv.data.dto.TailoredCvDto;
 import com.Graduation.InstaCv.data.dto.request.GenerateCvRequest;
-import com.Graduation.InstaCv.data.model.TailoredCv;
+import com.Graduation.InstaCv.data.model.CV.TailoredCv;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.service.Interfaces.ICvGenerationService;
 import lombok.RequiredArgsConstructor;
@@ -47,4 +47,4 @@ public class CvController {
         TailoredCv tailoredCv = cvGenerationService.getCvByUserIdAndJobId(userId, jobId);
         return ResponseEntity.ok(cvMapper.mapTo(tailoredCv));
     }
-} 
+}

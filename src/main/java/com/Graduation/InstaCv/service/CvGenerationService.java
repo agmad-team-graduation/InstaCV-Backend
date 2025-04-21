@@ -1,16 +1,21 @@
 package com.Graduation.InstaCv.service;
 
-import com.Graduation.InstaCv.data.model.Job;
-import com.Graduation.InstaCv.data.model.JobSkill;
-import com.Graduation.InstaCv.data.model.TailoredCv;
+import com.Graduation.InstaCv.data.model.*;
+import com.Graduation.InstaCv.data.model.CV.EducationCv;
+import com.Graduation.InstaCv.data.model.CV.ExperienceCv;
+import com.Graduation.InstaCv.data.model.CV.ProjectCv;
+import com.Graduation.InstaCv.data.model.CV.TailoredCv;
+import com.Graduation.InstaCv.data.model.CV.skills.UserSkillCv;
 import com.Graduation.InstaCv.data.model.profile.*;
-import com.Graduation.InstaCv.exceptions.JobNotFoundException;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
+import com.Graduation.InstaCv.mappers.Impl.CV.UserSkillCvMapper;
+import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.repository.TailoredCvRepository;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.ICvGenerationService;
 import lombok.RequiredArgsConstructor;
+import org.mapstruct.control.MappingControl;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,7 +30,14 @@ public class CvGenerationService implements ICvGenerationService {
     private final TailoredCvRepository tailoredCvRepository;
     private final JobService jobService;
 
+    private final Mapper<UserSkillCv, UserSkill> userSkillCvMapper;
+    private final Mapper<ExperienceCv, Experience> experienceCvMapper;
+    private final Mapper<EducationCv, Education> educationCvMapper;
+    private final Mapper<ProjectCv, Project> projectCvMapper;
+
+
     @Override
+//    @Transactional
     public TailoredCv generateCv(Long userId, Long jobId) {
         // Check if CV already exists for this user and job
         Optional<TailoredCv> existingCv = tailoredCvRepository.findByUserIdAndJobId(userId, jobId);
@@ -36,7 +48,7 @@ public class CvGenerationService implements ICvGenerationService {
         // Get user and profile
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        
+
         Profile profile = user.getProfile();
         if (profile == null) {
             throw new ResourceNotFoundException("User has no profile");
@@ -44,11 +56,23 @@ public class CvGenerationService implements ICvGenerationService {
 
         // Get job
         Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new JobNotFoundException("Job not found with id: " + jobId));
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
 
         // Make sure job is analyzed
         if (!job.isAnalyzed()) {
             job = jobService.analyzeJob(jobId, false).join();
+            job = jobRepository.save(job);
+        }
+
+        // Make sure job is matching-analyzed
+        if (!job.isSkillMatchingAnalyzed()) {
+            job = jobService.analyzeJobMatching(jobId, userId);
+            job = jobRepository.save(job);
+        }
+
+        if (!job.isProjectMatchingAnalyzed()) {
+            job = jobService.analyzeProjectsMatching(jobId, userId);
+            job = jobRepository.save(job);
         }
 
         // Start building tailored CV
@@ -59,80 +83,44 @@ public class CvGenerationService implements ICvGenerationService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        // Get skills required by the job
-        Set<String> requiredHardSkills = job.getJobAnalysis().getHardSkills().stream()
-                .map(JobSkill::getName)
-                .map(String::toLowerCase)
-                .collect(Collectors.toSet());
-        
-        Set<String> requiredSoftSkills = job.getJobAnalysis().getSoftSkills().stream()
-                .map(JobSkill::getName)
-                .map(String::toLowerCase)
-                .collect(Collectors.toSet());
+        List<MatchedSkill> matchedSkills = job.getSkillMatchingAnalysis().getMatchedSkills();
+        matchedSkills.sort(Comparator.comparing(MatchedSkill::getSimilarity).reversed());
 
-        // Prioritize skills that match job requirements and by skill level
-        List<Skill> tailoredSkills = profile.getSkills().stream()
-                .sorted((s1, s2) -> {
-                    // First, check job requirement match
-                    boolean s1Match = requiredHardSkills.contains(s1.getSkill().toLowerCase()) 
-                            || requiredSoftSkills.contains(s1.getSkill().toLowerCase());
-                    boolean s2Match = requiredHardSkills.contains(s2.getSkill().toLowerCase())
-                            || requiredSoftSkills.contains(s2.getSkill().toLowerCase());
-                    
-                    // If match status is different, prioritize matches
-                    if (s1Match && !s2Match) return -1;
-                    if (!s1Match && s2Match) return 1;
-                    
-                    // If both match or both don't match, sort by skill level
-                    if (s1.getLevel() != null && s2.getLevel() != null) {
-                        // Compare ordinals in reverse (higher skill level should be first)
-                        return Integer.compare(s2.getLevel().ordinal(), s1.getLevel().ordinal());
-                    } else if (s1.getLevel() != null) {
-                        return -1; // s1 has level, s2 doesn't, so s1 comes first
-                    } else if (s2.getLevel() != null) {
-                        return 1;  // s2 has level, s1 doesn't, so s2 comes first
-                    }
-                    
-                    // If neither has a level, maintain original order
-                    return 0;
-                })
-                .collect(Collectors.toList());
-        
-        tailoredCv.setSkills(tailoredSkills);
+        List<UserSkill> tailoredSkills = matchedSkills.stream()
+                .map(MatchedSkill::getUserSkill)
+                .toList();
 
-        // Sort experiences by relevance to job
+        // convert to UserSkillCv
+        tailoredCv.setSkills(tailoredSkills.stream().map(userSkillCvMapper::mapFrom).toList());
+
+        // Sort experiences by date
         List<Experience> tailoredExperience = profile.getExperienceList().stream()
                 .sorted(Comparator.comparing(Experience::getStartDate).reversed())
-                .collect(Collectors.toList());
-        
-        tailoredCv.setExperience(tailoredExperience);
+                .toList();
+
+        // Convert to ExperienceCv
+        tailoredCv.setExperience(tailoredExperience.stream().map(experienceCvMapper::mapFrom).toList());
 
         // Sort education by date
         List<Education> tailoredEducation = profile.getEducationList().stream()
                 .sorted(Comparator.comparing(Education::getStartDate).reversed())
-                .collect(Collectors.toList());
-        
-        tailoredCv.setEducation(tailoredEducation);
+                .toList();
+
+        // Convert to EducationCv
+        tailoredCv.setEducation(tailoredEducation.stream().map(educationCvMapper::mapFrom).toList());
 
         // Include relevant projects
-        List<Project> tailoredProjects = profile.getProjects().stream()
-                .sorted((p1, p2) -> {
-                    // Count skill matches in project description
-                    long p1Matches = countMatches(p1.getDescription(), requiredHardSkills);
-                    long p2Matches = countMatches(p2.getDescription(), requiredHardSkills);
-                    return Long.compare(p2Matches, p1Matches);
-                })
-                .collect(Collectors.toList());
-        
-        tailoredCv.setProjects(tailoredProjects);
+        List<Project> tailoredProjects = job.getProjectMatchingAnalysis().getProjectsMatchedWithSkills()
+                .stream().sorted(Comparator.comparing(MatchedProject::getMatchedSkillsCount).reversed())
+                .map(MatchedProject::getProject).toList();
+
+        // Convert to ProjectCv
+        tailoredCv.setProjects(tailoredProjects.stream().map(projectCvMapper::mapFrom).toList());
 
         // Generate summary
-        String summary = generateSummary(profile, job);
+        String summary = generateProfileSummary(profile, job);
         tailoredCv.setSummary(summary);
 
-        // Calculate match score
-        int matchScore = calculateMatchScore(profile, job);
-        tailoredCv.setMatchScore(matchScore);
 
         // Save and return
         return tailoredCvRepository.save(tailoredCv);
@@ -163,42 +151,16 @@ public class CvGenerationService implements ICvGenerationService {
                 .count();
     }
 
-    private String generateSummary(Profile profile, Job job) {
+    private String generateProfileSummary(Profile profile, Job job) {
         // Simple summary generation logic
         String jobTitle = job.getTitle();
         String company = job.getCompany();
-        
-        return "Professional with experience in " + 
-                profile.getSkills().stream()
+
+        return "Professional with experience in " +
+                profile.getUserSkills().stream()
                         .limit(5)
-                        .map(Skill::getSkill)
+                        .map(UserSkill::getSkill)
                         .collect(Collectors.joining(", ")) +
                 " seeking a position as " + jobTitle + " at " + company + ".";
     }
-
-    private int calculateMatchScore(Profile profile, Job job) {
-        // Count matching skills
-        Set<String> userSkills = profile.getSkills().stream()
-                .map(skill -> skill.getSkill().toLowerCase())
-                .collect(Collectors.toSet());
-        
-        Set<String> jobSkills = new HashSet<>();
-        if (job.getJobAnalysis().getHardSkills() != null) {
-            jobSkills.addAll(job.getJobAnalysis().getHardSkills().stream()
-                    .map(skill -> skill.getName().toLowerCase())
-                    .collect(Collectors.toSet()));
-        }
-        if (job.getJobAnalysis().getSoftSkills() != null) {
-            jobSkills.addAll(job.getJobAnalysis().getSoftSkills().stream()
-                    .map(skill -> skill.getName().toLowerCase())
-                    .collect(Collectors.toSet()));
-        }
-        
-        long matchingSkills = userSkills.stream()
-                .filter(jobSkills::contains)
-                .count();
-        
-        // Score is percentage of job skills matched
-        return jobSkills.isEmpty() ? 0 : (int) (matchingSkills * 100 / jobSkills.size());
-    }
-} 
+}

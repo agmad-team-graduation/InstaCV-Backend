@@ -3,13 +3,13 @@ package com.Graduation.InstaCv.service;
 import com.Graduation.InstaCv.data.dto.response.ExtractedJobSkillResponse;
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
-import com.Graduation.InstaCv.data.model.JobSkill;
-import com.Graduation.InstaCv.exceptions.JobNotFoundException;
-//import com.Graduation.InstaCv.repository.JobAnalysisRepository;
-import com.Graduation.InstaCv.data.model.Job;
-import com.Graduation.InstaCv.data.model.JobAnalysis;
+import com.Graduation.InstaCv.data.enums.SkillType;
+import com.Graduation.InstaCv.data.model.*;
+import com.Graduation.InstaCv.data.model.profile.Profile;
+import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.repository.JobRepository;
+import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.IJobService;
 import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
@@ -22,18 +22,20 @@ import java.util.concurrent.CompletableFuture;
 @AllArgsConstructor
 public class JobService implements IJobService {
     private final JobRepository jobRepository;
+    private final UserRepository userRepository;
     private final JobSkillService jobSkillService;
     private final Mapper<JobSkill, ExtractedJobSkillResponse> jobSkillMapper;
 
     @Override
-    public Job addJob(Job job) {
+    public Job addJob(Job job, Profile profile) {
+        job.setProfile(profile);
         return jobRepository.save(job);
     }
 
     @Override
     public Job getJob(Long jobId) {
         return jobRepository.findById(jobId)
-                .orElseThrow(() -> new JobNotFoundException("Job with ID " + jobId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Job with ID " + jobId + " not found"));
     }
 
     @Override
@@ -41,7 +43,32 @@ public class JobService implements IJobService {
     public CompletableFuture<Job> analyzeJob(Long jobId, boolean forceAnalyze) {
         return jobRepository.findById(jobId)
                 .map(job -> analyzeIfNeeded(job, forceAnalyze))
-                .orElseThrow(() -> new JobNotFoundException("Job with ID " + jobId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Job with ID " + jobId + " not found"));
+    }
+
+    @Override
+    public Job analyzeJobMatching(Long jobId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
+        job = analyzeIfNeeded(job, false).join();
+        job.setSkillMatchingAnalysis(jobSkillService.analyzeSkillsMatching(job, user));
+        job.setSkillMatchingAnalyzed(true);
+        return jobRepository.save(job);
+    }
+
+    @Override
+    public Job analyzeProjectsMatching(Long jobId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
+        job = analyzeIfNeeded(job, false).join();
+        job.setProjectMatchingAnalysis(jobSkillService.analyzeProjectsMatching(job, user));
+        job.getProjectMatchingAnalysis().setJob(job);
+        job.setProjectMatchingAnalyzed(true);
+        return jobRepository.save(job);
     }
 
     @Override
@@ -66,12 +93,24 @@ public class JobService implements IJobService {
     }
 
     private Job updateJobWithAnalysis(Job job, JobKnowledgeResponse knowledge, JobSkillsResponse skills) {
-        job.setJobAnalysis(
-                JobAnalysis.builder()
-                        .hardSkills(knowledge.getKnowledgePredictions().stream().map(jobSkillMapper::mapFrom).toList())
-                        .softSkills(skills.getSkillsPredictions().stream().map(jobSkillMapper::mapFrom).toList())
-                        .build());
+        List<JobSkill> hardSkills = knowledge.getKnowledgePredictions().stream()
+                .map(jobSkillMapper::mapFrom)
+                .toList();
+        hardSkills.forEach(jobSkill -> jobSkill.setSkillType(SkillType.HARD));
+
+        List<JobSkill> softSkills = skills.getSkillsPredictions().stream()
+                .map(jobSkillMapper::mapFrom)
+                .toList();
+        softSkills.forEach(jobSkill -> jobSkill.setSkillType(SkillType.SOFT));
+
+        // Clear and add new skills, instead of directly setting to avoid orphan removal error
+        job.getJobSkills().clear();
+        job.getJobSkills().addAll(hardSkills);
+        job.getJobSkills().addAll(softSkills);
+
         job.setAnalyzed(true);
+
+        job.getJobSkills().forEach(jobSkill -> jobSkill.setJob(job));
         return job;
     }
 }
