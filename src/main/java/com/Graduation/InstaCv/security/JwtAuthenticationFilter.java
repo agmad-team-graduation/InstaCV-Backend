@@ -11,10 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -22,24 +19,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final IAuthService authservice;
 
-    // List of paths that should bypass JWT authentication
-    private final List<String> PUBLIC_PATHS = Arrays.asList(
-            "/api/v1/auth",       // Your existing auth endpoints
-            "/api/github/authorize",
-            "/api/github/callback",
-            "/api/github/test",
-            "/api/v1/jobs",
-            "/api/v1/profiles",
-            "/api/v1/cv"
-    );
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-
-        // Skip this filter for public paths
-        return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
-    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,

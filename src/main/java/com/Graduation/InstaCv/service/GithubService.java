@@ -1,6 +1,10 @@
 package com.Graduation.InstaCv.service;
 
 
+import com.Graduation.InstaCv.data.dto.GithubRepoDto;
+import com.Graduation.InstaCv.data.dto.GithubUserDto;
+import com.Graduation.InstaCv.data.dto.request.AccessTokenRequest;
+import com.Graduation.InstaCv.data.dto.response.AccessTokenResponse;
 import com.Graduation.InstaCv.data.model.Github.GithubProfile;
 import com.Graduation.InstaCv.data.model.Github.GithubRepository;
 import org.slf4j.Logger;
@@ -12,10 +16,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class GithubService {
-
     private final WebClient.Builder webClientBuilder;
 
     @Value("${github.client.id}")
@@ -25,7 +29,6 @@ public class GithubService {
     private String clientSecret;
 
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
-
 
     public GithubService(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
@@ -37,50 +40,41 @@ public class GithubService {
     }
 
     public String getAccessToken(String code) {
-        Map<String, String> body = new HashMap<>();
-        body.put("client_id", clientId);
-        body.put("client_secret", clientSecret);
-        body.put("code", code);
+        AccessTokenRequest requestDto = new AccessTokenRequest(clientId, clientSecret, code);
 
         return webClientBuilder.build()
                 .post()
                 .uri("https://github.com/login/oauth/access_token")
                 .header("Accept", "application/json")
-                .bodyValue(body)
+                .bodyValue(requestDto)
                 .retrieve()
-                .bodyToMono(Map.class)
-                .map(response -> (String) response.get("access_token"))
+                .bodyToMono(AccessTokenResponse.class)
+                .map(AccessTokenResponse::getAccess_token)
                 .block();
     }
-    public GithubProfile getUserProfile(String accessToken) {
-        GithubProfile profile = new GithubProfile();
 
+    public GithubProfile getUserProfile(String accessToken) {
         try {
             // Fetch user details
-            Map<String, Object> userDetails = webClientBuilder.build()
+            GithubUserDto userDetails = webClientBuilder.build()
                     .get()
                     .uri("https://api.github.com/user")
                     .header("Authorization", "token " + accessToken)
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .bodyToMono(GithubUserDto.class)
                     .block();
 
             if (userDetails == null) {
                 throw new RuntimeException("Failed to retrieve user details from GitHub");
             }
 
-            profile.setUsername((String) userDetails.get("login"));
-            profile.setName((String) userDetails.get("name"));
-            profile.setBio((String) userDetails.get("bio"));
-            profile.setAvatarUrl((String) userDetails.get("avatar_url"));
-
             // Fetch repositories
-            List<Map<String, Object>> repos = webClientBuilder.build()
+            List<GithubRepoDto> repos = webClientBuilder.build()
                     .get()
                     .uri("https://api.github.com/user/repos")
                     .header("Authorization", "token " + accessToken)
                     .retrieve()
-                    .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .bodyToFlux(GithubRepoDto.class)
                     .collectList()
                     .block();
 
@@ -88,33 +82,46 @@ public class GithubService {
                 throw new RuntimeException("Failed to retrieve repositories from GitHub");
             }
 
-            List<GithubRepository> repositories = new ArrayList<>();
+            // Convert DTOs to domain objects
+            GithubProfile profile = GithubProfile.builder().
+                    username(userDetails.getLogin())
+                    .name(userDetails.getName())
+                    .bio(userDetails.getBio())
+                    .avatarUrl(userDetails.getAvatar_url())
+                    .build();
 
-            for (Map<String, Object> repo : repos) {
-                GithubRepository repository = new GithubRepository();
-                repository.setName((String) repo.get("name"));
-                repository.setDescription((String) repo.get("description"));
+            List<GithubRepository> repositories = repos.stream()
+                    .map(repo -> {
+                        // Fetch languages and extract keys directly
+                        List<String> languageList = new ArrayList<>(
+                                Objects.requireNonNull(
+                                        webClientBuilder.build()
+                                                .get()
+                                                .uri(repo.getLanguages_url())
+                                                .header("Authorization", "token " + accessToken)
+                                                .retrieve()
+                                                .bodyToMono(new ParameterizedTypeReference<Map<String, Long>>() {
+                                                })
+                                                .block()
+                                ).keySet()
+                        );
 
-                // Fetch languages
-                String languagesUrl = (String) repo.get("languages_url");
-                Map<String, Long> languages = webClientBuilder.build()
-                        .get()
-                        .uri(languagesUrl)
-                        .header("Authorization", "token " + accessToken)
-                        .retrieve()
-                        .bodyToMono(new ParameterizedTypeReference<Map<String, Long>>() {})
-                        .block();
+                        // Fetch README content
+                        String readmeContent = getReadmeContent(accessToken, userDetails.getLogin(), repo.getName());
 
-                repository.setLanguages(languages);
-
-                // Fetch README content if it exists
-                String readmeContent = getReadmeContent(accessToken, (String) userDetails.get("login"), (String) repo.get("name"));
-                repository.setReadmeContent(readmeContent);
-
-                repositories.add(repository);
-            }
+                        // Create repository object
+                        return GithubRepository.builder()
+                                .name(repo.getName())
+                                .description(repo.getDescription())
+                                .languages(languageList)
+                                .readmeContent(readmeContent)
+                                .build();
+                    })
+                    .collect(Collectors.toList());
 
             profile.setRepositories(repositories);
+            return profile;
+
         } catch (WebClientResponseException e) {
             logger.error("Error fetching data from GitHub API: Status code: {}, Response body: {}",
                     e.getStatusCode(), e.getResponseBodyAsString(), e);
@@ -123,26 +130,10 @@ public class GithubService {
             logger.error("Unexpected error occurred while fetching GitHub profile", e);
             throw new RuntimeException("Unexpected error occurred: " + e.getMessage(), e);
         }
-
-        return profile;
     }
 
     private String getReadmeContent(String accessToken, String owner, String repo) {
         try {
-            // First try to get metadata to check if README exists
-            Map<String, Object> readmeMetadata = webClientBuilder.build()
-                    .get()
-                    .uri("https://api.github.com/repos/" + owner + "/" + repo + "/readme")
-                    .header("Authorization", "token " + accessToken)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
-                    .block();
-
-            if (readmeMetadata == null) {
-                return "";
-            }
-
-            // Now fetch the raw content
             return webClientBuilder.build()
                     .get()
                     .uri("https://api.github.com/repos/" + owner + "/" + repo + "/readme")
@@ -155,14 +146,14 @@ public class GithubService {
             if (e.getStatusCode().is4xxClientError()) {
                 logger.warn("README not found for repo: {}/{}. Status code: {}",
                         owner, repo, e.getStatusCode());
-                return ""; // README not found or cannot be accessed
+                return "";
             }
             logger.error("Error fetching README for repo: {}/{}. Status code: {}, Response body: {}",
                     owner, repo, e.getStatusCode(), e.getResponseBodyAsString(), e);
-            return ""; // Other error
+            return "";
         } catch (Exception e) {
             logger.error("Error fetching README for repo: {}/{}", owner, repo, e);
-            return ""; // General error
+            return "";
         }
     }
 }
