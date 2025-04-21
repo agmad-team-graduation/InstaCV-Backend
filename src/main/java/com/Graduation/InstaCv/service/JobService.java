@@ -5,6 +5,8 @@ import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
 import com.Graduation.InstaCv.data.enums.SkillType;
 import com.Graduation.InstaCv.data.model.*;
+import com.Graduation.InstaCv.data.model.job.Job;
+import com.Graduation.InstaCv.data.model.job.JobSkill;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.mappers.Mapper;

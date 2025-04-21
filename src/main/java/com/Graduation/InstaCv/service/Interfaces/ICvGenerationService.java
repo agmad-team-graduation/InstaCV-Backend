@@ -1,6 +1,6 @@
 package com.Graduation.InstaCv.service.Interfaces;
 
-import com.Graduation.InstaCv.data.model.CV.TailoredCv;
+import com.Graduation.InstaCv.data.model.cv.TailoredCv;
 
 import java.util.List;
 

@@ -1,7 +1,7 @@
 package com.Graduation.InstaCv.mappers.Impl;
 
 import com.Graduation.InstaCv.data.dto.TailoredCvDto;
-import com.Graduation.InstaCv.data.model.CV.TailoredCv;
+import com.Graduation.InstaCv.data.model.cv.TailoredCv;
 import com.Graduation.InstaCv.mappers.Mapper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;

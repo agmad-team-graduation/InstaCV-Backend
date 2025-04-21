@@ -2,9 +2,9 @@ package com.Graduation.InstaCv.service.Interfaces;
 
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
-import com.Graduation.InstaCv.data.model.Job;
-import com.Graduation.InstaCv.data.model.ProjectsMatchingAnalysis;
-import com.Graduation.InstaCv.data.model.SkillMatchingAnalysis;
+import com.Graduation.InstaCv.data.model.job.Job;
+import com.Graduation.InstaCv.data.model.jobMatching.projectMatching.ProjectsMatchingAnalysis;
+import com.Graduation.InstaCv.data.model.jobMatching.skillMatching.SkillMatchingAnalysis;
 import com.Graduation.InstaCv.data.model.User;
 
 import java.util.concurrent.CompletableFuture;

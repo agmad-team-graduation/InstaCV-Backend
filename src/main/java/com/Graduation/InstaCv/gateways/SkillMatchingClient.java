@@ -2,8 +2,8 @@ package com.Graduation.InstaCv.gateways;
 
 import com.Graduation.InstaCv.data.dto.request.MatchingSkillsRequest;
 import com.Graduation.InstaCv.data.dto.request.ProjectsMatchingRequest;
-import com.Graduation.InstaCv.data.model.ProjectsMatchingAnalysis;
-import com.Graduation.InstaCv.data.model.SkillMatchingAnalysis;
+import com.Graduation.InstaCv.data.model.jobMatching.projectMatching.ProjectsMatchingAnalysis;
+import com.Graduation.InstaCv.data.model.jobMatching.skillMatching.SkillMatchingAnalysis;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

@@ -1,6 +1,6 @@
 package com.Graduation.InstaCv.data.dto;
 
-import com.Graduation.InstaCv.data.model.Job;
+import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

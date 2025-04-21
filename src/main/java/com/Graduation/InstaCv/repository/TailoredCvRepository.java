@@ -1,6 +1,6 @@
 package com.Graduation.InstaCv.repository;
 
-import com.Graduation.InstaCv.data.model.CV.TailoredCv;
+import com.Graduation.InstaCv.data.model.cv.TailoredCv;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -1,12 +1,8 @@
-package com.Graduation.InstaCv.data.model.CV;
+package com.Graduation.InstaCv.data.model.cv;
 
-import com.Graduation.InstaCv.data.model.CV.skills.UserSkillCv;
-import com.Graduation.InstaCv.data.model.Job;
-import com.Graduation.InstaCv.data.model.profile.Education;
-import com.Graduation.InstaCv.data.model.profile.Experience;
+import com.Graduation.InstaCv.data.model.cv.skills.UserSkillCv;
+import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.PersonalDetails;
-import com.Graduation.InstaCv.data.model.profile.UserSkill;
-import com.Graduation.InstaCv.data.model.profile.Project;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

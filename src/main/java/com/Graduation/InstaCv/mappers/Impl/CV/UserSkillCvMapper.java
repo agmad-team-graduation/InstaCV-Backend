@@ -1,8 +1,6 @@
 package com.Graduation.InstaCv.mappers.Impl.CV;
 
-import com.Graduation.InstaCv.data.model.CV.EducationCv;
-import com.Graduation.InstaCv.data.model.CV.skills.UserSkillCv;
-import com.Graduation.InstaCv.data.model.profile.Education;
+import com.Graduation.InstaCv.data.model.cv.skills.UserSkillCv;
 import com.Graduation.InstaCv.data.model.profile.UserSkill;
 import com.Graduation.InstaCv.mappers.Mapper;
 import org.springframework.stereotype.Component;

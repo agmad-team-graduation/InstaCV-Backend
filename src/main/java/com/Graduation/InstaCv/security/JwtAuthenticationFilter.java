@@ -11,7 +11,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
 
 @RequiredArgsConstructor
@@ -19,6 +18,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final IAuthService authservice;
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,

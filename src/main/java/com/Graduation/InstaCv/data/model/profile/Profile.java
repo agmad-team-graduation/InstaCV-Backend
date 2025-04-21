@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.data.model.profile;
 
-import com.Graduation.InstaCv.data.model.Job;
+import com.Graduation.InstaCv.data.model.github.GithubProfile;
+import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -30,6 +31,9 @@ public class Profile {
 
     @Embedded
     private PersonalDetails personalDetails;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private GithubProfile githubProfile;
 
     @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Education> educationList;
