@@ -26,7 +26,8 @@ public class GithubController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<GithubProfile> profile(@RequestParam String accessToken) {
-        return ResponseEntity.ok(githubService.getUserProfile(accessToken));
+    public ResponseEntity<GithubProfile> profile(@RequestParam String accessToken,
+                                                 @RequestParam(defaultValue = "false") boolean forceFetch) {
+        return ResponseEntity.ok(githubService.getUserProfile(accessToken, forceFetch));
     }
 }

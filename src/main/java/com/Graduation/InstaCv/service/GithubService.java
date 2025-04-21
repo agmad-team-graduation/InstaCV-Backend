@@ -6,11 +6,14 @@ import com.Graduation.InstaCv.data.dto.response.GithubUserResponse;
 import com.Graduation.InstaCv.data.dto.request.AccessTokenRequest;
 import com.Graduation.InstaCv.data.dto.response.GithubAccessTokenResponse;
 import com.Graduation.InstaCv.data.dto.response.GithubAuthLink;
+import com.Graduation.InstaCv.data.model.BaseSkill;
 import com.Graduation.InstaCv.data.model.github.GithubProfile;
 import com.Graduation.InstaCv.data.model.github.GithubRepository;
+import com.Graduation.InstaCv.data.model.github.RepoSkill;
 import com.Graduation.InstaCv.exceptions.FetchErrorException;
 import com.Graduation.InstaCv.gateways.github.GithubApiClient;
 import com.Graduation.InstaCv.gateways.github.GithubAuthClient;
+import com.Graduation.InstaCv.repository.GithubProfileRepository;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,10 +42,13 @@ public class GithubService {
 
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
 
-    public GithubService(GithubAuthClient githubAuthClient, GithubApiClient githubApiClient, WebClient.Builder webClientBuilder) {
+    private final GithubProfileRepository githubProfileRepository;
+
+    public GithubService(GithubAuthClient githubAuthClient, GithubApiClient githubApiClient, WebClient.Builder webClientBuilder, GithubProfileRepository githubProfileRepository) {
         this.githubAuthClient = githubAuthClient;
         this.githubApiClient = githubApiClient;
         this.webClientBuilder = webClientBuilder;
+        this.githubProfileRepository = githubProfileRepository;
     }
 
     public GithubAuthLink getAuthorizationUrl() {
@@ -61,14 +67,33 @@ public class GithubService {
         return githubAuthClient.getAccessToken(requestDto);
     }
 
-    public GithubProfile getUserProfile(String accessToken) {
+    public GithubProfile getUserProfile(String accessToken, boolean forceFetch) {
         try {
             String tokenHeader = "token " + accessToken;
             GithubUserResponse userDetails = githubApiClient.getUser(tokenHeader);
+
+            if (!forceFetch){
+                Optional<GithubProfile> tryGetProfile = githubProfileRepository.findByUsername(userDetails.getLogin());
+                if (tryGetProfile.isPresent()) {
+                    return tryGetProfile.get();
+                }
+            }
+
             List<GithubRepoResponse> repos = githubApiClient.getRepos(tokenHeader);
+
+            GithubProfile githubProfile = GithubProfile.builder()
+                    .username(userDetails.getLogin())
+                    .name(userDetails.getName())
+                    .bio(userDetails.getBio())
+                    .avatarUrl(userDetails.getAvatar_url())
+                    .build();
+
             List<GithubRepository> reposWithLanguagesAndReadme = repos.stream()
                     .map(repo -> {
-                        List<String> languages = getLanguagesFromClient(tokenHeader, repo.getFullName());
+                        List<RepoSkill> languages = getLanguagesFromClient(tokenHeader, repo.getFullName())
+                                .stream()
+                                .map(lang -> BaseSkill.builder().skill(lang).build().asRepoSkill())
+                                .toList();
                         String readmeContent = getReadmeFromClient(tokenHeader, repo.getFullName());
                         return GithubRepository.builder()
                                 .name(repo.getName())
@@ -78,13 +103,13 @@ public class GithubService {
                                 .build();
                     }).collect(Collectors.toList());
 
-            return GithubProfile.builder()
-                    .username(userDetails.getLogin())
-                    .name(userDetails.getName())
-                    .bio(userDetails.getBio())
-                    .avatarUrl(userDetails.getAvatar_url())
-                    .repositories(reposWithLanguagesAndReadme)
-                    .build();
+            reposWithLanguagesAndReadme.forEach(repo -> {
+                repo.setGithubProfile(githubProfile);
+                repo.getLanguages().forEach(lang -> lang.setGithubRepository(repo));
+            });
+            githubProfile.setRepositories(reposWithLanguagesAndReadme);
+
+            return githubProfileRepository.save(githubProfile);
         } catch (Exception e) {
             logger.error("Error fetching GitHub profile", e);
             throw new FetchErrorException("Failed to fetch GitHub profile", e);
