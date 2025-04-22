@@ -1,7 +1,7 @@
 package com.Graduation.InstaCv.mappers.Impl;
 
 import com.Graduation.InstaCv.data.dto.response.ExtractedJobSkillResponse;
-import com.Graduation.InstaCv.data.model.JobSkill;
+import com.Graduation.InstaCv.data.model.job.JobSkill;
 import com.Graduation.InstaCv.mappers.Mapper;
 import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;

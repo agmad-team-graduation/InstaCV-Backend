@@ -1,7 +1,7 @@
 package com.Graduation.InstaCv.mappers.Impl;
 
 import com.Graduation.InstaCv.data.dto.JobDto;
-import com.Graduation.InstaCv.data.model.Job;
+import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.repository.ProfileRepository;
 import lombok.AllArgsConstructor;

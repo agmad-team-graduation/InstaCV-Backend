@@ -1,21 +1,21 @@
 package com.Graduation.InstaCv.service;
 
-import com.Graduation.InstaCv.data.model.*;
-import com.Graduation.InstaCv.data.model.CV.EducationCv;
-import com.Graduation.InstaCv.data.model.CV.ExperienceCv;
-import com.Graduation.InstaCv.data.model.CV.ProjectCv;
-import com.Graduation.InstaCv.data.model.CV.TailoredCv;
-import com.Graduation.InstaCv.data.model.CV.skills.UserSkillCv;
+import com.Graduation.InstaCv.data.model.cv.EducationCv;
+import com.Graduation.InstaCv.data.model.cv.ExperienceCv;
+import com.Graduation.InstaCv.data.model.cv.ProjectCv;
+import com.Graduation.InstaCv.data.model.cv.TailoredCv;
+import com.Graduation.InstaCv.data.model.cv.skills.UserSkillCv;
+import com.Graduation.InstaCv.data.model.jobMatching.projectMatching.MatchedProject;
+import com.Graduation.InstaCv.data.model.jobMatching.skillMatching.MatchedSkill;
+import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.*;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
-import com.Graduation.InstaCv.mappers.Impl.CV.UserSkillCvMapper;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.repository.TailoredCvRepository;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.ICvGenerationService;
 import lombok.RequiredArgsConstructor;
-import org.mapstruct.control.MappingControl;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

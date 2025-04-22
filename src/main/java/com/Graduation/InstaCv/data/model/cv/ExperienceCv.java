@@ -1,6 +1,5 @@
-package com.Graduation.InstaCv.data.model.CV;
+package com.Graduation.InstaCv.data.model.cv;
 
-import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,18 +7,18 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "cv_education")
+@Table(name = "cv_experience")
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class EducationCv {
+public class ExperienceCv {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String degree;
-    private String school;
+    private String jobTitle;
+    private String company;
     private String city;
     private String country;
 
@@ -36,8 +35,7 @@ public class EducationCv {
 
     @ManyToOne
     @JoinColumn(name = "tailored_cv_id")
-    @JsonIgnore
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
+    @JsonIgnore
     private TailoredCv cv;
 }

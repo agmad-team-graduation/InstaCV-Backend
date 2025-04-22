@@ -1,5 +1,8 @@
 package com.Graduation.InstaCv.data.model;
 
+import com.Graduation.InstaCv.data.model.github.RepoSkill;
+import com.Graduation.InstaCv.data.model.profile.ProjectSkill;
+import com.Graduation.InstaCv.data.model.job.JobSkill;
 import com.Graduation.InstaCv.data.model.profile.UserSkill;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -36,6 +39,13 @@ public class BaseSkill {
 
     public ProjectSkill asProjectSkill() {
         return ProjectSkill.builder()
+                .id(this.id)
+                .skill(this.skill)
+                .build();
+    }
+
+    public RepoSkill asRepoSkill() {
+        return RepoSkill.builder()
                 .id(this.id)
                 .skill(this.skill)
                 .build();
