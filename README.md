@@ -1,1 +1,1 @@
-# Insta-CV Backend
+# InstaCV Backend
