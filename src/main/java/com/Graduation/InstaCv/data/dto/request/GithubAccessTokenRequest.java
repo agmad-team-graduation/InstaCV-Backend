@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AccessTokenRequest {
+public class GithubAccessTokenRequest {
     @JsonProperty("client_id")
     private String clientId;
     @JsonProperty("client_secret")

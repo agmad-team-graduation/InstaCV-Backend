@@ -3,9 +3,9 @@ package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.response.GithubRepoResponse;
 import com.Graduation.InstaCv.data.dto.response.GithubUserResponse;
-import com.Graduation.InstaCv.data.dto.request.AccessTokenRequest;
+import com.Graduation.InstaCv.data.dto.request.GithubAccessTokenRequest;
 import com.Graduation.InstaCv.data.dto.response.GithubAccessTokenResponse;
-import com.Graduation.InstaCv.data.dto.response.GithubAuthLink;
+import com.Graduation.InstaCv.data.dto.response.AuthLink;
 import com.Graduation.InstaCv.data.model.BaseSkill;
 import com.Graduation.InstaCv.data.model.github.GithubProfile;
 import com.Graduation.InstaCv.data.model.github.GithubRepository;
@@ -51,15 +51,15 @@ public class GithubService {
         this.githubProfileRepository = githubProfileRepository;
     }
 
-    public GithubAuthLink getAuthorizationUrl() {
-        return GithubAuthLink.builder()
+    public AuthLink getAuthorizationUrl() {
+        return AuthLink.builder()
                 .authLink("https://github.com/login/oauth/authorize?client_id=" + clientId +
                         "&scope=user,repo&redirect_uri=" + callbackUrl)
                 .build();
     }
 
     public GithubAccessTokenResponse getAccessToken(String code) {
-        AccessTokenRequest requestDto = AccessTokenRequest.builder()
+        GithubAccessTokenRequest requestDto = GithubAccessTokenRequest.builder()
                 .clientId(clientId)
                 .clientSecret(clientSecret)
                 .code(code)

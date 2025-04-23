@@ -1,6 +1,6 @@
 package com.Graduation.InstaCv.gateways.github;
 
-import com.Graduation.InstaCv.data.dto.request.AccessTokenRequest;
+import com.Graduation.InstaCv.data.dto.request.GithubAccessTokenRequest;
 import com.Graduation.InstaCv.data.dto.response.GithubAccessTokenResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
@@ -14,5 +14,5 @@ public interface GithubAuthClient {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             headers = "Accept=application/json"
     )
-    GithubAccessTokenResponse getAccessToken(@RequestBody AccessTokenRequest request);
+    GithubAccessTokenResponse getAccessToken(@RequestBody GithubAccessTokenRequest request);
 }

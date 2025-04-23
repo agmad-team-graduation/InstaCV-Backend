@@ -40,6 +40,9 @@ public class SecurityConfig {
             "/api/github/callback",
             "/api/github/test/**",
 
+            // LinkedIn OAuth endpoints
+            "/api/linkedin/test/**",
+
             // TODO: Remove unnecessary endpoints from the whitelist
             "/api/v1/jobs/**",
             "/api/v1/profiles/**",

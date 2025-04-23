@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class GithubAuthLink {
+public class AuthLink {
     private String authLink;
 }

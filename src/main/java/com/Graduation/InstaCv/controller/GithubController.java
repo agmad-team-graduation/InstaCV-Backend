@@ -2,7 +2,7 @@ package com.Graduation.InstaCv.controller;
 
 
 import com.Graduation.InstaCv.data.dto.response.GithubAccessTokenResponse;
-import com.Graduation.InstaCv.data.dto.response.GithubAuthLink;
+import com.Graduation.InstaCv.data.dto.response.AuthLink;
 import com.Graduation.InstaCv.data.model.github.GithubProfile;
 import com.Graduation.InstaCv.service.GithubService;
 import lombok.AllArgsConstructor;
@@ -16,7 +16,7 @@ public class GithubController {
     private final GithubService githubService;
 
     @GetMapping("/authorize")
-    public ResponseEntity<GithubAuthLink> authorize() {
+    public ResponseEntity<AuthLink> authorize() {
         return ResponseEntity.ok(githubService.getAuthorizationUrl());
     }
 
