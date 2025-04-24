@@ -74,7 +74,7 @@ public class GithubService {
             String tokenHeader = "token " + accessToken;
             GithubUserResponse userDetails = githubApiClient.getUser(tokenHeader);
 
-            if (!forceFetch){
+            if (!forceFetch) {
                 Optional<GithubProfile> tryGetProfile = githubProfileRepository.findByUsername(userDetails.getLogin());
                 if (tryGetProfile.isPresent()) {
                     return tryGetProfile.get();
@@ -154,45 +154,17 @@ public class GithubService {
         int currentPage = 1;
 
         while (true) {
-            // Create the URI outside the lambda
-            String uri = UriComponentsBuilder.newInstance()
-                    .scheme("https")
-                    .host("api.github.com")
-                    .path("/user/repos")
-                    .queryParam("page", currentPage)
-                    .queryParam("per_page", perPage)
-                    .build()
-                    .toUriString();
-
             try {
-                List<GithubRepoResponse> reposPage = webClientBuilder.build()
-                        .get()
-                        .uri(uri)
-                        .header("Authorization", tokenHeader)
-                        .header("Accept", "application/vnd.github.v3+json")
-                        .retrieve()
-                        .bodyToMono(new ParameterizedTypeReference<List<GithubRepoResponse>>() {})
-                        .block();
-
-                if (reposPage == null || reposPage.isEmpty()) {
-                    break;
-                }
-
+                List<GithubRepoResponse> reposPage = githubApiClient.getRepos(tokenHeader, currentPage, perPage, "public");
+                if (reposPage == null || reposPage.isEmpty()) break;
                 allRepos.addAll(reposPage);
-                logger.info("Fetched page {} of repositories, got {} repos", currentPage, reposPage.size());
-
-                if (reposPage.size() < perPage) {
-                    break;
-                }
-
+                if (reposPage.size() < perPage) break;
                 currentPage++;
             } catch (Exception e) {
                 logger.error("Error fetching repositories page {}: {}", currentPage, e.getMessage());
                 throw new FetchErrorException("Failed to fetch GitHub repositories", e);
             }
         }
-
-        logger.info("Total repositories fetched: {}", allRepos.size());
         return allRepos;
     }
 }
