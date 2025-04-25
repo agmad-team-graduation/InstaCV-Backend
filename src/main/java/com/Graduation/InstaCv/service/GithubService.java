@@ -14,6 +14,7 @@ import com.Graduation.InstaCv.exceptions.FetchErrorException;
 import com.Graduation.InstaCv.gateways.github.GithubApiClient;
 import com.Graduation.InstaCv.gateways.github.GithubAuthClient;
 import com.Graduation.InstaCv.repository.GithubProfileRepository;
+import com.Graduation.InstaCv.service.Interfaces.IGithubService;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class GithubService {
+public class GithubService implements IGithubService {
 
     private final GithubAuthClient githubAuthClient;
     private final GithubApiClient githubApiClient;

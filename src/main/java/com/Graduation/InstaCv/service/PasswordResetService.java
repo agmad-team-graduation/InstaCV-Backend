@@ -7,6 +7,7 @@ import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.repository.PasswordResetTokenRepository;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.IPasswordResetService;
+import com.Graduation.InstaCv.utils.EmailUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,7 @@ import java.util.UUID;
 public class PasswordResetService implements IPasswordResetService {
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
-    private final EmailService emailService;
+    private final EmailUtils emailUtils;
     private final PasswordEncoder passwordEncoder;
 
     public void processForgotPassword(String email) {
@@ -35,7 +36,7 @@ public class PasswordResetService implements IPasswordResetService {
                 .build();
 
         passwordResetTokenRepository.save(token);
-        emailService.sendPasswordResetEmail(user.getEmail(), token.getToken());
+        emailUtils.sendPasswordResetEmail(user.getEmail(), token.getToken());
     }
 
     public void resetPassword(String token, String newPassword) {
