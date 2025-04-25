@@ -15,9 +15,6 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
-    private String mailFrom;
-
     public void sendPasswordResetEmail(String to, String resetToken) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -26,7 +23,6 @@ public class EmailService {
             message.setText("To reset your password, click the link below:\n\n" +
             "http://localhost:3000/reset-password?token=" + resetToken +
                     "\n\nThe link will expire in 30 minutes.");
-            message.setFrom(mailFrom);
             logger.info("Attempting to send email to: {}", to);
             mailSender.send(message);
             logger.info("Email sent successfully");
