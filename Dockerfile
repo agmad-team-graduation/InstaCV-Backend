@@ -1,5 +1,5 @@
-# Use the official OpenJDK image
-FROM openjdk:17-jdk-slim
+# Use the official OpenJDK 21 image
+FROM openjdk:21-jdk-slim
 
 # Add a label (optional)
 LABEL maintainer="osama392maher@gmail.com"
