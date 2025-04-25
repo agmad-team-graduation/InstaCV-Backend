@@ -1,87 +1,55 @@
 package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.model.User;
+import com.Graduation.InstaCv.data.model.auth.PasswordResetToken;
+import com.Graduation.InstaCv.exceptions.InvalidTokenException;
+import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
+import com.Graduation.InstaCv.repository.PasswordResetTokenRepository;
 import com.Graduation.InstaCv.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.Graduation.InstaCv.service.Interfaces.IPasswordResetService;
+import com.Graduation.InstaCv.utils.EmailUtils;
+import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class PasswordResetService {
+@AllArgsConstructor
+public class PasswordResetService implements IPasswordResetService {
+    private final UserRepository userRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailUtils emailUtils;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private UserRepository userRepository;
+    public void processForgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
 
-    @Autowired
-    private EmailService emailService;
+        PasswordResetToken token = PasswordResetToken.builder()
+                // Generate unique token
+                .token(UUID.randomUUID().toString())
+                // Set token expiry (30 minutes from now)
+                .expiryDate(LocalDateTime.now().plusMinutes(30))
+                .user(user)
+                .build();
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    public boolean processForgotPassword(String email) {
-        Optional<User> userOptional = userRepository.findByEmail(email);
-
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-
-            // Generate unique token
-            String token = UUID.randomUUID().toString();
-
-            // Set token expiry (30 minutes from now)
-            LocalDateTime expiryDate = LocalDateTime.now().plusMinutes(30);
-
-            user.setResetToken(token);
-            user.setResetTokenExpiryDate(expiryDate);
-            userRepository.save(user);
-
-            // Send email with reset link
-            emailService.sendPasswordResetEmail(user.getEmail(), token);
-
-            return true;
-        }
-
-        return false;
+        passwordResetTokenRepository.save(token);
+        emailUtils.sendPasswordResetEmail(user.getEmail(), token.getToken());
     }
 
-    public boolean validateResetToken(String token) {
-        Optional<User> userOptional = userRepository.findByResetToken(token);
-
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-
-            // Check if token is expired
-            if (user.getResetTokenExpiryDate().isAfter(LocalDateTime.now())) {
-                return true;
-            }
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetToken tokenEntity = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new InvalidTokenException("Invalid Password Reset Token"));
+        if (tokenEntity.getExpiryDate().isBefore(LocalDateTime.now())) {
+            passwordResetTokenRepository.delete(tokenEntity);
+            throw new InvalidTokenException("Password Reset Token has expired");
         }
-
-        return false;
+        User user = tokenEntity.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        passwordResetTokenRepository.delete(tokenEntity);
     }
 
-    public boolean resetPassword(String token, String newPassword) {
-        Optional<User> userOptional = userRepository.findByResetToken(token);
-
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-
-            // Validate token expiry
-            if (user.getResetTokenExpiryDate().isAfter(LocalDateTime.now())) {
-                // Update password
-                user.setPassword(passwordEncoder.encode(newPassword));
-
-                // Clear reset token fields
-                user.setResetToken(null);
-                user.setResetTokenExpiryDate(null);
-
-                userRepository.save(user);
-                return true;
-            }
-        }
-
-        return false;
-    }
 }
