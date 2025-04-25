@@ -18,9 +18,11 @@ import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -72,14 +74,14 @@ public class GithubService {
             String tokenHeader = "token " + accessToken;
             GithubUserResponse userDetails = githubApiClient.getUser(tokenHeader);
 
-            if (!forceFetch){
+            if (!forceFetch) {
                 Optional<GithubProfile> tryGetProfile = githubProfileRepository.findByUsername(userDetails.getLogin());
                 if (tryGetProfile.isPresent()) {
                     return tryGetProfile.get();
                 }
             }
 
-            List<GithubRepoResponse> repos = githubApiClient.getRepos(tokenHeader);
+            List<GithubRepoResponse> repos = getAllRepositories(tokenHeader);
 
             GithubProfile githubProfile = GithubProfile.builder()
                     .username(userDetails.getLogin())
@@ -108,7 +110,6 @@ public class GithubService {
                 repo.getLanguages().forEach(lang -> lang.setGithubRepository(repo));
             });
             githubProfile.setRepositories(reposWithLanguagesAndReadme);
-
             return githubProfileRepository.save(githubProfile);
         } catch (Exception e) {
             logger.error("Error fetching GitHub profile", e);
@@ -145,5 +146,25 @@ public class GithubService {
             logger.error("Error fetching languages for repository: {}", fullName, e);
             throw new FetchErrorException("Failed to fetch languages", e);
         }
+    }
+
+    private List<GithubRepoResponse> getAllRepositories(String tokenHeader) {
+        List<GithubRepoResponse> allRepos = new ArrayList<>();
+        final int perPage = 100; // Maximum allowed by GitHub API
+        int currentPage = 1;
+
+        while (true) {
+            try {
+                List<GithubRepoResponse> reposPage = githubApiClient.getRepos(tokenHeader, currentPage, perPage, "public");
+                if (reposPage == null || reposPage.isEmpty()) break;
+                allRepos.addAll(reposPage);
+                if (reposPage.size() < perPage) break;
+                currentPage++;
+            } catch (Exception e) {
+                logger.error("Error fetching repositories page {}: {}", currentPage, e.getMessage());
+                throw new FetchErrorException("Failed to fetch GitHub repositories", e);
+            }
+        }
+        return allRepos;
     }
 }
