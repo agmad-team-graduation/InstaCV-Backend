@@ -30,6 +30,15 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonBackReference // To prevent infinite loop
     private Profile profile;
+
+    // New fields for password reset
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry_date")
+    private LocalDateTime resetTokenExpiryDate;
+
+
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
