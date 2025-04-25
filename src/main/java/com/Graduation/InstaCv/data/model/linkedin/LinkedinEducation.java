@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.data.model.linkedin;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,5 +21,8 @@ public class LinkedinEducation {
     private LocalDate endDate;
     @ManyToOne
     @JoinColumn(name = "profile_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @JsonIgnore
     private LinkedinProfile profile;
 }

@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.data.model.linkedin;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,5 +16,8 @@ public class LinkedinSkill {
     private String name;
     @ManyToOne
     @JoinColumn(name = "profile_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @JsonIgnore
     private LinkedinProfile profile;
 }
