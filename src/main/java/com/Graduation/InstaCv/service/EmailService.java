@@ -24,7 +24,7 @@ public class EmailService {
             message.setTo(to);
             message.setSubject("Password Reset Request");
             message.setText("To reset your password, click the link below:\n\n" +
-            "http://your-frontend-url/reset-password?token=" + resetToken +
+            "http://localhost:3000/reset-password?token=" + resetToken +
                     "\n\nThe link will expire in 30 minutes.");
             message.setFrom(mailFrom);
             logger.info("Attempting to send email to: {}", to);
