@@ -8,4 +8,5 @@ import java.util.UUID;
 public interface IProfileService {
     Profile getProfileByUserId(Long userId);
     Profile fullUpdateProfile(Long userId, Profile profile);
+
 }
