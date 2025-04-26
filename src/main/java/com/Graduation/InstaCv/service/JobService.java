@@ -74,8 +74,13 @@ public class JobService implements IJobService {
     }
 
     @Override
-    public List<Job> getJobs() {
-        return jobRepository.findAll();
+    public List<Job> getJobsByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        Profile profile = user.getProfile();
+        if (profile == null)
+            throw new ResourceNotFoundException("Profile not found for user with id: " + userId);
+        return jobRepository.findJobsByProfileId(profile.getId());
     }
 
     @Override

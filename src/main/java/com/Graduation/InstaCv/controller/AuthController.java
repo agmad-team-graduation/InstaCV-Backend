@@ -7,6 +7,7 @@ import com.Graduation.InstaCv.data.dto.response.LoginResponse;
 import com.Graduation.InstaCv.data.dto.response.RegisterResponse;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
+import com.Graduation.InstaCv.service.Interfaces.IUserService;
 import com.Graduation.InstaCv.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +24,7 @@ public class AuthController {
 
     private final IAuthService authService;
 
-    private final UserService userService;
-
+    private final IUserService userService;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {

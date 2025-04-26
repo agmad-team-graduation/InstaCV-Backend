@@ -7,6 +7,7 @@ import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.service.JobService;
 import com.Graduation.InstaCv.service.ProfileService;
+import com.Graduation.InstaCv.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,14 +28,14 @@ public class JobController {
     @PostMapping("/add")
     public ResponseEntity<JobDto> addJob(@RequestBody JobDto job) {
         Job jobE = jobMapper.mapFrom(job);
-        Profile profile = profileService.getProfile(job.getProfileId()).getProfile();
+        Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
         Job SavedJob = jobService.addJob(jobE, profile);
         return new ResponseEntity<>(jobMapper.mapTo(SavedJob), HttpStatus.CREATED);
     }
 
     @GetMapping("/jobs")
     public List<JobDto> getAllJobs() {
-        List<Job> jobsEntity = jobService.getJobs();
+        List<Job> jobsEntity = jobService.getJobsByUserId(SecurityUtils.getCurrentUserDetails().getId());
         return jobsEntity.stream().map(jobMapper::mapTo).collect(Collectors.toList());
     }
 

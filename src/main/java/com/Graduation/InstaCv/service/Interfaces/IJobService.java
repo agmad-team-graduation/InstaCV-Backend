@@ -11,7 +11,7 @@ public interface IJobService {
 
     Job getJob(Long jobId);
 
-    List<Job> getJobs();
+    List<Job> getJobsByUserId(Long userId);
 
     void delete(Long jobId);
 
