@@ -3,22 +3,19 @@ package com.Graduation.InstaCv.mappers.Impl;
 import com.Graduation.InstaCv.data.dto.ProfileDto;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.profile.Profile;
-import com.Graduation.InstaCv.mappers.Mapper;
-import com.Graduation.InstaCv.repository.UserRepository;
+import com.Graduation.InstaCv.mappers.ContextAwareMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @AllArgsConstructor
-public class ProfileMapper implements Mapper<Profile, ProfileDto> {
-    private UserRepository userRepository;
-
+public class ProfileMapper implements ContextAwareMapper<Profile, ProfileDto, User> {
     @Override
     public ProfileDto mapTo(Profile profile) {
         if (profile == null)
             return null;
         return ProfileDto.builder()
-                .userId(profile.getUser().getId())
+                .profileId(profile.getId())
                 .personalDetails(profile.getPersonalDetails())
                 .educationList(profile.getEducationList())
                 .experienceList(profile.getExperienceList())
@@ -29,11 +26,9 @@ public class ProfileMapper implements Mapper<Profile, ProfileDto> {
     }
 
     @Override
-    public Profile mapFrom(ProfileDto profileDto) {
+    public Profile mapFrom(ProfileDto profileDto, User user) {
         if (profileDto == null)
             return null;
-        User user = userRepository.findById(profileDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + profileDto.getUserId()));
 
         return Profile.builder()
                 .user(user)

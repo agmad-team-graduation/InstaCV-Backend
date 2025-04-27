@@ -3,6 +3,7 @@ package com.Graduation.InstaCv.data.model.cv;
 import com.Graduation.InstaCv.data.model.cv.skills.UserSkillCv;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.PersonalDetails;
+import com.Graduation.InstaCv.data.model.profile.Profile;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,8 +24,9 @@ public class TailoredCv {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @ManyToOne
+    @JoinColumn(name = "profile_id", referencedColumnName = "id")
+    private Profile profile;
 
     @ManyToOne
     @JoinColumn(name = "job_id")

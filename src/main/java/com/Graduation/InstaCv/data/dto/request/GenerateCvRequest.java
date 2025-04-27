@@ -8,6 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GenerateCvRequest {
-    private Long userId;
     private Long jobId;
 } 

@@ -7,17 +7,20 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public interface IJobService {
-    Job addJob(Job job, Profile profile);
+    Job addJob(Long userId, Job job);
 
     Job getJob(Long jobId);
 
-    List<Job> getJobs();
+    List<Job> getJobsByUserId(Long userId);
 
-    void delete(Long jobId);
 
-    CompletableFuture<Job> analyzeJob(Long jobId, boolean forceAnalyze);
+    CompletableFuture<Job> analyzeJob(Long jobId, Long userId, boolean forceAnalyze);
 
     Job analyzeJobMatching(Long jobId, Long userId);
 
     Job analyzeProjectsMatching(Long jobId, Long userId);
+
+    Job getJobByIdAndUserId(Long jobId, Long userId);
+
+    void deleteJobByIdAndUserId(Long jobId, Long userId);
 }

@@ -30,7 +30,6 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonBackReference // To prevent infinite loop
     private Profile profile;
-
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();

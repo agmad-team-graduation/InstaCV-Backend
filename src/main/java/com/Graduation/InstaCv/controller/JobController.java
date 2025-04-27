@@ -4,9 +4,10 @@ package com.Graduation.InstaCv.controller;
 import com.Graduation.InstaCv.data.dto.JobDto;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.Profile;
-import com.Graduation.InstaCv.mappers.Mapper;
-import com.Graduation.InstaCv.service.JobService;
-import com.Graduation.InstaCv.service.ProfileService;
+import com.Graduation.InstaCv.mappers.ContextAwareMapper;
+import com.Graduation.InstaCv.service.Interfaces.IJobService;
+import com.Graduation.InstaCv.service.Interfaces.IProfileService;
+import com.Graduation.InstaCv.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,34 +21,35 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/v1/jobs")
 public class JobController {
-    private final JobService jobService;
-    private final ProfileService profileService;
-    private final Mapper<Job, JobDto> jobMapper;
+    private final IJobService jobService;
+    private final IProfileService profileService;
+    private final ContextAwareMapper<Job, JobDto, Profile> jobMapper;
 
     @PostMapping("/add")
     public ResponseEntity<JobDto> addJob(@RequestBody JobDto job) {
-        Job jobE = jobMapper.mapFrom(job);
-        Profile profile = profileService.getProfile(job.getProfileId()).getProfile();
-        Job SavedJob = jobService.addJob(jobE, profile);
+        Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
+        Job jobE = jobMapper.mapFrom(job, profile);
+        Job SavedJob = jobService.addJob(SecurityUtils.getCurrentUserDetails().getId(), jobE);
         return new ResponseEntity<>(jobMapper.mapTo(SavedJob), HttpStatus.CREATED);
     }
 
-    @GetMapping("/jobs")
+    @GetMapping("/all")
     public List<JobDto> getAllJobs() {
-        List<Job> jobsEntity = jobService.getJobs();
+        List<Job> jobsEntity = jobService.getJobsByUserId(SecurityUtils.getCurrentUserDetails().getId());
         return jobsEntity.stream().map(jobMapper::mapTo).collect(Collectors.toList());
     }
 
-    // get job by id
     @GetMapping("/{jobId}")
     public ResponseEntity<JobDto> getJob(@PathVariable Long jobId) {
-        Job jobFound = jobService.getJob(jobId);
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        Job jobFound = jobService.getJobByIdAndUserId(jobId, userId);
         return new ResponseEntity<>(jobMapper.mapTo(jobFound), HttpStatus.OK);
     }
 
     @DeleteMapping("/{jobId}")
-    public ResponseEntity<Void> DeleteJob(@PathVariable Long jobId) {
-        jobService.delete(jobId);
+    public ResponseEntity<Void> deleteJob(@PathVariable Long jobId) {
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        jobService.deleteJobByIdAndUserId(jobId, userId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
@@ -55,6 +57,7 @@ public class JobController {
     public CompletableFuture<ResponseEntity<Job>> analyzeJob(
             @PathVariable Long jobId,
             @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
-        return jobService.analyzeJob(jobId, forceAnalyze).thenApply(ResponseEntity::ok);
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        return jobService.analyzeJob(jobId, userId, forceAnalyze).thenApply(ResponseEntity::ok);
     }
 }

@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProfileDto {
-    private Long userId;
+    private Long profileId;
     private PersonalDetails personalDetails;
     private List<Education> educationList;
     private List<Experience> experienceList;

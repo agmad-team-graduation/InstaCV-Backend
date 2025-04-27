@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.service;
 
+import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.cv.EducationCv;
 import com.Graduation.InstaCv.data.model.cv.ExperienceCv;
 import com.Graduation.InstaCv.data.model.cv.ProjectCv;
@@ -12,6 +13,7 @@ import com.Graduation.InstaCv.data.model.profile.*;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.repository.JobRepository;
+import com.Graduation.InstaCv.repository.ProfileRepository;
 import com.Graduation.InstaCv.repository.TailoredCvRepository;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.ICvGenerationService;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CvGenerationService implements ICvGenerationService {
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     private final JobRepository jobRepository;
     private final TailoredCvRepository tailoredCvRepository;
     private final JobService jobService;
@@ -40,27 +43,24 @@ public class CvGenerationService implements ICvGenerationService {
 //    @Transactional
     public TailoredCv generateCv(Long userId, Long jobId) {
         // Check if CV already exists for this user and job
-        Optional<TailoredCv> existingCv = tailoredCvRepository.findByUserIdAndJobId(userId, jobId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        Profile profile = user.getProfile();
+        if (profile == null) throw new ResourceNotFoundException("User has no profile");
+
+        Optional<TailoredCv> existingCv = tailoredCvRepository.findByIdAndProfileId(profile.getId(), jobId);
         if (existingCv.isPresent()) {
             return existingCv.get();
         }
 
-        // Get user and profile
-        var user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-
-        Profile profile = user.getProfile();
-        if (profile == null) {
-            throw new ResourceNotFoundException("User has no profile");
-        }
-
         // Get job
-        Job job = jobRepository.findById(jobId)
+        Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
 
         // Make sure job is analyzed
         if (!job.isAnalyzed()) {
-            job = jobService.analyzeJob(jobId, false).join();
+            job = jobService.analyzeJob(jobId, user.getId(), false).join();
             job = jobRepository.save(job);
         }
 
@@ -77,7 +77,7 @@ public class CvGenerationService implements ICvGenerationService {
 
         // Start building tailored CV
         TailoredCv tailoredCv = TailoredCv.builder()
-                .userId(userId)
+                .profile(profile)
                 .job(job)
                 .personalDetails(profile.getPersonalDetails())
                 .createdAt(LocalDateTime.now())
@@ -122,33 +122,41 @@ public class CvGenerationService implements ICvGenerationService {
         tailoredCv.setSummary(summary);
 
 
+        // Set relationships
+        tailoredCv.getEducation().forEach(x -> x.setCv(tailoredCv));
+        tailoredCv.getExperience().forEach(x -> x.setCv(tailoredCv));
+        tailoredCv.getProjects().forEach(x -> x.setCv(tailoredCv));
+        tailoredCv.getSkills().forEach(x -> x.setCv(tailoredCv));
+
+
         // Save and return
         return tailoredCvRepository.save(tailoredCv);
     }
 
     @Override
-    public TailoredCv getCvById(Long cvId) {
-        return tailoredCvRepository.findById(cvId)
-                .orElseThrow(() -> new ResourceNotFoundException("CV not found with id: " + cvId));
+    public TailoredCv getCvByIdAndUserId(Long cvId, Long userId) {
+        Long profileId = profileRepository.findProfileIdByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user: " + userId));
+        return tailoredCvRepository.findByIdAndProfileId(cvId, profileId)
+                .orElseThrow(() -> new ResourceNotFoundException("CV not found or not accessible for user: " + userId));
     }
 
     @Override
     public List<TailoredCv> getCvsByUserId(Long userId) {
-        return tailoredCvRepository.findByUserId(userId);
+        Long profileId = profileRepository.findProfileIdByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user: " + userId));
+        return tailoredCvRepository.findByProfileId(profileId);
     }
 
     @Override
-    public TailoredCv getCvByUserIdAndJobId(Long userId, Long jobId) {
-        return tailoredCvRepository.findByUserIdAndJobId(userId, jobId)
+    public TailoredCv getCvByJobIdAndUserId(Long jobId, Long userId) {
+        Long profileId = profileRepository.findProfileIdByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user: " + userId));
+        boolean jobExists = jobRepository.existsByIdAndProfileId(jobId, profileId);
+        if (!jobExists)
+            throw new ResourceNotFoundException("Job not found for user: " + userId + " and job: " + jobId);
+        return tailoredCvRepository.findByJobId(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("CV not found for user: " + userId + " and job: " + jobId));
-    }
-
-    private long countMatches(String text, Set<String> keywords) {
-        if (text == null || keywords == null) return 0;
-        String lowerText = text.toLowerCase();
-        return keywords.stream()
-                .filter(keyword -> lowerText.contains(keyword.toLowerCase()))
-                .count();
     }
 
     private String generateProfileSummary(Profile profile, Job job) {

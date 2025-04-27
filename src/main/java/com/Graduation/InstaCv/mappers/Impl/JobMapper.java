@@ -2,16 +2,14 @@ package com.Graduation.InstaCv.mappers.Impl;
 
 import com.Graduation.InstaCv.data.dto.JobDto;
 import com.Graduation.InstaCv.data.model.job.Job;
-import com.Graduation.InstaCv.mappers.Mapper;
-import com.Graduation.InstaCv.repository.ProfileRepository;
+import com.Graduation.InstaCv.data.model.profile.Profile;
+import com.Graduation.InstaCv.mappers.ContextAwareMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @AllArgsConstructor
-public class JobMapper implements Mapper<Job, JobDto> {
-    private ProfileRepository profileRepository;
-
+public class JobMapper implements ContextAwareMapper<Job, JobDto, Profile> {
     @Override
     public JobDto mapTo(Job job) {
         return JobDto.builder()
@@ -25,10 +23,10 @@ public class JobMapper implements Mapper<Job, JobDto> {
     }
 
     @Override
-    public Job mapFrom(JobDto jobDto) {
+    public Job mapFrom(JobDto jobDto, Profile profile) {
         return Job.builder()
                 .id(jobDto.getId())
-                .profile(profileRepository.findById(jobDto.getProfileId()).orElse(null))
+                .profile(profile)
                 .title(jobDto.getTitle())
                 .company(jobDto.getCompany())
                 .description(jobDto.getDescription())

@@ -28,8 +28,9 @@ public class UserMapper implements Mapper<User, UserDto> {
                 .id(userDto.getId())
                 .name(userDto.getName())
                 .email(userDto.getEmail());
+        User user = builder.build();
         if (userDto.getProfile() != null)
-            builder.profile(profileMapper.mapFrom(userDto.getProfile()));
-        return builder.build();
+            builder.profile(profileMapper.mapFrom(userDto.getProfile(), user));
+        return user;
     }
 }
