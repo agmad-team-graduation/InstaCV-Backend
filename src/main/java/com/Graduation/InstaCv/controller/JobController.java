@@ -60,4 +60,13 @@ public class JobController {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         return jobService.analyzeJob(jobId, userId, forceAnalyze).thenApply(ResponseEntity::ok);
     }
+
+    @GetMapping("/skill-matching/{jobId}")
+    public JobDto getSkillMatching(
+            @PathVariable Long jobId,
+            @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        Job job = jobService.analyzeJobMatching(jobId, userId, forceAnalyze);
+        return jobMapper.mapTo(job);
+    }
 }

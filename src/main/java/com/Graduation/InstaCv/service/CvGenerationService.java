@@ -66,7 +66,7 @@ public class CvGenerationService implements ICvGenerationService {
 
         // Make sure job is matching-analyzed
         if (!job.isSkillMatchingAnalyzed()) {
-            job = jobService.analyzeJobMatching(jobId, userId);
+            job = jobService.analyzeJobMatching(jobId, userId, false);
             job = jobRepository.save(job);
         }
 
