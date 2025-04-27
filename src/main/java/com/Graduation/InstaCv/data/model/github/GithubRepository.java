@@ -25,8 +25,12 @@ public class GithubRepository {
     @JsonIgnore
     @EqualsAndHashCode.Exclude
     private GithubProfile githubProfile;
-    // TODO Later: This is better to be a ManyToMany relationship, having all GithubSkills in a table
-    @OneToMany(mappedBy = "githubRepository", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "github_repo_skills_mapping",
+            joinColumns = @JoinColumn(name = "github_repository_id"),
+            inverseJoinColumns = @JoinColumn(name = "repo_skill_id")
+    )
     private List<RepoSkill> languages;
     @Column(length = 100000)
     private String readmeContent;
