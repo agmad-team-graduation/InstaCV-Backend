@@ -19,6 +19,9 @@ public class JobMapper implements ContextAwareMapper<Job, JobDto, Profile> {
                 .company(job.getCompany())
                 .description(job.getDescription())
                 .isAnalyzed(job.isAnalyzed())
+                .jobSkills(job.getJobSkills())
+                .isSkillMatchingAnalyzed(job.isSkillMatchingAnalyzed())
+                .skillMatchingAnalysis(job.getSkillMatchingAnalysis())
                 .build();
     }
 
@@ -31,6 +34,9 @@ public class JobMapper implements ContextAwareMapper<Job, JobDto, Profile> {
                 .company(jobDto.getCompany())
                 .description(jobDto.getDescription())
                 .isAnalyzed(jobDto.isAnalyzed())
+                .jobSkills(jobDto.getJobSkills())
+                .isSkillMatchingAnalyzed(jobDto.isSkillMatchingAnalyzed())
+                .skillMatchingAnalysis(jobDto.getSkillMatchingAnalysis())
                 .build();
     }
 }

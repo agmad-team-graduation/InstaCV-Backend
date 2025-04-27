@@ -4,7 +4,6 @@ import com.Graduation.InstaCv.data.dto.response.ExtractedJobSkillResponse;
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
 import com.Graduation.InstaCv.data.enums.SkillType;
-import com.Graduation.InstaCv.data.model.*;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.job.JobSkill;
 import com.Graduation.InstaCv.data.model.profile.Profile;
@@ -12,16 +11,12 @@ import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.repository.ProfileRepository;
-import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.IJobService;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -41,12 +36,6 @@ public class JobService implements IJobService {
     }
 
     @Override
-    public Job getJob(Long jobId) {
-        return jobRepository.findById(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job with ID " + jobId + " not found"));
-    }
-
-    @Override
     @Async
     public CompletableFuture<Job> analyzeJob(Long jobId, Long userId, boolean forceAnalyze) {
         Profile profile = profileRepository.findByUserId(userId)
@@ -57,11 +46,12 @@ public class JobService implements IJobService {
     }
 
     @Override
-    public Job analyzeJobMatching(Long jobId, Long userId) {
+    public Job analyzeJobMatching(Long jobId, Long userId, boolean forceAnalyze) {
         Profile profile = profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id: " + userId));
         Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
+        if (!forceAnalyze && job.isSkillMatchingAnalyzed()) return job;
         job = analyzeIfNeeded(job, false).join();
         job.setSkillMatchingAnalysis(jobSkillService.analyzeSkillsMatching(job, profile.getUser()));
         job.setSkillMatchingAnalyzed(true);
