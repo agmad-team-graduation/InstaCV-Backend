@@ -7,9 +7,9 @@ import java.util.List;
 public interface ICvGenerationService {
     TailoredCv generateCv(Long userId, Long jobId);
 
-    TailoredCv getCvById(Long cvId);
+    TailoredCv getCvByIdAndUserId(Long cvId, Long userId);
 
     List<TailoredCv> getCvsByUserId(Long userId);
 
-    TailoredCv getCvByUserIdAndJobId(Long userId, Long jobId);
+    TailoredCv getCvByJobIdAndUserId(Long userId, Long jobId);
 }

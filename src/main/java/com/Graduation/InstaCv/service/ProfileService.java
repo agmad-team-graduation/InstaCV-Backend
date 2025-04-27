@@ -22,9 +22,12 @@ public class ProfileService implements IProfileService {
     }
 
     @Override
-    public Profile fullUpdateProfile(Long userId, Profile newProfile) {
+    public Profile createProfile(Long userId, Profile newProfile) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + userId));
+
+        if (user.getProfile() != null)
+            throw new IllegalStateException("User already has a profile");
 
         user.setProfile(newProfile);
         user.setProfileCreated(true);
@@ -37,7 +40,6 @@ public class ProfileService implements IProfileService {
         newProfile.getAddedJobs().forEach(job -> job.setProfile(newProfile));
 
         newProfile.getProjects().forEach(project -> project.getSkills().forEach(projectSkill -> projectSkill.setProject(project)));
-        userRepository.save(user);
         return profileRepository.save(newProfile);
     }
 }
