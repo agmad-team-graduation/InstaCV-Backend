@@ -5,8 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class GenerateCvRequest {
-    private Long jobId;
-} 
+@NoArgsConstructor
+public class ForgotPasswordRequest {
+    private String email;
+}
+

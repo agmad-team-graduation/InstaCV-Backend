@@ -9,27 +9,29 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 @Getter
 @RequiredArgsConstructor
-public class userDetails implements UserDetails{
-
-    private final User user;
+public class UserDetailsImpl implements UserDetails {
+    private final UserDetailsInfo userDetailsInfo;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        return userDetailsInfo.getRoles();
     }
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return userDetailsInfo.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return userDetailsInfo.getEmail();
+    }
+
+    public Long getId() {
+        return userDetailsInfo.getId();
     }
 
     @Override
@@ -50,9 +52,5 @@ public class userDetails implements UserDetails{
     @Override
     public boolean isEnabled() {
         return true;
-    }
-
-    public Long getId() {
-        return user.getId();
     }
 }

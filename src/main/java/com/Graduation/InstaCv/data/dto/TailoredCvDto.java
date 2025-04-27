@@ -19,8 +19,8 @@ import java.util.List;
 @AllArgsConstructor
 public class TailoredCvDto {
     private Long id;
-    private Long userId;
-    private JobDto job;
+    private Long profileId;
+    private Long jobId;
     private PersonalDetails personalDetails;
     private List<EducationCv> education;
     private List<ExperienceCv> experience;

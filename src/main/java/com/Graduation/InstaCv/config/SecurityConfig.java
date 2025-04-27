@@ -2,7 +2,7 @@ package com.Graduation.InstaCv.config;
 
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.security.JwtAuthenticationFilter;
-import com.Graduation.InstaCv.security.userDetailsService;
+import com.Graduation.InstaCv.security.UserDetailsServiceImpl;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,13 +27,17 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepository) {
-        return new userDetailsService(userRepository);
+        return new UserDetailsServiceImpl(userRepository);
     }
 
     private static final String[] WHITELIST_URLS = {
             // Existing auth endpoints
+            "/api/v1/auth/**",
             "/api/v1/auth/login",
             "/api/v1/auth/register",
+            "/api/v1/auth/reset-password/validate",
+            "/api/v1/auth/reset-password",
+            "/api/v1/auth/forget-password",
 
             // GitHub OAuth endpoints
             "/api/github/authorize",
@@ -42,7 +46,7 @@ public class SecurityConfig {
 
             // TODO: Remove unnecessary endpoints from the whitelist
             "/api/v1/jobs/**",
-            "/api/v1/profiles/**",
+//            "/api/v1/profiles/**",
             "/api/v1/cv/**"
     };
 
@@ -67,7 +71,6 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 ).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 }

@@ -2,21 +2,20 @@ package com.Graduation.InstaCv.mappers.Impl;
 
 import com.Graduation.InstaCv.data.dto.TailoredCvDto;
 import com.Graduation.InstaCv.data.model.cv.TailoredCv;
-import com.Graduation.InstaCv.mappers.Mapper;
+import com.Graduation.InstaCv.data.model.job.Job;
+import com.Graduation.InstaCv.mappers.ContextAwareMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @AllArgsConstructor
-public class TailoredCvMapper implements Mapper<TailoredCv, TailoredCvDto> {
-    private final JobMapper jobMapper;
-
+public class TailoredCvMapper implements ContextAwareMapper<TailoredCv, TailoredCvDto, Job> {
     @Override
     public TailoredCvDto mapTo(TailoredCv tailoredCv) {
         return TailoredCvDto.builder()
                 .id(tailoredCv.getId())
-                .userId(tailoredCv.getUserId())
-                .job(jobMapper.mapTo(tailoredCv.getJob()))
+                .profileId(tailoredCv.getProfile().getId())
+                .jobId(tailoredCv.getJob().getId())
                 .personalDetails(tailoredCv.getPersonalDetails())
                 .education(tailoredCv.getEducation())
                 .experience(tailoredCv.getExperience())
@@ -28,11 +27,11 @@ public class TailoredCvMapper implements Mapper<TailoredCv, TailoredCvDto> {
     }
 
     @Override
-    public TailoredCv mapFrom(TailoredCvDto tailoredCvDto) {
+    public TailoredCv mapFrom(TailoredCvDto tailoredCvDto, Job job) {
         return TailoredCv.builder()
                 .id(tailoredCvDto.getId())
-                .userId(tailoredCvDto.getUserId())
-                .job(jobMapper.mapFrom(tailoredCvDto.getJob()))
+                .profile(job.getProfile())
+                .job(job)
                 .personalDetails(tailoredCvDto.getPersonalDetails())
                 .education(tailoredCvDto.getEducation())
                 .experience(tailoredCvDto.getExperience())

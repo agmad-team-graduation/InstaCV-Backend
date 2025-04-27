@@ -14,21 +14,21 @@ import com.Graduation.InstaCv.exceptions.FetchErrorException;
 import com.Graduation.InstaCv.gateways.github.GithubApiClient;
 import com.Graduation.InstaCv.gateways.github.GithubAuthClient;
 import com.Graduation.InstaCv.repository.GithubProfileRepository;
+import com.Graduation.InstaCv.repository.GithubSkillRepository;
+import com.Graduation.InstaCv.service.Interfaces.IGithubService;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class GithubService {
+public class GithubService implements IGithubService {
 
     private final GithubAuthClient githubAuthClient;
     private final GithubApiClient githubApiClient;
@@ -45,12 +45,14 @@ public class GithubService {
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
 
     private final GithubProfileRepository githubProfileRepository;
+    private final GithubSkillRepository skillRepository;
 
-    public GithubService(GithubAuthClient githubAuthClient, GithubApiClient githubApiClient, WebClient.Builder webClientBuilder, GithubProfileRepository githubProfileRepository) {
+    public GithubService(GithubAuthClient githubAuthClient, GithubApiClient githubApiClient, WebClient.Builder webClientBuilder, GithubProfileRepository githubProfileRepository, GithubSkillRepository skillRepository) {
         this.githubAuthClient = githubAuthClient;
         this.githubApiClient = githubApiClient;
         this.webClientBuilder = webClientBuilder;
         this.githubProfileRepository = githubProfileRepository;
+        this.skillRepository = skillRepository;
     }
 
     public GithubAuthLink getAuthorizationUrl() {
@@ -94,7 +96,7 @@ public class GithubService {
                     .map(repo -> {
                         List<RepoSkill> languages = getLanguagesFromClient(tokenHeader, repo.getFullName())
                                 .stream()
-                                .map(lang -> BaseSkill.builder().skill(lang).build().asRepoSkill())
+                                .map(this::getOrCreateRepoSkill)
                                 .toList();
                         String readmeContent = getReadmeFromClient(tokenHeader, repo.getFullName());
                         return GithubRepository.builder()
@@ -105,16 +107,20 @@ public class GithubService {
                                 .build();
                     }).collect(Collectors.toList());
 
-            reposWithLanguagesAndReadme.forEach(repo -> {
-                repo.setGithubProfile(githubProfile);
-                repo.getLanguages().forEach(lang -> lang.setGithubRepository(repo));
-            });
+            reposWithLanguagesAndReadme.forEach(repo -> repo.setGithubProfile(githubProfile));
             githubProfile.setRepositories(reposWithLanguagesAndReadme);
             return githubProfileRepository.save(githubProfile);
         } catch (Exception e) {
             logger.error("Error fetching GitHub profile", e);
             throw new FetchErrorException("Failed to fetch GitHub profile", e);
         }
+    }
+
+    private RepoSkill getOrCreateRepoSkill(String skill) {
+        return skillRepository.findBySkill(skill)
+                .orElseGet(() -> skillRepository.save(
+                        BaseSkill.builder().skill(skill).build().asRepoSkill()
+                ));
     }
 
     private String getReadmeFromClient(String tokenHeader, String fullName) {
