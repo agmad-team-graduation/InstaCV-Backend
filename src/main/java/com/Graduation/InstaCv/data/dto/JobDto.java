@@ -25,15 +25,26 @@ public class JobDto {
     private boolean isSkillMatchingAnalyzed;
     private SkillMatchingAnalysis skillMatchingAnalysis;
     @JsonIgnore
+    @Builder.Default
     private List<JobSkill> jobSkills = List.of();
-    public List<JobSkill> getHardSkills() {
+
+    public List<BaseSkillDto> getHardSkills() {
         return jobSkills.stream()
                 .filter(jobSkill -> jobSkill.getSkillType() == SkillType.HARD)
+                .map(jobSkill -> BaseSkillDto.builder()
+                        .id(jobSkill.getId())
+                        .skill(jobSkill.getSkill())
+                        .build())
                 .toList();
     }
-    public List<JobSkill> getSoftSkills() {
+
+    public List<BaseSkillDto> getSoftSkills() {
         return jobSkills.stream()
                 .filter(jobSkill -> jobSkill.getSkillType() == SkillType.SOFT)
+                .map(jobSkill -> BaseSkillDto.builder()
+                        .id(jobSkill.getId())
+                        .skill(jobSkill.getSkill())
+                        .build())
                 .toList();
     }
 }

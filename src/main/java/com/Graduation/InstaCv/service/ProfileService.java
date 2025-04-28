@@ -31,13 +31,13 @@ public class ProfileService implements IProfileService {
 
         user.setProfile(newProfile);
         user.setProfileCreated(true);
-        newProfile.setUser(user);
 
+        newProfile.setId(null);
+        newProfile.setUser(user);
         newProfile.getEducationList().forEach(education -> education.setProfile(newProfile));
         newProfile.getExperienceList().forEach(experience -> experience.setProfile(newProfile));
         newProfile.getProjects().forEach(project -> project.setProfile(newProfile));
         newProfile.getUserSkills().forEach(userSkill -> userSkill.setProfile(newProfile));
-        newProfile.getAddedJobs().forEach(job -> job.setProfile(newProfile));
 
         newProfile.getProjects().forEach(project -> project.getSkills().forEach(projectSkill -> projectSkill.setProject(project)));
         return profileRepository.save(newProfile);

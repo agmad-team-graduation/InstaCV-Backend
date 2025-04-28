@@ -10,7 +10,6 @@ import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.repository.JobRepository;
-import com.Graduation.InstaCv.repository.ProfileRepository;
 import com.Graduation.InstaCv.service.Interfaces.IJobService;
 import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
@@ -23,14 +22,13 @@ import java.util.concurrent.CompletableFuture;
 @AllArgsConstructor
 public class JobService implements IJobService {
     private final JobRepository jobRepository;
-    private final ProfileRepository profileRepository;
+    private final ProfileService profileService;
     private final JobSkillService jobSkillService;
     private final Mapper<JobSkill, ExtractedJobSkillResponse> jobSkillMapper;
 
     @Override
-    public Job addJob(Long userId, Job job) {
-        Profile profile = profileRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id: " + userId));
+    public Job addJob(Job job, Profile profile) {
+        job.setId(null);
         job.setProfile(profile);
         return jobRepository.save(job);
     }
@@ -38,8 +36,7 @@ public class JobService implements IJobService {
     @Override
     @Async
     public CompletableFuture<Job> analyzeJob(Long jobId, Long userId, boolean forceAnalyze) {
-        Profile profile = profileRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id: " + userId));
+        Profile profile = profileService.getProfileByUserId(userId);
         return jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .map(job -> analyzeIfNeeded(job, forceAnalyze))
                 .orElseThrow(() -> new ResourceNotFoundException("Job with ID " + jobId + " not found"));
@@ -47,8 +44,7 @@ public class JobService implements IJobService {
 
     @Override
     public Job analyzeJobMatching(Long jobId, Long userId, boolean forceAnalyze) {
-        Profile profile = profileRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id: " + userId));
+        Profile profile = profileService.getProfileByUserId(userId);
         Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
         if (!forceAnalyze && job.isSkillMatchingAnalyzed()) return job;
@@ -60,8 +56,7 @@ public class JobService implements IJobService {
 
     @Override
     public Job analyzeProjectsMatching(Long jobId, Long userId) {
-        Profile profile = profileRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id: " + userId));
+        Profile profile = profileService.getProfileByUserId(userId);
         Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
         job = analyzeIfNeeded(job, false).join();
@@ -73,8 +68,7 @@ public class JobService implements IJobService {
 
     @Override
     public Job getJobByIdAndUserId(Long jobId, Long userId) {
-        Profile profile = profileRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id: " + userId));
+        Profile profile = profileService.getProfileByUserId(userId);
         return jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId + " for user with id: " + userId));
     }
@@ -87,8 +81,7 @@ public class JobService implements IJobService {
 
     @Override
     public List<Job> getJobsByUserId(Long userId) {
-        Profile profile = profileRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id: " + userId));
+        Profile profile = profileService.getProfileByUserId(userId);
         return jobRepository.findJobsByProfileId(profile.getId());
     }
 

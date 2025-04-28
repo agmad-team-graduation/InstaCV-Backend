@@ -1,6 +1,5 @@
 package com.Graduation.InstaCv.data.dto;
 
-import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,5 +19,4 @@ public class ProfileDto {
     private List<Experience> experienceList;
     private List<UserSkill> userSkills;
     private List<Project> projects;
-    private List<Job> addedJobs;
 }

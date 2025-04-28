@@ -2,6 +2,7 @@ package com.Graduation.InstaCv.controller;
 
 
 import com.Graduation.InstaCv.data.dto.JobDto;
+import com.Graduation.InstaCv.data.dto.JobSimpleDto;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.mappers.ContextAwareMapper;
@@ -24,19 +25,19 @@ public class JobController {
     private final IJobService jobService;
     private final IProfileService profileService;
     private final ContextAwareMapper<Job, JobDto, Profile> jobMapper;
+    private final ContextAwareMapper<Job, JobSimpleDto, Profile> jobSimpleMapper;
 
     @PostMapping("/add")
-    public ResponseEntity<JobDto> addJob(@RequestBody JobDto job) {
+    public ResponseEntity<JobDto> addJob(@RequestBody JobSimpleDto job) {
         Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
-        Job jobE = jobMapper.mapFrom(job, profile);
-        Job SavedJob = jobService.addJob(SecurityUtils.getCurrentUserDetails().getId(), jobE);
+        Job SavedJob = jobService.addJob(jobSimpleMapper.mapFrom(job, profile), profile);
         return new ResponseEntity<>(jobMapper.mapTo(SavedJob), HttpStatus.CREATED);
     }
 
     @GetMapping("/all")
-    public List<JobDto> getAllJobs() {
+    public List<JobSimpleDto> getAllJobs() {
         List<Job> jobsEntity = jobService.getJobsByUserId(SecurityUtils.getCurrentUserDetails().getId());
-        return jobsEntity.stream().map(jobMapper::mapTo).collect(Collectors.toList());
+        return jobsEntity.stream().map(jobSimpleMapper::mapTo).collect(Collectors.toList());
     }
 
     @GetMapping("/{jobId}")
@@ -54,11 +55,12 @@ public class JobController {
     }
 
     @GetMapping("/analyze/{jobId}")
-    public CompletableFuture<ResponseEntity<Job>> analyzeJob(
+    public CompletableFuture<ResponseEntity<JobDto>> analyzeJob(
             @PathVariable Long jobId,
             @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
-        return jobService.analyzeJob(jobId, userId, forceAnalyze).thenApply(ResponseEntity::ok);
+        return jobService.analyzeJob(jobId, userId, forceAnalyze)
+                .thenApply(job -> new ResponseEntity<>(jobMapper.mapTo(job), HttpStatus.OK));
     }
 
     @GetMapping("/skill-matching/{jobId}")

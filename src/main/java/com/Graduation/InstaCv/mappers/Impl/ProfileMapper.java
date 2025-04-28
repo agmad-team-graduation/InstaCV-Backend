@@ -21,7 +21,6 @@ public class ProfileMapper implements ContextAwareMapper<Profile, ProfileDto, Us
                 .experienceList(profile.getExperienceList())
                 .userSkills(profile.getUserSkills())
                 .projects(profile.getProjects())
-                .addedJobs(profile.getAddedJobs())
                 .build();
     }
 
@@ -37,7 +36,6 @@ public class ProfileMapper implements ContextAwareMapper<Profile, ProfileDto, Us
                 .experienceList(profileDto.getExperienceList())
                 .userSkills(profileDto.getUserSkills())
                 .projects(profileDto.getProjects())
-                .addedJobs(profileDto.getAddedJobs())
                 .build();
     }
 }
