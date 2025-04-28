@@ -3,6 +3,7 @@ package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.request.LoginRequest;
 import com.Graduation.InstaCv.data.model.User;
+import com.Graduation.InstaCv.exceptions.InvalidCredentialsException;
 import com.Graduation.InstaCv.security.UserDetailsImpl;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import io.jsonwebtoken.Claims;
@@ -12,8 +13,7 @@ import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -38,10 +38,14 @@ public class AuthService implements IAuthService {
 
     @Override
     public UserDetails authenticate(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
-        );
-        return (UserDetails) authentication.getPrincipal();
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
+            );
+            return (UserDetails) authentication.getPrincipal();
+        } catch (BadCredentialsException e) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
     }
 
     @Override
