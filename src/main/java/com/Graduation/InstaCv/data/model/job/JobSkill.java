@@ -22,7 +22,8 @@ public class JobSkill extends BaseSkill {
     @EqualsAndHashCode.Exclude
     private Job job;
 
-    @Column(name = "model_confidence")
+    @JsonIgnore
+    @Transient
     private float modelConfidence;
 
     // To distinguish hard vs soft skill

@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -34,6 +35,9 @@ public class PasswordResetService implements IPasswordResetService {
                 .expiryDate(LocalDateTime.now().plusMinutes(30))
                 .user(user)
                 .build();
+
+        Optional<PasswordResetToken> oldToken = passwordResetTokenRepository.findByUserId(user.getId());
+        oldToken.ifPresent(passwordResetTokenRepository::delete);
 
         passwordResetTokenRepository.save(token);
         emailUtils.sendPasswordResetEmail(user.getEmail(), token.getToken());

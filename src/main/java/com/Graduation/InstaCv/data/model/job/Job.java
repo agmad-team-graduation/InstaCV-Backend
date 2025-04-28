@@ -36,6 +36,7 @@ public class Job {
     // This is the refactor of JobAnalysis object
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
+    @Builder.Default
     private List<JobSkill> jobSkills = List.of();
     @OneToOne(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     private SkillMatchingAnalysis skillMatchingAnalysis;

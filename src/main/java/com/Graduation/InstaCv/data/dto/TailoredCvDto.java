@@ -22,10 +22,10 @@ public class TailoredCvDto {
     private Long profileId;
     private Long jobId;
     private PersonalDetails personalDetails;
+    private String summary;
     private List<EducationCv> education;
     private List<ExperienceCv> experience;
     private List<UserSkillCv> skills;
     private List<ProjectCv> projects;
-    private String summary;
     private LocalDateTime createdAt;
 }
