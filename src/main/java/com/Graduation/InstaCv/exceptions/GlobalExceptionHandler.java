@@ -71,17 +71,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
-    // Handle UsernameAlreadyExistsException
-    @ExceptionHandler(EmailAlreadyExistsException.class)
-    public ResponseEntity<ApiErrorResponse> handleUsernameAlreadyExistsException(EmailAlreadyExistsException ex) {
-        log.error("Username already exists: {}", ex.getMessage());
-        ApiErrorResponse error = ApiErrorResponse.builder()
-                .status(HttpStatus.CONFLICT.value())
-                .message(ex.getMessage())
-                .build();
-        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
-    }
-
     // Handle InvalidRegistrationDataException
     @ExceptionHandler(InvalidRegistrationDataException.class)
     public ResponseEntity<ApiErrorResponse> handleInvalidRegistrationDataException(InvalidRegistrationDataException ex) {
