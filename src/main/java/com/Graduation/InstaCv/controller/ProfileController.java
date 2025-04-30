@@ -32,4 +32,11 @@ public class ProfileController {
         return profileMapper.mapTo(createdProfile);
     }
 
+    @PutMapping("/update")
+    public ProfileDto updateProfile(@RequestBody ProfileDto profileDto) {
+        // Extract userId from the security context
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        Profile updatedProfile = profileService.updateProfile(userId, profileDto);
+        return profileMapper.mapTo(updatedProfile);
+    }
 }
