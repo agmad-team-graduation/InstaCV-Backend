@@ -2,8 +2,10 @@ package com.Graduation.InstaCv.service;
 
 
 import com.Graduation.InstaCv.data.dto.request.LoginRequest;
+import com.Graduation.InstaCv.data.enums.AuthProvider;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.exceptions.InvalidCredentialsException;
+import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.security.UserDetailsImpl;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import io.jsonwebtoken.Claims;
@@ -12,11 +14,9 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -28,7 +28,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthService implements IAuthService {
     private final AuthenticationManager authenticationManager;
-    private final UserDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -72,5 +72,19 @@ public class AuthService implements IAuthService {
     private Key getSigningKey() {
         byte[] keyBytes = secretKey.getBytes();
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    @Override
+    public User processOAuthPostLogin(String email) {
+        var optional = userRepository.findByEmail(email);
+        if (optional.isPresent()) {
+            return optional.get();
+        } else {
+            User newUser = new User();
+            newUser.setEmail(email);
+            newUser.setProvider(AuthProvider.GOOGLE);
+            // set any defaults, e.g. role = USER
+            return userRepository.save(newUser);
+        }
     }
 }

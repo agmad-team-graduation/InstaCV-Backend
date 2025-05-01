@@ -62,7 +62,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public OAuth2AuthenticationSuccessHandler oauth2SuccessHandler(JwtTokenProvider tokenProvider, IAuthService authService) {
+        return new OAuth2AuthenticationSuccessHandler(tokenProvider, authService);
+    }
+
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
+                                                   OAuth2AuthenticationSuccessHandler successHandler) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(WHITELIST_URLS).permitAll()
@@ -72,7 +79,15 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults()) // Enable CORS with default settings
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                ).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                ).oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(end -> end.baseUri("/api/auth/oauth2/authorize"))
+                        .redirectionEndpoint(redir -> redir.baseUri("/api/auth/oauth2/code/*"))
+                        .userInfoEndpoint(user -> user
+                                .userService(new CustomOAuth2UserService())    // maps Google user to your User entity
+                        )
+                        .successHandler(successHandler)
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }
