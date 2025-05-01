@@ -29,7 +29,7 @@ public class RemoteOkJobDto {
 
     @JsonProperty("description")
     private String description;
-    // Change from Long to String to match the actual response format
+
     @JsonProperty("date")
     private String date;
 }
