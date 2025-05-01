@@ -1,6 +1,11 @@
 package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.RemoteOkJobDto;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.safety.Safelist;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -104,6 +109,7 @@ public class RemoteOKJobScrappingService {
 
 
     public List<RemoteOkJobDto> getFilteredDevJobs(String tech, boolean recent) {
+        // First get the base list depending on whether we want recent or all jobs
         List<RemoteOkJobDto> baseJobList;
         if (recent) {
             baseJobList = getDevJobs().stream()
@@ -113,14 +119,61 @@ public class RemoteOKJobScrappingService {
             baseJobList = getDevJobs();
         }
 
+        // Apply technology filter if needed
+        List<RemoteOkJobDto> filteredJobs;
         if (tech != null && !tech.trim().isEmpty()) {
-            return baseJobList.stream()
+            filteredJobs = baseJobList.stream()
                     .filter(job -> job.getTags() != null &&
                             job.getTags().stream()
                                     .anyMatch(tag -> tag.toLowerCase().contains(tech.toLowerCase())))
                     .collect(Collectors.toList());
+        } else {
+            filteredJobs = baseJobList;
         }
 
-        return baseJobList;
+        // Clean job descriptions before returning
+        return processJobDescriptions(filteredJobs);
+    }
+
+    private String cleanJobDescription(String htmlDescription) {
+        if (htmlDescription == null || htmlDescription.isEmpty()) {
+            return "";
+        }
+
+        try {
+            // Parse the HTML
+            Document doc = Jsoup.parse(htmlDescription);
+
+            // Clean the HTML - keep only basic formatting
+            String cleanedHtml = Jsoup.clean(htmlDescription, Safelist.basic());
+            Document cleanDoc = Jsoup.parse(cleanedHtml);
+
+            // Format lists specially
+            for (Element li : cleanDoc.select("li")) {
+                li.before(new TextNode("• "));
+            }
+
+            // Get text and improve formatting
+            String plainText = cleanDoc.text()
+                    .replaceAll("•", "\n• ") // Put each bullet point on a new line
+                    .replaceAll("\\s{2,}", " ")  // Remove extra spaces
+                    .replaceAll(" \\n", "\n")    // Clean up spaces before newlines
+                    .replaceAll("\\n{3,}", "\n\n"); // Limit consecutive newlines
+
+            return plainText;
+        } catch (Exception e) {
+            System.err.println("Error cleaning job description: " + e.getMessage());
+            // Return the original if parsing fails
+            return htmlDescription;
+        }
+    }
+
+    private List<RemoteOkJobDto> processJobDescriptions(List<RemoteOkJobDto> jobs) {
+        jobs.forEach(job -> {
+            if (job.getDescription() != null) {
+                job.setDescription(cleanJobDescription(job.getDescription()));
+            }
+        });
+        return jobs;
     }
 }

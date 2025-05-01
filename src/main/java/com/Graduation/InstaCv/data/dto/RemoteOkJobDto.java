@@ -27,6 +27,8 @@ public class RemoteOkJobDto {
     @JsonProperty("apply_url")
     private String applyUrl;
 
+    @JsonProperty("description")
+    private String description;
     // Change from Long to String to match the actual response format
     @JsonProperty("date")
     private String date;
