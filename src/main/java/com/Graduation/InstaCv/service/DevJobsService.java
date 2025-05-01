@@ -1,0 +1,126 @@
+package com.Graduation.InstaCv.service;
+
+import com.Graduation.InstaCv.data.dto.DevJobs;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class DevJobsService {
+
+    private final RestTemplate restTemplate;
+    private static final String REMOTE_OK_API_URL = "https://remoteok.com/api";
+    private static final List<String> DEV_TAGS = List.of(
+            "dev", "developer", "software", "programming", "engineer",
+            "javascript", "python", "java", "ruby", "go", "php",
+            "nodejs", "react", "angular", "vue", "frontend", "backend",
+            "fullstack", "full-stack", "web", "mobile", "android", "ios"
+    );
+
+    @Autowired
+    public DevJobsService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    // Helper method to check if a job is a developer job
+    private boolean isDeveloperJob(DevJobs job) {
+        if (job.getTags() == null) return false;
+
+        for (String tag : job.getTags()) {
+            String lowerTag = tag.toLowerCase();
+            if (DEV_TAGS.stream().anyMatch(lowerTag::contains)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Helper method to check if a job was posted within the last two weeks
+    private boolean isPostedWithinLastTwoWeeks(DevJobs job) {
+        if (job.getDate() == null || job.getDate().isEmpty()) return false;
+
+        try {
+            // Parse ISO 8601 date string
+            LocalDateTime jobDate = LocalDateTime.parse(
+                    job.getDate().replace("Z", "").replace("+00:00", ""),
+                    DateTimeFormatter.ISO_DATE_TIME);
+
+            // Get date from two weeks ago
+            LocalDateTime twoWeeksAgo = LocalDateTime.now().minus(2, ChronoUnit.WEEKS);
+
+            // Return true if job date is after two weeks ago
+            return jobDate.isAfter(twoWeeksAgo);
+        } catch (Exception e) {
+            System.err.println("Error parsing date: " + job.getDate() + " - " + e.getMessage());
+            return false; // If we can't parse the date, we exclude it from recent jobs
+        }
+    }
+
+    public List<DevJobs> getDevJobs() {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<DevJobs[]> response = restTemplate.exchange(
+                    REMOTE_OK_API_URL,
+                    HttpMethod.GET,
+                    entity,
+                    DevJobs[].class
+            );
+
+            DevJobs[] jobs = response.getBody();
+
+            if (jobs == null || jobs.length == 0) {
+                return Collections.emptyList();
+            }
+
+            // Skip the first element (it's metadata), filter for dev jobs
+            return Arrays.stream(jobs)
+                    .skip(1)
+                    .filter(this::isDeveloperJob)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            // Log the exception
+            System.err.println("Error fetching dev jobs: " + e.getMessage());
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+
+    public List<DevJobs> getFilteredDevJobs(String tech, boolean recent) {
+        List<DevJobs> baseJobList;
+        if (recent) {
+            baseJobList = getDevJobs().stream()
+                    .filter(this::isPostedWithinLastTwoWeeks)
+                    .collect(Collectors.toList());
+        } else {
+            baseJobList = getDevJobs();
+        }
+
+        if (tech != null && !tech.trim().isEmpty()) {
+            return baseJobList.stream()
+                    .filter(job -> job.getTags() != null &&
+                            job.getTags().stream()
+                                    .anyMatch(tag -> tag.toLowerCase().contains(tech.toLowerCase())))
+                    .collect(Collectors.toList());
+        }
+
+        return baseJobList;
+    }
+}
