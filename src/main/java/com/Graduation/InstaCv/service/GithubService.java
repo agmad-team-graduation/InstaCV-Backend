@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.service;
 
 
+import com.Graduation.InstaCv.data.dto.request.GithubAccessTokenRequest;
 import com.Graduation.InstaCv.data.dto.response.GithubRepoResponse;
 import com.Graduation.InstaCv.data.dto.response.GithubUserResponse;
 import com.Graduation.InstaCv.data.dto.request.AccessTokenRequest;
@@ -10,13 +11,19 @@ import com.Graduation.InstaCv.data.model.BaseSkill;
 import com.Graduation.InstaCv.data.model.github.GithubProfile;
 import com.Graduation.InstaCv.data.model.github.GithubRepository;
 import com.Graduation.InstaCv.data.model.github.RepoSkill;
+import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.exceptions.FetchErrorException;
+import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.gateways.github.GithubApiClient;
 import com.Graduation.InstaCv.gateways.github.GithubAuthClient;
 import com.Graduation.InstaCv.repository.GithubProfileRepository;
 import com.Graduation.InstaCv.repository.GithubSkillRepository;
+import com.Graduation.InstaCv.repository.ProfileRepository;
 import com.Graduation.InstaCv.service.Interfaces.IGithubService;
+import com.Graduation.InstaCv.utils.SecurityUtils;
 import feign.FeignException;
+import io.netty.util.internal.StringUtil;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,30 +36,27 @@ import java.util.stream.Collectors;
 
 @Service
 public class GithubService implements IGithubService {
-
     private final GithubAuthClient githubAuthClient;
     private final GithubApiClient githubApiClient;
     private final WebClient.Builder webClientBuilder;
 
     @Value("${github.client.id}")
     private String clientId;
-
     @Value("${github.client.secret}")
     private String clientSecret;
     @Value("${github.callback.url}")
     private String callbackUrl;
 
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
+    private final GithubSkillRepository githubSkillRepository;
+    private final ProfileRepository profileRepository;
 
-    private final GithubProfileRepository githubProfileRepository;
-    private final GithubSkillRepository skillRepository;
-
-    public GithubService(GithubAuthClient githubAuthClient, GithubApiClient githubApiClient, WebClient.Builder webClientBuilder, GithubProfileRepository githubProfileRepository, GithubSkillRepository skillRepository) {
+    public GithubService(GithubAuthClient githubAuthClient, GithubApiClient githubApiClient, WebClient.Builder webClientBuilder, GithubProfileRepository githubProfileRepository, GithubSkillRepository githubSkillRepository, ProfileRepository profileRepository) {
         this.githubAuthClient = githubAuthClient;
         this.githubApiClient = githubApiClient;
         this.webClientBuilder = webClientBuilder;
-        this.githubProfileRepository = githubProfileRepository;
-        this.skillRepository = skillRepository;
+        this.githubSkillRepository = githubSkillRepository;
+        this.profileRepository = profileRepository;
     }
 
     public GithubAuthLink getAuthorizationUrl() {
@@ -71,20 +75,35 @@ public class GithubService implements IGithubService {
         return githubAuthClient.getAccessToken(requestDto);
     }
 
-    public GithubProfile getUserProfile(String accessToken, boolean forceFetch) {
+    public GithubProfile getUserProfile(GithubAccessTokenRequest request) {
         try {
+            Long userId = SecurityUtils.getCurrentUserDetails().getId();
+            Profile profile = profileRepository.findByUserId(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id " + userId));
+
+            GithubProfile oldGithubProfile = profile.getGithubProfile();
+
+            if ((request == null || StringUtil.isNullOrEmpty(request.getAccessToken())) && oldGithubProfile != null)
+                // Make a copy to avoid lazy loading issues
+                return GithubProfile.builder()
+                        .username(oldGithubProfile.getUsername())
+                        .name(oldGithubProfile.getName())
+                        .bio(oldGithubProfile.getBio())
+                        .avatarUrl(oldGithubProfile.getAvatarUrl())
+                        .repositories(oldGithubProfile.getRepositories())
+                        .skills(oldGithubProfile.getSkills())
+                        .build();
+
+            assert request != null;
+            String accessToken = request.getAccessToken();
             String tokenHeader = "token " + accessToken;
             GithubUserResponse userDetails = githubApiClient.getUser(tokenHeader);
-
-            if (!forceFetch) {
-                Optional<GithubProfile> tryGetProfile = githubProfileRepository.findByUsername(userDetails.getLogin());
-                if (tryGetProfile.isPresent()) {
-                    return tryGetProfile.get();
-                }
+            // If accessToken is valid, we can fetch the user details and remove the old profile, else it throws error
+            if (oldGithubProfile != null) {
+                profile.setGithubProfile(null);
+                profileRepository.save(profile);
             }
-
             List<GithubRepoResponse> repos = getAllRepositories(tokenHeader);
-
             GithubProfile githubProfile = GithubProfile.builder()
                     .username(userDetails.getLogin())
                     .name(userDetails.getName())
@@ -92,12 +111,16 @@ public class GithubService implements IGithubService {
                     .avatarUrl(userDetails.getAvatar_url())
                     .build();
 
+            Set<RepoSkill> profileSetSkills = new HashSet<>();
+            Set<RepoSkill> allGithubSkills = new HashSet<>(githubSkillRepository.findAll());
+
             List<GithubRepository> reposWithLanguagesAndReadme = repos.stream()
                     .map(repo -> {
                         List<RepoSkill> languages = getLanguagesFromClient(tokenHeader, repo.getFullName())
                                 .stream()
-                                .map(this::getOrCreateRepoSkill)
+                                .map(skill -> getOrCreateRepoSkill(skill, allGithubSkills))
                                 .toList();
+                        profileSetSkills.addAll(languages);
                         String readmeContent = getReadmeFromClient(tokenHeader, repo.getFullName());
                         return GithubRepository.builder()
                                 .name(repo.getName())
@@ -109,18 +132,25 @@ public class GithubService implements IGithubService {
 
             reposWithLanguagesAndReadme.forEach(repo -> repo.setGithubProfile(githubProfile));
             githubProfile.setRepositories(reposWithLanguagesAndReadme);
-            return githubProfileRepository.save(githubProfile);
-        } catch (Exception e) {
-            logger.error("Error fetching GitHub profile", e);
+            githubProfile.setSkills(profileSetSkills.stream().toList());
+            profile.setGithubProfile(githubProfile);
+
+            return profileRepository.save(profile).getGithubProfile();
+        } catch (FeignException.FeignClientException | WebClientResponseException e) {
+            logger.error("Error fetching user profile: {}", e.getMessage());
             throw new FetchErrorException("Failed to fetch GitHub profile", e);
         }
     }
 
-    private RepoSkill getOrCreateRepoSkill(String skill) {
-        return skillRepository.findBySkill(skill)
-                .orElseGet(() -> skillRepository.save(
-                        BaseSkill.builder().skill(skill).build().asRepoSkill()
-                ));
+    private RepoSkill getOrCreateRepoSkill(String skill, Set<RepoSkill> allGithubSkills) {
+        return allGithubSkills.stream()
+                .filter(existingSkill -> existingSkill.getSkill().equals(skill))
+                .findFirst()
+                .orElseGet(() -> {
+                    RepoSkill newSkill = RepoSkill.builder().skill(skill).build();
+                    allGithubSkills.add(newSkill);
+                    return githubSkillRepository.save(newSkill);
+                });
     }
 
     private String getReadmeFromClient(String tokenHeader, String fullName) {

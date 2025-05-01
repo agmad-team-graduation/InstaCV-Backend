@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.controller;
 
 
+import com.Graduation.InstaCv.data.dto.request.GithubAccessTokenRequest;
 import com.Graduation.InstaCv.data.dto.response.GithubAccessTokenResponse;
 import com.Graduation.InstaCv.data.dto.response.GithubAuthLink;
 import com.Graduation.InstaCv.data.model.github.GithubProfile;
@@ -25,9 +26,8 @@ public class GithubController {
         return ResponseEntity.ok(githubService.getAccessToken(code));
     }
 
-    @GetMapping("/profile")
-    public ResponseEntity<GithubProfile> profile(@RequestParam String accessToken,
-                                                 @RequestParam(defaultValue = "false") boolean forceFetch) {
-        return ResponseEntity.ok(githubService.getUserProfile(accessToken, forceFetch));
+    @PostMapping("/profile")
+    public ResponseEntity<GithubProfile> profile(@RequestBody(required = false) GithubAccessTokenRequest githubAccessTokenRequest) {
+        return ResponseEntity.ok(githubService.getUserProfile(githubAccessTokenRequest));
     }
 }

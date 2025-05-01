@@ -1,11 +1,12 @@
 package com.Graduation.InstaCv.service.Interfaces;
 
+import com.Graduation.InstaCv.data.dto.request.GithubAccessTokenRequest;
 import com.Graduation.InstaCv.data.dto.response.GithubAccessTokenResponse;
 import com.Graduation.InstaCv.data.dto.response.GithubAuthLink;
 import com.Graduation.InstaCv.data.model.github.GithubProfile;
 
 public interface IGithubService {
-    GithubProfile getUserProfile(String accessToken, boolean forceFetch);
+    GithubProfile getUserProfile(GithubAccessTokenRequest request);
 
     GithubAccessTokenResponse getAccessToken(String code);
 

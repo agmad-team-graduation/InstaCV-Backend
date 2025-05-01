@@ -7,4 +7,5 @@ public interface IProfileService {
     Profile getProfileByUserId(Long userId);
     Profile createProfile(Long userId, Profile profile);
     Profile updateProfile(Long userId, ProfileDto profile);
+    Profile addGithubSkillsIntoProfile(Long userId);
 }

@@ -1,22 +1,28 @@
 package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.ProfileDto;
+import com.Graduation.InstaCv.data.model.BaseSkill;
 import com.Graduation.InstaCv.data.model.User;
+import com.Graduation.InstaCv.data.model.github.RepoSkill;
 import com.Graduation.InstaCv.data.model.profile.*;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.repository.ProfileRepository;
 import com.Graduation.InstaCv.repository.UserRepository;
+import com.Graduation.InstaCv.service.Interfaces.IGithubService;
 import com.Graduation.InstaCv.service.Interfaces.IProfileService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class ProfileService implements IProfileService {
     private ProfileRepository profileRepository;
     private UserRepository userRepository;
+    private IGithubService githubService;
 
     @Override
     public Profile getProfileByUserId(Long userId) {
@@ -114,5 +120,37 @@ public class ProfileService implements IProfileService {
             });
         }
         return profileRepository.save(existingProfile);
+    }
+
+    @Override
+    public Profile addGithubSkillsIntoProfile(Long userId) {
+        // Fetch the user's profile
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Profile not found for user ID: " + userId));
+
+        // Ensure the user has connected their GitHub profile
+        if (profile.getGithubProfile() == null || profile.getGithubProfile().getUsername() == null)
+            throw new IllegalStateException("GitHub profile is not connected for user ID: " + userId);
+
+        List<RepoSkill> githubSkills = profile.getGithubProfile().getSkills();
+        if (githubSkills == null)
+            throw new IllegalStateException("Error getting GitHub skills for user ID: " + userId + ", try re-fetching the GitHub profile.");
+
+        // Map GitHub skills to UserSkill entities, avoiding duplicates
+        Set<String> existingSkillNames = profile.getUserSkills().stream()
+                .map(UserSkill::getSkill)
+                .collect(Collectors.toSet());
+
+        // Filter out existing skills of github profile skills
+        List<UserSkill> newSkills = githubSkills.stream()
+                .filter(githubSkill -> !existingSkillNames.contains(githubSkill.getSkill()))
+                .map(githubSkill -> UserSkill.builder().skill(githubSkill.getSkill()).profile(profile).build())
+                .collect(Collectors.toList());
+
+        // Add the new skills to the profile
+        profile.getUserSkills().addAll(newSkills);
+
+        // Save the updated profile
+        return profileRepository.save(profile);
     }
 }
