@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DevJobs {
+public class RemoteOkJobDto {
     private String id;
 
     @JsonProperty("position")

@@ -1,6 +1,6 @@
 package com.Graduation.InstaCv.service;
 
-import com.Graduation.InstaCv.data.dto.DevJobs;
+import com.Graduation.InstaCv.data.dto.RemoteOkJobDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class DevJobsService {
+public class RemoteOKJobScrappingService {
 
     private final RestTemplate restTemplate;
     private static final String REMOTE_OK_API_URL = "https://remoteok.com/api";
@@ -30,12 +30,12 @@ public class DevJobsService {
     );
 
     @Autowired
-    public DevJobsService(RestTemplate restTemplate) {
+    public RemoteOKJobScrappingService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
     // Helper method to check if a job is a developer job
-    private boolean isDeveloperJob(DevJobs job) {
+    private boolean isDeveloperJob(RemoteOkJobDto job) {
         if (job.getTags() == null) return false;
 
         for (String tag : job.getTags()) {
@@ -49,7 +49,7 @@ public class DevJobsService {
     }
 
     // Helper method to check if a job was posted within the last two weeks
-    private boolean isPostedWithinLastTwoWeeks(DevJobs job) {
+    private boolean isPostedWithinLastTwoWeeks(RemoteOkJobDto job) {
         if (job.getDate() == null || job.getDate().isEmpty()) return false;
 
         try {
@@ -69,21 +69,21 @@ public class DevJobsService {
         }
     }
 
-    public List<DevJobs> getDevJobs() {
+    public List<RemoteOkJobDto> getDevJobs() {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<DevJobs[]> response = restTemplate.exchange(
+            ResponseEntity<RemoteOkJobDto[]> response = restTemplate.exchange(
                     REMOTE_OK_API_URL,
                     HttpMethod.GET,
                     entity,
-                    DevJobs[].class
+                    RemoteOkJobDto[].class
             );
 
-            DevJobs[] jobs = response.getBody();
+            RemoteOkJobDto[] jobs = response.getBody();
 
             if (jobs == null || jobs.length == 0) {
                 return Collections.emptyList();
@@ -103,8 +103,8 @@ public class DevJobsService {
     }
 
 
-    public List<DevJobs> getFilteredDevJobs(String tech, boolean recent) {
-        List<DevJobs> baseJobList;
+    public List<RemoteOkJobDto> getFilteredDevJobs(String tech, boolean recent) {
+        List<RemoteOkJobDto> baseJobList;
         if (recent) {
             baseJobList = getDevJobs().stream()
                     .filter(this::isPostedWithinLastTwoWeeks)
