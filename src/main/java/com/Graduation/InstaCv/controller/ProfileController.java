@@ -39,4 +39,12 @@ public class ProfileController {
         Profile updatedProfile = profileService.updateProfile(userId, profileDto);
         return profileMapper.mapTo(updatedProfile);
     }
+
+    @PutMapping("/add-github-skills")
+    public ProfileDto addGithubSkillsIntoProfile() {
+        // Extract userId from the security context
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        Profile updatedProfile = profileService.addGithubSkillsIntoProfile(userId);
+        return profileMapper.mapTo(updatedProfile);
+    }
 }

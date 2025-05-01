@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.exceptions;
 
 import com.Graduation.InstaCv.data.dto.response.ApiErrorResponse;
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -151,5 +152,35 @@ public class GlobalExceptionHandler {
                 .message("Method not allowed: " + ex.getMessage())
                 .build();
         return new ResponseEntity<>(error, HttpStatus.METHOD_NOT_ALLOWED);
+    }
+
+    // Handle FeignException$Unauthorized
+    @ExceptionHandler(FeignException.Unauthorized.class)
+    public ResponseEntity<ApiErrorResponse> handleFeignUnauthorized(FeignException.Unauthorized ex) {
+        ApiErrorResponse error = ApiErrorResponse.builder()
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .message("Unauthorized: " + ex.getMessage())
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    // Handle FeignException
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ApiErrorResponse> handleFeignException(FeignException ex) {
+        ApiErrorResponse error = ApiErrorResponse.builder()
+                .status(ex.status())
+                .message("Feign error: " + ex.getMessage())
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.valueOf(ex.status()));
+    }
+
+    // Handle FetchErrorException
+    @ExceptionHandler(FetchErrorException.class)
+    public ResponseEntity<ApiErrorResponse> handleFetchErrorException(FetchErrorException ex) {
+        ApiErrorResponse error = ApiErrorResponse.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
