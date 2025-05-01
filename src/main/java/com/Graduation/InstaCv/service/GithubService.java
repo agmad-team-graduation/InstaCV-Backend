@@ -7,7 +7,6 @@ import com.Graduation.InstaCv.data.dto.response.GithubUserResponse;
 import com.Graduation.InstaCv.data.dto.request.AccessTokenRequest;
 import com.Graduation.InstaCv.data.dto.response.GithubAccessTokenResponse;
 import com.Graduation.InstaCv.data.dto.response.GithubAuthLink;
-import com.Graduation.InstaCv.data.model.BaseSkill;
 import com.Graduation.InstaCv.data.model.github.GithubProfile;
 import com.Graduation.InstaCv.data.model.github.GithubRepository;
 import com.Graduation.InstaCv.data.model.github.RepoSkill;
@@ -16,14 +15,12 @@ import com.Graduation.InstaCv.exceptions.FetchErrorException;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.gateways.github.GithubApiClient;
 import com.Graduation.InstaCv.gateways.github.GithubAuthClient;
-import com.Graduation.InstaCv.repository.GithubProfileRepository;
 import com.Graduation.InstaCv.repository.GithubSkillRepository;
 import com.Graduation.InstaCv.repository.ProfileRepository;
 import com.Graduation.InstaCv.service.Interfaces.IGithubService;
 import com.Graduation.InstaCv.utils.SecurityUtils;
 import feign.FeignException;
 import io.netty.util.internal.StringUtil;
-import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,7 +48,7 @@ public class GithubService implements IGithubService {
     private final GithubSkillRepository githubSkillRepository;
     private final ProfileRepository profileRepository;
 
-    public GithubService(GithubAuthClient githubAuthClient, GithubApiClient githubApiClient, WebClient.Builder webClientBuilder, GithubProfileRepository githubProfileRepository, GithubSkillRepository githubSkillRepository, ProfileRepository profileRepository) {
+    public GithubService(GithubAuthClient githubAuthClient, GithubApiClient githubApiClient, WebClient.Builder webClientBuilder, GithubSkillRepository githubSkillRepository, ProfileRepository profileRepository) {
         this.githubAuthClient = githubAuthClient;
         this.githubApiClient = githubApiClient;
         this.webClientBuilder = webClientBuilder;
