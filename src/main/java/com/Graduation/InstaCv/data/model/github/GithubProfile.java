@@ -2,9 +2,6 @@ package com.Graduation.InstaCv.data.model.github;
 
 import java.util.List;
 
-import com.Graduation.InstaCv.data.model.profile.Profile;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -28,6 +28,12 @@ public class CvController {
         return ResponseEntity.ok(cvMapper.mapTo(tailoredCv));
     }
 
+    @PutMapping("/{cvId}")
+    public ResponseEntity<TailoredCvDto> updateCv(@PathVariable Long cvId, @RequestBody TailoredCvDto tailoredCvDto) {
+        TailoredCv updatedCv = cvGenerationService.updateCv(cvId, SecurityUtils.getCurrentUserDetails().getId(), tailoredCvDto);
+        return ResponseEntity.ok(cvMapper.mapTo(updatedCv));
+    }
+
     @GetMapping("/{cvId}")
     public ResponseEntity<TailoredCvDto> getCvById(@PathVariable Long cvId) {
         TailoredCv tailoredCv = cvGenerationService.getCvByIdAndUserId(cvId, SecurityUtils.getCurrentUserDetails().getId());
@@ -48,4 +54,5 @@ public class CvController {
         TailoredCv tailoredCv = cvGenerationService.getCvByJobIdAndUserId(SecurityUtils.getCurrentUserDetails().getId(), jobId);
         return ResponseEntity.ok(cvMapper.mapTo(tailoredCv));
     }
+
 }

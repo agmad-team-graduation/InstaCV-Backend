@@ -10,6 +10,7 @@ import com.Graduation.InstaCv.data.model.jobMatching.projectMatching.MatchedProj
 import com.Graduation.InstaCv.data.model.jobMatching.skillMatching.MatchedSkill;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.*;
+import com.Graduation.InstaCv.data.dto.TailoredCvDto;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.repository.JobRepository;
@@ -32,7 +33,6 @@ public class CvGenerationService implements ICvGenerationService {
     private final JobRepository jobRepository;
     private final TailoredCvRepository tailoredCvRepository;
     private final JobService jobService;
-
     private final Mapper<UserSkillCv, UserSkill> userSkillCvMapper;
     private final Mapper<ExperienceCv, Experience> experienceCvMapper;
     private final Mapper<EducationCv, Education> educationCvMapper;
@@ -170,5 +170,80 @@ public class CvGenerationService implements ICvGenerationService {
                         .map(UserSkill::getSkill)
                         .collect(Collectors.joining(", ")) +
                 " seeking a position as " + jobTitle + " at " + company + ".";
+    }
+
+    @Override
+    public TailoredCv updateCv(Long cvId, Long userId, TailoredCvDto tailoredCvDto) {
+        // Get the CV and validate ownership
+        TailoredCv existingCv = getCvByIdAndUserId(cvId, userId);
+        
+        // Update basic fields
+        if (tailoredCvDto.getPersonalDetails() != null) {
+            existingCv.setPersonalDetails(tailoredCvDto.getPersonalDetails());
+        }
+        if (tailoredCvDto.getSummary() != null) {
+            existingCv.setSummary(tailoredCvDto.getSummary());
+        }
+        
+        // Update education
+        if (tailoredCvDto.getEducation() != null) {
+            // Clear existing education
+            existingCv.getEducation().clear();
+            // Add new education
+            tailoredCvDto.getEducation().forEach(education -> {
+                education.setId(null); // Reset ID to allow new entity creation
+                education.setCv(existingCv);
+                existingCv.getEducation().add(education);
+            });
+        }
+        
+        // Update experience
+        if (tailoredCvDto.getExperience() != null) {
+            // Clear existing experience
+            existingCv.getExperience().clear();
+            // Add new experience
+            tailoredCvDto.getExperience().forEach(experience -> {
+                experience.setId(null); // Reset ID to allow new entity creation
+                experience.setCv(existingCv);
+                existingCv.getExperience().add(experience);
+            });
+        }
+        
+        // Update skills
+        if (tailoredCvDto.getSkills() != null) {
+            // Clear existing skills
+            existingCv.getSkills().clear();
+            // Add new skills
+            tailoredCvDto.getSkills().forEach(skill -> {
+                skill.setId(null); // Reset ID to allow new entity creation
+                skill.setCv(existingCv);
+                existingCv.getSkills().add(skill);
+            });
+        }
+        
+        // Update projects
+        if (tailoredCvDto.getProjects() != null) {
+            // Clear existing projects
+            existingCv.getProjects().clear();
+            // Add new projects
+            tailoredCvDto.getProjects().forEach(project -> {
+                project.setId(null); // Reset ID to allow new entity creation
+                project.setCv(existingCv);
+                // Handle project skills
+                if (project.getSkills() != null) {
+                    project.getSkills().forEach(skill -> {
+                        skill.setId(null); // Reset ID to allow new entity creation
+                        skill.setProjectCv(project);
+                    });
+                }
+                existingCv.getProjects().add(project);
+            });
+        }
+                
+        // Set updated timestamp
+        existingCv.setUpdatedAt(LocalDateTime.now());
+        
+        // Save and return
+        return tailoredCvRepository.save(existingCv);
     }
 }

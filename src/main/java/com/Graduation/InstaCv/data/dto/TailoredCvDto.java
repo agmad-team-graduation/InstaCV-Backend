@@ -19,7 +19,6 @@ import java.util.List;
 @AllArgsConstructor
 public class TailoredCvDto {
     private Long id;
-    private Long profileId;
     private Long jobId;
     private PersonalDetails personalDetails;
     private String summary;
@@ -28,4 +27,5 @@ public class TailoredCvDto {
     private List<UserSkillCv> skills;
     private List<ProjectCv> projects;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

@@ -1,14 +1,12 @@
 package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.ProfileDto;
-import com.Graduation.InstaCv.data.model.BaseSkill;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.github.RepoSkill;
 import com.Graduation.InstaCv.data.model.profile.*;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.repository.ProfileRepository;
 import com.Graduation.InstaCv.repository.UserRepository;
-import com.Graduation.InstaCv.service.Interfaces.IGithubService;
 import com.Graduation.InstaCv.service.Interfaces.IProfileService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,7 +20,6 @@ import java.util.stream.Collectors;
 public class ProfileService implements IProfileService {
     private ProfileRepository profileRepository;
     private UserRepository userRepository;
-    private IGithubService githubService;
 
     @Override
     public Profile getProfileByUserId(Long userId) {
@@ -103,10 +100,12 @@ public class ProfileService implements IProfileService {
             updatedProfile.getProjects().forEach(project -> {
                 project.setId(null);
                 project.setProfile(existingProfile);
-                project.getSkills().forEach(projectSkill -> {
-                    projectSkill.setId(null);
-                    projectSkill.setProject(project);
-                });
+                if (project.getSkills() != null) {
+                    project.getSkills().forEach(projectSkill -> {
+                        projectSkill.setId(null);
+                        projectSkill.setProject(project);
+                    });
+                }
                 existingProjects.add(project);
             });
         }
