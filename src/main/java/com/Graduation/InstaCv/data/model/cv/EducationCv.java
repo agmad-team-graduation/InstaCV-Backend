@@ -17,6 +17,13 @@ public class EducationCv {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "section_id")
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private EducationSection section;
+
     private String degree;
     private String school;
     private String city;
@@ -33,10 +40,6 @@ public class EducationCv {
 
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "tailored_cv_id")
-    @JsonIgnore
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private TailoredCv cv;
+    @Column(name = "order_index")
+    private int orderIndex;
 }

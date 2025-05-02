@@ -1,10 +1,7 @@
 package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.model.User;
-import com.Graduation.InstaCv.data.model.cv.EducationCv;
-import com.Graduation.InstaCv.data.model.cv.ExperienceCv;
-import com.Graduation.InstaCv.data.model.cv.ProjectCv;
-import com.Graduation.InstaCv.data.model.cv.TailoredCv;
+import com.Graduation.InstaCv.data.model.cv.*;
 import com.Graduation.InstaCv.data.model.cv.skills.UserSkillCv;
 import com.Graduation.InstaCv.data.model.jobMatching.projectMatching.MatchedProject;
 import com.Graduation.InstaCv.data.model.jobMatching.skillMatching.MatchedSkill;
@@ -81,6 +78,7 @@ public class CvGenerationService implements ICvGenerationService {
                 .job(job)
                 .personalDetails(profile.getPersonalDetails())
                 .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         List<MatchedSkill> matchedSkills = job.getSkillMatchingAnalysis().getMatchedSkills();
@@ -88,10 +86,14 @@ public class CvGenerationService implements ICvGenerationService {
 
         List<UserSkill> tailoredSkills = matchedSkills.stream()
                 .map(MatchedSkill::getUserSkill)
+                .sorted(Comparator.comparing(UserSkill::getLevel).reversed())
                 .toList();
 
         // convert to UserSkillCv
-        tailoredCv.setSkills(tailoredSkills.stream().map(userSkillCvMapper::mapFrom).toList());
+        tailoredCv.setSkillSection(
+                SkillSection.builder().items(
+                        tailoredSkills.stream().map(userSkillCvMapper::mapFrom).toList()
+                ).build());
 
         // Sort experiences by date
         List<Experience> tailoredExperience = profile.getExperienceList().stream()
@@ -99,7 +101,10 @@ public class CvGenerationService implements ICvGenerationService {
                 .toList();
 
         // Convert to ExperienceCv
-        tailoredCv.setExperience(tailoredExperience.stream().map(experienceCvMapper::mapFrom).toList());
+        tailoredCv.setExperienceSection(
+                ExperienceSection.builder().items(
+                        tailoredExperience.stream().map(experienceCvMapper::mapFrom).toList()
+                ).build());
 
         // Sort education by date
         List<Education> tailoredEducation = profile.getEducationList().stream()
@@ -107,7 +112,10 @@ public class CvGenerationService implements ICvGenerationService {
                 .toList();
 
         // Convert to EducationCv
-        tailoredCv.setEducation(tailoredEducation.stream().map(educationCvMapper::mapFrom).toList());
+        tailoredCv.setEducationSection(
+                EducationSection.builder().items(
+                        tailoredEducation.stream().map(educationCvMapper::mapFrom).toList()
+                ).build());
 
         // Include relevant projects
         List<Project> tailoredProjects = job.getProjectMatchingAnalysis().getProjectsMatchedWithSkills()
@@ -115,7 +123,10 @@ public class CvGenerationService implements ICvGenerationService {
                 .map(MatchedProject::getProject).toList();
 
         // Convert to ProjectCv
-        tailoredCv.setProjects(tailoredProjects.stream().map(projectCvMapper::mapFrom).toList());
+        tailoredCv.setProjectSection(
+                ProjectSection.builder().items(
+                        tailoredProjects.stream().map(projectCvMapper::mapFrom).toList()
+                ).build());
 
         // Generate summary
         String summary = generateProfileSummary(profile, job);
@@ -123,14 +134,45 @@ public class CvGenerationService implements ICvGenerationService {
 
 
         // Set relationships
-        tailoredCv.getEducation().forEach(x -> x.setCv(tailoredCv));
-        tailoredCv.getExperience().forEach(x -> x.setCv(tailoredCv));
-        tailoredCv.getProjects().forEach(x -> x.setCv(tailoredCv));
-        tailoredCv.getSkills().forEach(x -> x.setCv(tailoredCv));
+        tailoredCv.getEducationSection().getItems().forEach(x -> x.setSection(tailoredCv.getEducationSection()));
+        tailoredCv.getExperienceSection().getItems().forEach(x -> x.setSection(tailoredCv.getExperienceSection()));
+        tailoredCv.getProjectSection().getItems().forEach(x -> x.setSection(tailoredCv.getProjectSection()));
+        tailoredCv.getSkillSection().getItems().forEach(x -> x.setSection(tailoredCv.getSkillSection()));
 
+        // Set order index
+        setEducationOrderIndex(tailoredCv.getEducationSection().getItems());
+        setExperienceOrderIndex(tailoredCv.getExperienceSection().getItems());
+        setProjectOrderIndex(tailoredCv.getProjectSection().getItems());
+        setSkillOrderIndex(tailoredCv.getSkillSection().getItems());
+
+        // Set order index for sections
+        tailoredCv.getEducationSection().setOrderIndex(0);
+        tailoredCv.getExperienceSection().setOrderIndex(1);
+        tailoredCv.getProjectSection().setOrderIndex(2);
+        tailoredCv.getSkillSection().setOrderIndex(3);
 
         // Save and return
         return tailoredCvRepository.save(tailoredCv);
+    }
+
+    private void setEducationOrderIndex(List<EducationCv> items) {
+        for (int i = 0; i < items.size(); i++)
+            items.get(i).setOrderIndex(i);
+    }
+
+    private void setExperienceOrderIndex(List<ExperienceCv> items) {
+        for (int i = 0; i < items.size(); i++)
+            items.get(i).setOrderIndex(i);
+    }
+
+    private void setProjectOrderIndex(List<ProjectCv> items) {
+        for (int i = 0; i < items.size(); i++)
+            items.get(i).setOrderIndex(i);
+    }
+
+    private void setSkillOrderIndex(List<UserSkillCv> items) {
+        for (int i = 0; i < items.size(); i++)
+            items.get(i).setOrderIndex(i);
     }
 
     @Override
@@ -176,7 +218,7 @@ public class CvGenerationService implements ICvGenerationService {
     public TailoredCv updateCv(Long cvId, Long userId, TailoredCvDto tailoredCvDto) {
         // Get the CV and validate ownership
         TailoredCv existingCv = getCvByIdAndUserId(cvId, userId);
-        
+
         // Update basic fields
         if (tailoredCvDto.getPersonalDetails() != null) {
             existingCv.setPersonalDetails(tailoredCvDto.getPersonalDetails());
@@ -184,65 +226,56 @@ public class CvGenerationService implements ICvGenerationService {
         if (tailoredCvDto.getSummary() != null) {
             existingCv.setSummary(tailoredCvDto.getSummary());
         }
-        
-        // Update education
-        if (tailoredCvDto.getEducation() != null) {
-            // Clear existing education
-            existingCv.getEducation().clear();
-            // Add new education
-            tailoredCvDto.getEducation().forEach(education -> {
-                education.setId(null); // Reset ID to allow new entity creation
-                education.setCv(existingCv);
-                existingCv.getEducation().add(education);
+
+        // Update education section
+        if (tailoredCvDto.getEducationSection() != null) {
+            existingCv.setEducationSection(tailoredCvDto.getEducationSection());
+            // Set relationships and order index
+            existingCv.getEducationSection().getItems().forEach(item -> {
+                item.setSection(existingCv.getEducationSection());
             });
+            setEducationOrderIndex(existingCv.getEducationSection().getItems());
         }
-        
-        // Update experience
-        if (tailoredCvDto.getExperience() != null) {
-            // Clear existing experience
-            existingCv.getExperience().clear();
-            // Add new experience
-            tailoredCvDto.getExperience().forEach(experience -> {
-                experience.setId(null); // Reset ID to allow new entity creation
-                experience.setCv(existingCv);
-                existingCv.getExperience().add(experience);
+
+        // Update experience section
+        if (tailoredCvDto.getExperienceSection() != null) {
+            existingCv.setExperienceSection(tailoredCvDto.getExperienceSection());
+            // Set relationships and order index
+            existingCv.getExperienceSection().getItems().forEach(item -> {
+                item.setSection(existingCv.getExperienceSection());
             });
+            setExperienceOrderIndex(existingCv.getExperienceSection().getItems());
         }
-        
-        // Update skills
-        if (tailoredCvDto.getSkills() != null) {
-            // Clear existing skills
-            existingCv.getSkills().clear();
-            // Add new skills
-            tailoredCvDto.getSkills().forEach(skill -> {
-                skill.setId(null); // Reset ID to allow new entity creation
-                skill.setCv(existingCv);
-                existingCv.getSkills().add(skill);
+
+        // Update skill section
+        if (tailoredCvDto.getSkillSection() != null) {
+            existingCv.setSkillSection(tailoredCvDto.getSkillSection());
+            // Set relationships and order index
+            existingCv.getSkillSection().getItems().forEach(item -> {
+                item.setSection(existingCv.getSkillSection());
             });
+            setSkillOrderIndex(existingCv.getSkillSection().getItems());
         }
-        
-        // Update projects
-        if (tailoredCvDto.getProjects() != null) {
-            // Clear existing projects
-            existingCv.getProjects().clear();
-            // Add new projects
-            tailoredCvDto.getProjects().forEach(project -> {
-                project.setId(null); // Reset ID to allow new entity creation
-                project.setCv(existingCv);
+
+        // Update project section
+        if (tailoredCvDto.getProjectSection() != null) {
+            existingCv.setProjectSection(tailoredCvDto.getProjectSection());
+            // Set relationships and order index
+            existingCv.getProjectSection().getItems().forEach(item -> {
+                item.setSection(existingCv.getProjectSection());
                 // Handle project skills
-                if (project.getSkills() != null) {
-                    project.getSkills().forEach(skill -> {
-                        skill.setId(null); // Reset ID to allow new entity creation
-                        skill.setProjectCv(project);
+                if (item.getSkills() != null) {
+                    item.getSkills().forEach(skill -> {
+                        skill.setProjectCv(item);
                     });
                 }
-                existingCv.getProjects().add(project);
             });
+            setProjectOrderIndex(existingCv.getProjectSection().getItems());
         }
-                
+
         // Set updated timestamp
         existingCv.setUpdatedAt(LocalDateTime.now());
-        
+
         // Save and return
         return tailoredCvRepository.save(existingCv);
     }

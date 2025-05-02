@@ -2,6 +2,7 @@ package com.Graduation.InstaCv.data.model.cv.skills;
 
 import com.Graduation.InstaCv.data.enums.SkillLevel;
 import com.Graduation.InstaCv.data.model.cv.TailoredCv;
+import com.Graduation.InstaCv.data.model.cv.SkillSection;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,14 +18,18 @@ public class UserSkillCv {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "section_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @JsonIgnore
+    private SkillSection section;
+
     private String skill;
+
+    @Column(name = "order_index")
+    private int orderIndex;
 
     @Enumerated(EnumType.STRING)
     private SkillLevel level;
-
-    @ManyToOne
-    @JoinColumn(name = "tailored_cv_id")
-    @ToString.Exclude
-    @JsonIgnore
-    private TailoredCv cv;
 }

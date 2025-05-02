@@ -18,6 +18,14 @@ public class ExperienceCv {
     private Long id;
 
     private String jobTitle;
+    
+    @ManyToOne
+    @JoinColumn(name = "section_id")
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private ExperienceSection section;
+
     private String company;
     private String city;
     private String country;
@@ -33,9 +41,6 @@ public class ExperienceCv {
 
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "tailored_cv_id")
-    @ToString.Exclude
-    @JsonIgnore
-    private TailoredCv cv;
+    @Column(name = "order_index")
+    private int orderIndex;
 }
