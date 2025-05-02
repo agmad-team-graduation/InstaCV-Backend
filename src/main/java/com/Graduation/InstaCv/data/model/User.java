@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.data.model;
 
+import com.Graduation.InstaCv.data.enums.AuthProvider;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
@@ -21,8 +22,7 @@ public class User {
     private String name;
     @Column(nullable = false, unique = true)
     private String email;
-    @Column(nullable = false)
-    private String password;
+    private String password; // Nullable for OAuth users
     @Column(updatable = false, name = "created_at")
     private LocalDateTime createdAt;
     @Column(name = "is_profile_created")
@@ -30,6 +30,10 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonBackReference // To prevent infinite loop
     private Profile profile;
+    // Add auth provider field
+    @Column(name = "auth_provider")
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();

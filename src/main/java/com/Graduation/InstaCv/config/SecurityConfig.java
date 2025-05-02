@@ -2,7 +2,9 @@ package com.Graduation.InstaCv.config;
 
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.security.JwtAuthenticationFilter;
+import com.Graduation.InstaCv.security.OAuth2AuthenticationSuccessHandler;
 import com.Graduation.InstaCv.security.UserDetailsServiceImpl;
+import com.Graduation.InstaCv.service.CustomOAuth2UserService;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,6 +47,9 @@ public class SecurityConfig {
             "/api/github/callback",
             "/api/github/test/**",
 
+            // Google OAuth endpoints
+            "/api/auth/oauth2/**",
+
             // TODO: Remove unnecessary endpoints from the whitelist
             "/api/v1/jobs/**",
 //            "/api/v1/profiles/**",
@@ -62,7 +67,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
+                                                   OAuth2AuthenticationSuccessHandler successHandler) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(WHITELIST_URLS).permitAll()
@@ -72,7 +78,13 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults()) // Enable CORS with default settings
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                ).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                ).oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(end -> end.baseUri("/api/auth/oauth2/authorize"))
+                        .redirectionEndpoint(redir -> redir.baseUri("/api/auth/oauth2/code/*"))
+                        .userInfoEndpoint(user -> user.userService(new CustomOAuth2UserService()))   // maps Google user to your User entity
+                        .successHandler(successHandler)
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }
