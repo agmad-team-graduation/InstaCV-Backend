@@ -9,6 +9,5 @@ public interface IAuthService {
     UserDetails authenticate(LoginRequest loginRequest);
     String generateToken(UserDetails userDetails);
     Claims extractClaims(String token);
-
-    User processOAuthPostLogin(String email);
+    User processOAuthPostLogin(String email, String name);
 }

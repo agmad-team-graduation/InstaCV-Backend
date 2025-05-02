@@ -24,17 +24,14 @@ public class OAuth2AuthenticationSuccessHandler
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
-                                        Authentication authentication)
-            throws IOException {
-
+                                        Authentication authentication) throws IOException {
         OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
         // 1. register or fetch local user
-        User user = authService.processOAuthPostLogin(oauthUser.getAttribute("email"));
+        User user = authService.processOAuthPostLogin(oauthUser.getAttribute("email"), oauthUser.getAttribute("name"));
         // 2. generate JWT
         String token = authService.generateToken(new UserDetailsImpl(UserDetailsInfo.builder()
                 .id(user.getId())
                 .email(user.getEmail())
-                .password(user.getPassword())
                 .build()));
         // 3. send token in response body or cookie
         response.setContentType("application/json");

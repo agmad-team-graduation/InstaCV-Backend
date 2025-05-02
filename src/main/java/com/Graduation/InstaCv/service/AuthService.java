@@ -75,16 +75,11 @@ public class AuthService implements IAuthService {
     }
 
     @Override
-    public User processOAuthPostLogin(String email) {
-        var optional = userRepository.findByEmail(email);
-        if (optional.isPresent()) {
-            return optional.get();
-        } else {
-            User newUser = new User();
-            newUser.setEmail(email);
-            newUser.setProvider(AuthProvider.GOOGLE);
-            // set any defaults, e.g. role = USER
-            return userRepository.save(newUser);
-        }
+    public User processOAuthPostLogin(String email, String name) {
+        return userRepository.findByEmail(email).orElseGet(() -> User.builder()
+                .email(email)
+                .name(name)
+                .authProvider(AuthProvider.GOOGLE)
+                .build());
     }
 }

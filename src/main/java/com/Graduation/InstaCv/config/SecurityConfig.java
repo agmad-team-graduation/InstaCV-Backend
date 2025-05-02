@@ -2,7 +2,9 @@ package com.Graduation.InstaCv.config;
 
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.security.JwtAuthenticationFilter;
+import com.Graduation.InstaCv.security.OAuth2AuthenticationSuccessHandler;
 import com.Graduation.InstaCv.security.UserDetailsServiceImpl;
+import com.Graduation.InstaCv.service.CustomOAuth2UserService;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,6 +47,9 @@ public class SecurityConfig {
             "/api/github/callback",
             "/api/github/test/**",
 
+            // Google OAuth endpoints
+            "/api/auth/oauth2/**",
+
             // TODO: Remove unnecessary endpoints from the whitelist
             "/api/v1/jobs/**",
 //            "/api/v1/profiles/**",
@@ -62,8 +67,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public OAuth2AuthenticationSuccessHandler oauth2SuccessHandler(JwtTokenProvider tokenProvider, IAuthService authService) {
-        return new OAuth2AuthenticationSuccessHandler(tokenProvider, authService);
+    public OAuth2AuthenticationSuccessHandler oauth2SuccessHandler(IAuthService authService) {
+        return new OAuth2AuthenticationSuccessHandler(authService);
     }
 
 
@@ -82,9 +87,7 @@ public class SecurityConfig {
                 ).oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(end -> end.baseUri("/api/auth/oauth2/authorize"))
                         .redirectionEndpoint(redir -> redir.baseUri("/api/auth/oauth2/code/*"))
-                        .userInfoEndpoint(user -> user
-                                .userService(new CustomOAuth2UserService())    // maps Google user to your User entity
-                        )
+                        .userInfoEndpoint(user -> user.userService(new CustomOAuth2UserService()))   // maps Google user to your User entity
                         .successHandler(successHandler)
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
