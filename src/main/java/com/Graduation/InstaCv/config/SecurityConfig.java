@@ -67,12 +67,6 @@ public class SecurityConfig {
     }
 
     @Bean
-    public OAuth2AuthenticationSuccessHandler oauth2SuccessHandler(IAuthService authService) {
-        return new OAuth2AuthenticationSuccessHandler(authService);
-    }
-
-
-    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
                                                    OAuth2AuthenticationSuccessHandler successHandler) throws Exception {
         http

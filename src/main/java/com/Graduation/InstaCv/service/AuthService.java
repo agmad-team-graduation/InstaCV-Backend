@@ -33,7 +33,7 @@ public class AuthService implements IAuthService {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    @Value("${jwt.expiration}")
+    @Value("${jwt.expiration.milliseconds}")
     private Long expiration;
 
     @Override
@@ -75,11 +75,14 @@ public class AuthService implements IAuthService {
     }
 
     @Override
-    public User processOAuthPostLogin(String email, String name) {
-        return userRepository.findByEmail(email).orElseGet(() -> User.builder()
-                .email(email)
-                .name(name)
-                .authProvider(AuthProvider.GOOGLE)
-                .build());
+    public User processOAuthPostLogin(String email, String name) { // add to database if not exists
+        return userRepository.findByEmail(email).orElseGet(() -> {
+            User user = User.builder()
+                    .email(email)
+                    .name(name)
+                    .authProvider(AuthProvider.GOOGLE)
+                    .build();
+            return userRepository.save(user);
+        });
     }
 }

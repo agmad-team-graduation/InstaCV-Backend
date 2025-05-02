@@ -22,8 +22,7 @@ public class User {
     private String name;
     @Column(nullable = false, unique = true)
     private String email;
-    @Column(nullable = false)
-    private String password;
+    private String password; // Nullable for OAuth users
     @Column(updatable = false, name = "created_at")
     private LocalDateTime createdAt;
     @Column(name = "is_profile_created")
@@ -34,6 +33,7 @@ public class User {
     // Add auth provider field
     @Column(name = "auth_provider")
     private AuthProvider authProvider = AuthProvider.LOCAL;
+
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
