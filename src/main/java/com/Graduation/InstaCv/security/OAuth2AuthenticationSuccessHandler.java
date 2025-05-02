@@ -5,7 +5,6 @@ import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
