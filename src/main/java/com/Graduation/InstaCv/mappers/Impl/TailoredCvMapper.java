@@ -7,11 +7,19 @@ import com.Graduation.InstaCv.mappers.ContextAwareMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 @Component
 @AllArgsConstructor
 public class TailoredCvMapper implements ContextAwareMapper<TailoredCv, TailoredCvDto, Job> {
     @Override
     public TailoredCvDto mapTo(TailoredCv tailoredCv) {
+        Map<String, Integer> sectionsOrder = Map.of(
+                "education", tailoredCv.getEducationSection().getOrderIndex(),
+                "experience", tailoredCv.getExperienceSection().getOrderIndex(),
+                "project", tailoredCv.getProjectSection().getOrderIndex(),
+                "skill", tailoredCv.getSkillSection().getOrderIndex()
+        );
         return TailoredCvDto.builder()
                 .id(tailoredCv.getId())
                 .jobId(tailoredCv.getJob().getId())
@@ -23,6 +31,7 @@ public class TailoredCvMapper implements ContextAwareMapper<TailoredCv, Tailored
                 .summary(tailoredCv.getSummary())
                 .createdAt(tailoredCv.getCreatedAt())
                 .updatedAt(tailoredCv.getUpdatedAt())
+                .sectionsOrder(sectionsOrder)
                 .build();
     }
 

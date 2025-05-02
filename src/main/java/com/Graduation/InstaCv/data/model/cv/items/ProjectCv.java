@@ -1,7 +1,6 @@
-package com.Graduation.InstaCv.data.model.cv;
+package com.Graduation.InstaCv.data.model.cv.items;
 
 import com.Graduation.InstaCv.data.model.cv.skills.ProjectSkillCv;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,28 +13,17 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProjectCv {
+public class ProjectCv implements CvItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
     private String title;
-
-    @ManyToOne
-    @JoinColumn(name = "section_id")
-    @JsonIgnore
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private ProjectSection section;
 
     @Column(name = "start_date")
     private LocalDate startDate;
 
     @Column(name = "end_date")
     private LocalDate endDate;
-    
-    @Column(name = "order_index")
-    private int orderIndex;
 
     @Column(name = "is_present")
     private boolean isPresent;
@@ -44,4 +32,7 @@ public class ProjectCv {
 
     @OneToMany(mappedBy = "projectCv", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjectSkillCv> skills;
+
+    @Column(name = "order_index")
+    private Integer orderIndex;
 }

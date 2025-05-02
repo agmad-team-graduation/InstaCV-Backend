@@ -2,6 +2,11 @@ package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.cv.*;
+import com.Graduation.InstaCv.data.model.cv.items.CvItem;
+import com.Graduation.InstaCv.data.model.cv.items.EducationCv;
+import com.Graduation.InstaCv.data.model.cv.items.ExperienceCv;
+import com.Graduation.InstaCv.data.model.cv.items.ProjectCv;
+import com.Graduation.InstaCv.data.model.cv.sections.*;
 import com.Graduation.InstaCv.data.model.cv.skills.UserSkillCv;
 import com.Graduation.InstaCv.data.model.jobMatching.projectMatching.MatchedProject;
 import com.Graduation.InstaCv.data.model.jobMatching.skillMatching.MatchedSkill;
@@ -132,47 +137,17 @@ public class CvGenerationService implements ICvGenerationService {
         String summary = generateProfileSummary(profile, job);
         tailoredCv.setSummary(summary);
 
-
-        // Set relationships
-        tailoredCv.getEducationSection().getItems().forEach(x -> x.setSection(tailoredCv.getEducationSection()));
-        tailoredCv.getExperienceSection().getItems().forEach(x -> x.setSection(tailoredCv.getExperienceSection()));
-        tailoredCv.getProjectSection().getItems().forEach(x -> x.setSection(tailoredCv.getProjectSection()));
-        tailoredCv.getSkillSection().getItems().forEach(x -> x.setSection(tailoredCv.getSkillSection()));
-
         // Set order index
-        setEducationOrderIndex(tailoredCv.getEducationSection().getItems());
-        setExperienceOrderIndex(tailoredCv.getExperienceSection().getItems());
-        setProjectOrderIndex(tailoredCv.getProjectSection().getItems());
-        setSkillOrderIndex(tailoredCv.getSkillSection().getItems());
+        setOrderIndex(tailoredCv.getEducationSection().getItems().stream().map(e -> (CvItem) e).toList());
+        setOrderIndex(tailoredCv.getExperienceSection().getItems().stream().map(e -> (CvItem) e).toList());
+        setOrderIndex(tailoredCv.getProjectSection().getItems().stream().map(e -> (CvItem) e).toList());
+        setOrderIndex(tailoredCv.getSkillSection().getItems().stream().map(e -> (CvItem) e).toList());
 
         // Set order index for sections
-        tailoredCv.getEducationSection().setOrderIndex(0);
-        tailoredCv.getExperienceSection().setOrderIndex(1);
-        tailoredCv.getProjectSection().setOrderIndex(2);
-        tailoredCv.getSkillSection().setOrderIndex(3);
+        setOrderIndexOfSections(tailoredCv);
 
         // Save and return
         return tailoredCvRepository.save(tailoredCv);
-    }
-
-    private void setEducationOrderIndex(List<EducationCv> items) {
-        for (int i = 0; i < items.size(); i++)
-            items.get(i).setOrderIndex(i);
-    }
-
-    private void setExperienceOrderIndex(List<ExperienceCv> items) {
-        for (int i = 0; i < items.size(); i++)
-            items.get(i).setOrderIndex(i);
-    }
-
-    private void setProjectOrderIndex(List<ProjectCv> items) {
-        for (int i = 0; i < items.size(); i++)
-            items.get(i).setOrderIndex(i);
-    }
-
-    private void setSkillOrderIndex(List<UserSkillCv> items) {
-        for (int i = 0; i < items.size(); i++)
-            items.get(i).setOrderIndex(i);
     }
 
     @Override
@@ -230,45 +205,87 @@ public class CvGenerationService implements ICvGenerationService {
         // Update education section
         if (tailoredCvDto.getEducationSection() != null) {
             existingCv.setEducationSection(tailoredCvDto.getEducationSection());
-            // Set relationships and order index
-            existingCv.getEducationSection().getItems().forEach(item -> item.setSection(existingCv.getEducationSection()));
-            setEducationOrderIndex(existingCv.getEducationSection().getItems());
+            existingCv.getEducationSection().setId(null);
+            existingCv.getEducationSection().getItems().forEach(e -> e.setId(null));
+            validateOrSetOrderIndex(existingCv.getEducationSection().getItems().stream().map(e -> (CvItem) e).toList());
         }
 
         // Update experience section
         if (tailoredCvDto.getExperienceSection() != null) {
             existingCv.setExperienceSection(tailoredCvDto.getExperienceSection());
-            // Set relationships and order index
-            existingCv.getExperienceSection().getItems().forEach(item -> item.setSection(existingCv.getExperienceSection()));
-            setExperienceOrderIndex(existingCv.getExperienceSection().getItems());
+            existingCv.getExperienceSection().setId(null);
+            existingCv.getExperienceSection().getItems().forEach(e -> e.setId(null));
+            validateOrSetOrderIndex(existingCv.getExperienceSection().getItems().stream().map(e -> (CvItem) e).toList());
         }
 
         // Update skill section
         if (tailoredCvDto.getSkillSection() != null) {
             existingCv.setSkillSection(tailoredCvDto.getSkillSection());
-            // Set relationships and order index
-            existingCv.getSkillSection().getItems().forEach(item -> item.setSection(existingCv.getSkillSection()));
-            setSkillOrderIndex(existingCv.getSkillSection().getItems());
+            existingCv.getSkillSection().setId(null);
+            existingCv.getSkillSection().getItems().forEach(e -> e.setId(null));
+            validateOrSetOrderIndex(existingCv.getSkillSection().getItems().stream().map(e -> (CvItem) e).toList());
         }
 
         // Update project section
         if (tailoredCvDto.getProjectSection() != null) {
             existingCv.setProjectSection(tailoredCvDto.getProjectSection());
+            existingCv.getProjectSection().setId(null);
             // Set relationships and order index
             existingCv.getProjectSection().getItems().forEach(item -> {
-                item.setSection(existingCv.getProjectSection());
+                item.setId(null);
                 // Handle project skills
                 if (item.getSkills() != null) {
+                    item.getSkills().forEach(skill -> skill.setId(null));
                     item.getSkills().forEach(skill -> skill.setProjectCv(item));
                 }
             });
-            setProjectOrderIndex(existingCv.getProjectSection().getItems());
+            validateOrSetOrderIndex(existingCv.getProjectSection().getItems().stream().map(e -> (CvItem) e).toList());
         }
 
+        // Validate or set order index of sections
+        validateOrSetOrderIndexOfSections(existingCv);
         // Set updated timestamp
         existingCv.setUpdatedAt(LocalDateTime.now());
 
         // Save and return
         return tailoredCvRepository.save(existingCv);
+    }
+
+    private void setOrderIndex(List<CvItem> items) {
+        for (int i = 0; i < items.size(); i++)
+            items.get(i).setOrderIndex(i + 1);
+    }
+
+    private void setOrderIndexOfSections(TailoredCv cv) {
+        cv.getEducationSection().setOrderIndex(1);
+        cv.getExperienceSection().setOrderIndex(2);
+        cv.getProjectSection().setOrderIndex(3);
+        cv.getSkillSection().setOrderIndex(4);
+    }
+
+    /**
+     * Validates the order index of items in a section. If any item has an invalid order index (<= 0) or if there are
+     * duplicate order indexes, it sets a new order index for all items, depending on the order of the items in the list.
+     */
+    private void validateOrSetOrderIndex(List<CvItem> items) {
+        Set<Integer> orderIndexes = new HashSet<>();
+        for (CvItem item : items) {
+            if (item.getOrderIndex() == null || item.getOrderIndex() <= 0 || !orderIndexes.add(item.getOrderIndex())) {
+                setOrderIndex(items);
+                return;
+            }
+        }
+    }
+
+    private void validateOrSetOrderIndexOfSections(TailoredCv cv) {
+        Set<Integer> orderIndexes = new HashSet<>();
+        orderIndexes.add(cv.getEducationSection().getOrderIndex());
+        orderIndexes.add(cv.getExperienceSection().getOrderIndex());
+        orderIndexes.add(cv.getProjectSection().getOrderIndex());
+        orderIndexes.add(cv.getSkillSection().getOrderIndex());
+        Integer minOrderIndex = Collections.min(orderIndexes);
+        Integer maxOrderIndex = Collections.max(orderIndexes);
+        if (orderIndexes.size() != 4 || orderIndexes.contains(null) || minOrderIndex <= 0 || maxOrderIndex > 4)
+            setOrderIndexOfSections(cv);
     }
 }

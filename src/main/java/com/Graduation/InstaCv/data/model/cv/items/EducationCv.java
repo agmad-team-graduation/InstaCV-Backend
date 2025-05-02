@@ -1,32 +1,22 @@
-package com.Graduation.InstaCv.data.model.cv;
+package com.Graduation.InstaCv.data.model.cv.items;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "cv_experience")
+@Table(name = "cv_education")
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class ExperienceCv {
+public class EducationCv implements CvItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private String jobTitle;
-    
-    @ManyToOne
-    @JoinColumn(name = "section_id")
-    @JsonIgnore
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private ExperienceSection section;
-
-    private String company;
+    private String degree;
+    private String school;
     private String city;
     private String country;
 
@@ -42,5 +32,5 @@ public class ExperienceCv {
     private String description;
 
     @Column(name = "order_index")
-    private int orderIndex;
+    private Integer orderIndex;
 }

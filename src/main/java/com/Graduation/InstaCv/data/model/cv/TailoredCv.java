@@ -1,5 +1,9 @@
 package com.Graduation.InstaCv.data.model.cv;
 
+import com.Graduation.InstaCv.data.model.cv.sections.EducationSection;
+import com.Graduation.InstaCv.data.model.cv.sections.ExperienceSection;
+import com.Graduation.InstaCv.data.model.cv.sections.ProjectSection;
+import com.Graduation.InstaCv.data.model.cv.sections.SkillSection;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.PersonalDetails;
 import com.Graduation.InstaCv.data.model.profile.Profile;

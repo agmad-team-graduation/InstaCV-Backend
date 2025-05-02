@@ -1,7 +1,7 @@
 package com.Graduation.InstaCv.mappers.Impl.CV;
 
 import com.Graduation.InstaCv.data.model.BaseSkill;
-import com.Graduation.InstaCv.data.model.cv.ProjectCv;
+import com.Graduation.InstaCv.data.model.cv.items.ProjectCv;
 import com.Graduation.InstaCv.data.model.cv.skills.ProjectSkillCv;
 import com.Graduation.InstaCv.data.model.profile.ProjectSkill;
 import com.Graduation.InstaCv.data.model.profile.Project;
