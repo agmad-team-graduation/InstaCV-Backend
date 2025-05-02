@@ -231,9 +231,7 @@ public class CvGenerationService implements ICvGenerationService {
         if (tailoredCvDto.getEducationSection() != null) {
             existingCv.setEducationSection(tailoredCvDto.getEducationSection());
             // Set relationships and order index
-            existingCv.getEducationSection().getItems().forEach(item -> {
-                item.setSection(existingCv.getEducationSection());
-            });
+            existingCv.getEducationSection().getItems().forEach(item -> item.setSection(existingCv.getEducationSection()));
             setEducationOrderIndex(existingCv.getEducationSection().getItems());
         }
 
@@ -241,9 +239,7 @@ public class CvGenerationService implements ICvGenerationService {
         if (tailoredCvDto.getExperienceSection() != null) {
             existingCv.setExperienceSection(tailoredCvDto.getExperienceSection());
             // Set relationships and order index
-            existingCv.getExperienceSection().getItems().forEach(item -> {
-                item.setSection(existingCv.getExperienceSection());
-            });
+            existingCv.getExperienceSection().getItems().forEach(item -> item.setSection(existingCv.getExperienceSection()));
             setExperienceOrderIndex(existingCv.getExperienceSection().getItems());
         }
 
@@ -251,9 +247,7 @@ public class CvGenerationService implements ICvGenerationService {
         if (tailoredCvDto.getSkillSection() != null) {
             existingCv.setSkillSection(tailoredCvDto.getSkillSection());
             // Set relationships and order index
-            existingCv.getSkillSection().getItems().forEach(item -> {
-                item.setSection(existingCv.getSkillSection());
-            });
+            existingCv.getSkillSection().getItems().forEach(item -> item.setSection(existingCv.getSkillSection()));
             setSkillOrderIndex(existingCv.getSkillSection().getItems());
         }
 
@@ -265,9 +259,7 @@ public class CvGenerationService implements ICvGenerationService {
                 item.setSection(existingCv.getProjectSection());
                 // Handle project skills
                 if (item.getSkills() != null) {
-                    item.getSkills().forEach(skill -> {
-                        skill.setProjectCv(item);
-                    });
+                    item.getSkills().forEach(skill -> skill.setProjectCv(item));
                 }
             });
             setProjectOrderIndex(existingCv.getProjectSection().getItems());

@@ -1,7 +1,6 @@
 package com.Graduation.InstaCv.data.model.cv.skills;
 
 import com.Graduation.InstaCv.data.enums.SkillLevel;
-import com.Graduation.InstaCv.data.model.cv.TailoredCv;
 import com.Graduation.InstaCv.data.model.cv.SkillSection;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
