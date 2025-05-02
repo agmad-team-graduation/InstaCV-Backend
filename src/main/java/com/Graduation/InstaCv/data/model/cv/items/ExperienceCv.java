@@ -1,6 +1,5 @@
-package com.Graduation.InstaCv.data.model.cv;
+package com.Graduation.InstaCv.data.model.cv.items;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,11 +11,10 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ExperienceCv {
+public class ExperienceCv implements CvItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String jobTitle;
     private String company;
     private String city;
@@ -33,9 +31,6 @@ public class ExperienceCv {
 
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "tailored_cv_id")
-    @ToString.Exclude
-    @JsonIgnore
-    private TailoredCv cv;
+    @Column(name = "order_index")
+    private Integer orderIndex;
 }
