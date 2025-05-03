@@ -30,8 +30,9 @@ public class JobController {
     @PostMapping("/add")
     public ResponseEntity<JobDto> addJob(@RequestBody JobSimpleDto job) {
         Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
-        Job SavedJob = jobService.addJob(jobSimpleMapper.mapFrom(job, profile), profile);
-        return new ResponseEntity<>(jobMapper.mapTo(SavedJob), HttpStatus.CREATED);
+        Job savedJob = jobService.addJob(jobSimpleMapper.mapFrom(job, profile), profile);
+        jobService.fullAnalyzeJobAsync(savedJob.getId(), profile.getUser().getId());
+        return new ResponseEntity<>(jobMapper.mapTo(savedJob), HttpStatus.CREATED);
     }
 
     @GetMapping("/all")

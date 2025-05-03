@@ -11,6 +11,7 @@ import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.service.Interfaces.IJobService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -77,6 +78,13 @@ public class JobService implements IJobService {
     public void deleteJobByIdAndUserId(Long jobId, Long userId) {
         Job job = getJobByIdAndUserId(jobId, userId); // ensures ownership
         jobRepository.delete(job);
+    }
+
+    @Override
+    @Async
+    @Transactional
+    public void fullAnalyzeJobAsync(Long jobId, Long userId) {
+        analyzeJobMatching(jobId, userId, false);
     }
 
     @Override

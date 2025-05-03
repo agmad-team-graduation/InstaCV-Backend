@@ -20,4 +20,6 @@ public interface IJobService {
     Job getJobByIdAndUserId(Long jobId, Long userId);
 
     void deleteJobByIdAndUserId(Long jobId, Long userId);
+
+    void fullAnalyzeJobAsync(Long jobId, Long userId);
 }
