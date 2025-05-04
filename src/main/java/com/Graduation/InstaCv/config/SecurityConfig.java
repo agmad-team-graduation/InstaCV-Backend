@@ -2,7 +2,10 @@ package com.Graduation.InstaCv.config;
 
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.security.JwtAuthenticationFilter;
+import com.Graduation.InstaCv.security.OAuth2AuthenticationSuccessHandler;
+import com.Graduation.InstaCv.security.UserDetailsInfo;
 import com.Graduation.InstaCv.security.UserDetailsServiceImpl;
+import com.Graduation.InstaCv.service.CustomOAuth2UserService;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,22 +36,13 @@ public class SecurityConfig {
 
     private static final String[] WHITELIST_URLS = {
             // Existing auth endpoints
-            "/api/v1/auth/**",
             "/api/v1/auth/login",
             "/api/v1/auth/register",
             "/api/v1/auth/reset-password/validate",
             "/api/v1/auth/reset-password",
             "/api/v1/auth/forget-password",
-
-            // GitHub OAuth endpoints
-            "/api/github/authorize",
-            "/api/github/callback",
-            "/api/github/test/**",
-
-            // TODO: Remove unnecessary endpoints from the whitelist
-            "/api/v1/jobs/**",
-//            "/api/v1/profiles/**",
-            "/api/v1/cv/**"
+            // Google OAuth endpoints
+            "/api/auth/oauth2/authorize/**",
     };
 
     @Bean
@@ -62,7 +56,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
+                                                   OAuth2AuthenticationSuccessHandler successHandler, UserDetailsInfo.JwtAuthenticationEntryPoint entryPoint
+    ) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(WHITELIST_URLS).permitAll()
@@ -70,9 +66,16 @@ public class SecurityConfig {
                 )
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults()) // Enable CORS with default settings
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                ).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(entryPoint))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/api/auth/oauth2/authorize/google")
+                        .authorizationEndpoint(end -> end.baseUri("/api/auth/oauth2/authorize"))
+                        .redirectionEndpoint(redir -> redir.baseUri("/api/auth/oauth2/code/*"))
+                        .userInfoEndpoint(user -> user.userService(new CustomOAuth2UserService()))   // maps Google user to your User entity
+                        .successHandler(successHandler)
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }

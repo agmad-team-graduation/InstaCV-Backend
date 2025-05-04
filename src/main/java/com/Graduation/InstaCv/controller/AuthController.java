@@ -9,6 +9,7 @@ import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import com.Graduation.InstaCv.service.Interfaces.IUserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -21,7 +22,8 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     private final IAuthService authService;
     private final IUserService userService;
-
+    @Value("${jwt.expiration.seconds}")
+    private Long expiration;
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
         UserDetails userDetails = authService.authenticate(loginRequest);
@@ -29,7 +31,7 @@ public class AuthController {
 
         LoginResponse loginResponse = LoginResponse.builder()
                 .token(token)
-                .expiresIn(86400L)
+                .expiresIn(expiration)
                 .build();
 
         return ResponseEntity.ok(loginResponse);

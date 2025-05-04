@@ -1,6 +1,5 @@
 package com.Graduation.InstaCv.security;
 
-import com.Graduation.InstaCv.data.model.profile.Education;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -15,21 +14,20 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private final IAuthService authservice;
+    private final IAuthService authService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
         try {
             String jwt = getJwtFromRequest(request);
             if (jwt != null) {
-                Claims claims = authservice.extractClaims(jwt);
+                Claims claims = authService.extractClaims(jwt);
                 UserDetails userDetails = new UserDetailsImpl(UserDetailsInfo.builder()
                         .id(Long.valueOf(claims.getId()))
                         .email(claims.getSubject())
@@ -46,6 +44,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             log.warn("Received Invalid auth token", e);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Unauthorized or invalid token.\"}");
             return;
         }
         filterChain.doFilter(request, response);

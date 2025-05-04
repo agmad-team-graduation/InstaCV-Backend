@@ -1,8 +1,7 @@
 package com.Graduation.InstaCv.data.model.cv.skills;
 
 import com.Graduation.InstaCv.data.enums.SkillLevel;
-import com.Graduation.InstaCv.data.model.cv.TailoredCv;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.Graduation.InstaCv.data.model.cv.items.CvItem;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,7 +11,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserSkillCv {
+public class UserSkillCv implements CvItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,9 +21,6 @@ public class UserSkillCv {
     @Enumerated(EnumType.STRING)
     private SkillLevel level;
 
-    @ManyToOne
-    @JoinColumn(name = "tailored_cv_id")
-    @ToString.Exclude
-    @JsonIgnore
-    private TailoredCv cv;
+    @Column(name = "order_index")
+    private Integer orderIndex;
 }
