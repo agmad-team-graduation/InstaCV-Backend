@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.controller;
 
 import com.Graduation.InstaCv.data.dto.RemoteOkJobDto;
+import com.Graduation.InstaCv.service.RemoteJobStorageService;
 import com.Graduation.InstaCv.service.RemoteOKJobScrappingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +13,12 @@ import java.util.List;
 public class RemoteOKJobScrappingController {
 
     private final RemoteOKJobScrappingService remoteOKJobScrappingService;
+    private final RemoteJobStorageService storageService;
 
     @Autowired
-    public RemoteOKJobScrappingController(RemoteOKJobScrappingService remoteOKJobScrappingService) {
+    public RemoteOKJobScrappingController(RemoteOKJobScrappingService remoteOKJobScrappingService, RemoteJobStorageService storageService) {
         this.remoteOKJobScrappingService = remoteOKJobScrappingService;
+        this.storageService = storageService;
     }
 
     @GetMapping("/dev-jobs")
@@ -28,7 +31,7 @@ public class RemoteOKJobScrappingController {
 
     @PostMapping("/sync")
     public ResponseEntity<String> syncJobs() {
-        int newJobsCount = remoteOKJobScrappingService.fetchAndSaveNewJobs();
+        int newJobsCount = storageService.fetchAndSaveNewJobs();
         return ResponseEntity.ok("Added " + newJobsCount + " new jobs");
     }
 

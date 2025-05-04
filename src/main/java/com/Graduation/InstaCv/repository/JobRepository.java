@@ -10,4 +10,5 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     List<Job> findJobsByProfileId(Long profileId);
     Optional<Job> findJobByIdAndProfileId(Long jobId, Long profileId);
     boolean existsByIdAndProfileId(Long jobId, Long profileId);
+    List<Job> findAllByRemoteJobDataIsNotNull();
 }

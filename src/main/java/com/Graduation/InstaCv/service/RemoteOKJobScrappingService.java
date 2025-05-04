@@ -1,10 +1,6 @@
 package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.RemoteOkJobDto;
-import com.Graduation.InstaCv.data.model.RemoteOk.RemoteOkJob;
-import com.Graduation.InstaCv.data.model.RemoteOk.RemoteOkJobSkill;
-import com.Graduation.InstaCv.repository.RemoteOkJobRepository;
-import jakarta.transaction.Transactional;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -30,16 +26,14 @@ import static com.Graduation.InstaCv.utils.DeveloperTags.DEV_TAGS;
 @Service
 public class RemoteOKJobScrappingService {
 
-    private final RemoteOkJobRepository remoteOkJobRepository;
     private final RestTemplate restTemplate;
     private static final String REMOTE_OK_API_URL = "https://remoteok.com/api";
 
-
     @Autowired
-    public RemoteOKJobScrappingService(RemoteOkJobRepository remoteOkJobRepository, RestTemplate restTemplate) {
-        this.remoteOkJobRepository = remoteOkJobRepository;
+    public RemoteOKJobScrappingService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
+
 
     // Helper method to check if a job is a developer job
     private boolean isDeveloperJob(RemoteOkJobDto job) {
@@ -175,109 +169,5 @@ public class RemoteOKJobScrappingService {
             }
         });
         return jobs;
-    }
-
-
-    /**
-     * Fetches new jobs from RemoteOK API and saves them to the database
-     * @return The number of new jobs saved
-     */
-    @Transactional
-    public  int fetchAndSaveNewJobs() {
-        // Get all jobs from the API
-        List<RemoteOkJobDto> apiJobs = getFilteredDevJobs(null,false);
-
-        if (apiJobs.isEmpty()) {
-            return 0;
-        }
-
-        // Get existing job IDs from the database
-        Set<String> existingJobIds = remoteOkJobRepository.findAllIds();
-
-        // Filter out jobs that already exist in the database
-        List<RemoteOkJobDto> newJobs = apiJobs.stream()
-                .filter(job -> !existingJobIds.contains(job.getId()))
-                .toList();
-
-        if (newJobs.isEmpty()) {
-            return 0;
-        }
-
-        // Convert DTOs to entities and save them
-        List<RemoteOkJob> jobEntities = newJobs.stream()
-                .map(this::convertToEntity)
-                .collect(Collectors.toList());
-
-        remoteOkJobRepository.saveAll(jobEntities);
-
-        return newJobs.size();
-    }
-
-    /**
-     * Converts a RemoteOkJobDto to a RemoteOkJob entity
-     */
-    private RemoteOkJob convertToEntity(RemoteOkJobDto dto) {
-        RemoteOkJob job = RemoteOkJob.builder()
-                .id(dto.getId())
-                .title(dto.getTitle())
-                .company(dto.getCompany())
-                .salaryMin(dto.getSalaryMin())
-                .salaryMax(dto.getSalaryMax())
-                .applyUrl(dto.getApplyUrl())
-                .description(dto.getDescription())
-                .date(dto.getDate())
-                .skills(new ArrayList<>())
-                .build();
-
-        // Add tags
-        if (dto.getTags() != null) {
-            for (String tagValue : dto.getTags()) {
-                RemoteOkJobSkill tag = new RemoteOkJobSkill();
-                tag.setSkill(tagValue);
-                tag.setJob(job);
-                job.getSkills().add(tag);
-            }
-        }
-
-        return job;
-    }
-
-    /**
-     * Scheduled task to automatically fetch new jobs daily
-     */
-    @Scheduled(fixedRate = 120_000) // Every 120,000 milliseconds (2 minutes)
-    public void scheduledJobSync() {
-        int newJobsCount = fetchAndSaveNewJobs();
-        System.out.println("Scheduled job sync completed. Added " + newJobsCount + " new jobs.");
-    }
-
-    /**
-     * Get all jobs from the database
-     */
-    public  List<RemoteOkJobDto> getAllJobs() {
-        return remoteOkJobRepository.findAll().stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-    }
-
-
-    private RemoteOkJobDto convertToDto(RemoteOkJob entity) {
-        RemoteOkJobDto dto = new RemoteOkJobDto();
-        dto.setId(entity.getId());
-        dto.setTitle(entity.getTitle());
-        dto.setCompany(entity.getCompany());
-        dto.setSalaryMin(entity.getSalaryMin());
-        dto.setSalaryMax(entity.getSalaryMax());
-        dto.setApplyUrl(entity.getApplyUrl());
-        dto.setDescription(entity.getDescription());
-        dto.setDate(entity.getDate());
-
-        // Extract tag values
-        List<String> tagValues = entity.getSkills().stream()
-                .map(RemoteOkJobSkill::getSkill)
-                .collect(Collectors.toList());
-        dto.setTags(tagValues);
-
-        return dto;
     }
 }

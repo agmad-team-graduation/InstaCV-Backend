@@ -1,13 +1,23 @@
 package com.Graduation.InstaCv.data.model.job;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import lombok.*;
 
-@Entity(name = "remote_job_data")
+@Entity
+@Table(name = "remote_job_data")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString(exclude = {"job"})
+@EqualsAndHashCode(exclude = {"job"})
 public class RemoteJobData {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "remote_id")
+    private String remoteId;  // Original ID from RemoteOK
 
     @Column(name = "salary_min")
     private Integer salaryMin;
@@ -20,5 +30,7 @@ public class RemoteJobData {
 
     private String date;
 
-
+    @OneToOne
+    @JoinColumn(name = "job_id")
+    private Job job;
 }

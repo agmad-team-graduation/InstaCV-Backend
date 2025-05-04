@@ -16,37 +16,38 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Table(name = "profile_jobs")
+@ToString(exclude = {"profile", "jobSkills", "skillMatchingAnalysis", "projectMatchingAnalysis", "remoteJobData"})
+@EqualsAndHashCode(exclude = {"profile", "jobSkills", "skillMatchingAnalysis", "projectMatchingAnalysis", "remoteJobData"})
 public class Job {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne(optional = false)
+    @ManyToOne
     @JoinColumn(name = "profile_id")
-    @ToString.Exclude
     @JsonIgnore
-    @EqualsAndHashCode.Exclude
     private Profile profile;
     private String title;
     private String company;
-    @Column(nullable = false, length = 2048)
+    @Column(nullable = false, length = 20480)
     private String description;
     private boolean isAnalyzed = false;
     private boolean isSkillMatchingAnalyzed = false;
     private boolean isProjectMatchingAnalyzed = false;
     private boolean analyzeFailed = false;
-    // This is the refactor of JobAnalysis object
+
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @Builder.Default
     private List<JobSkill> jobSkills = List.of();
+
     @OneToOne(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     private SkillMatchingAnalysis skillMatchingAnalysis;
+
     @OneToOne(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     private ProjectsMatchingAnalysis projectMatchingAnalysis;
+
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private RemoteJobData remoteJobData;
-//    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<TailoredCv> tailoredCvs;
 
     public List<JobSkill> getHardSkills() {
         return jobSkills.stream()
