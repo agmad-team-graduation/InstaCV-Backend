@@ -13,11 +13,12 @@ public interface IJobService {
 
     CompletableFuture<Job> analyzeSkillExtractionAsync(Long jobId, Long userId, boolean forceAnalyze);
 
-    CompletableFuture<Job> analyzeJobMatching(Long jobId, Long userId, boolean forceAnalyze);
+    CompletableFuture<Job> analyzeSkillsMatching(Long jobId, Long userId, boolean forceAnalyze);
 
     CompletableFuture<Job> analyzeProjectsMatching(Long jobId, Long userId, boolean forceAnalyze);
 
     Job getJobByIdAndUserId(Long jobId, Long userId);
 
     void deleteJobByIdAndUserId(Long jobId, Long userId);
+    Job fullAnalyze(Long jobId, Long userId, boolean forceAnalyze);
 }

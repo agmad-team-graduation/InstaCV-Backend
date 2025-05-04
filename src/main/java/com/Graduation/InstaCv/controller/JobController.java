@@ -42,10 +42,12 @@ public class JobController {
     }
 
     @GetMapping("/{jobId}")
-    public ResponseEntity<JobDto> getJob(@PathVariable Long jobId) {
+    public JobDto getJob(@PathVariable Long jobId) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         Job jobFound = jobService.getJobByIdAndUserId(jobId, userId);
-        return new ResponseEntity<>(jobMapper.mapTo(jobFound), HttpStatus.OK);
+        if (jobFound.isInitialAnalyzeFailed())
+            jobFound = jobService.fullAnalyze(jobId, userId, false);
+        return jobMapper.mapTo(jobFound);
     }
 
     @DeleteMapping("/{jobId}")
@@ -69,7 +71,7 @@ public class JobController {
             @PathVariable Long jobId,
             @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
-        return jobService.analyzeJobMatching(jobId, userId, forceAnalyze)
+        return jobService.analyzeSkillsMatching(jobId, userId, forceAnalyze)
                 .thenApply(job -> new ResponseEntity<>(jobMapper.mapTo(job), HttpStatus.OK));
     }
 }

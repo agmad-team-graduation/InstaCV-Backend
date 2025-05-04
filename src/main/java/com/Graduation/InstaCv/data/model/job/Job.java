@@ -33,6 +33,7 @@ public class Job {
     private boolean isAnalyzed = false;
     private boolean isSkillMatchingAnalyzed = false;
     private boolean isProjectMatchingAnalyzed = false;
+    private boolean initialAnalyzeFailed = false;
     // This is the refactor of JobAnalysis object
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore

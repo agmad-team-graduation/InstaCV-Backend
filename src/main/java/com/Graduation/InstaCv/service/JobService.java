@@ -38,11 +38,17 @@ public class JobService implements IJobService {
     @Transactional
     @Async
     public void backgroundFullAnalyzeJob(Long jobId, Long userId, Boolean forceAnalyze) {
-        // No need to call skillExtraction (will be done internally)
-        Job job = analyzeJobMatching(jobId, userId, forceAnalyze).join();
-        jobRepository.save(job);
-        job = analyzeProjectsMatching(jobId, userId, forceAnalyze).join();
-        jobRepository.save(job);
+        try {
+            // No need to call skillExtraction (will be done internally)
+            Job job = analyzeSkillsMatching(jobId, userId, forceAnalyze).join();
+            jobRepository.save(job);
+            job = analyzeProjectsMatching(jobId, userId, forceAnalyze).join();
+            jobRepository.save(job);
+        } catch (Exception e) {
+            Job job = getJobByIdAndUserId(jobId, userId);
+            job.setInitialAnalyzeFailed(true);
+            jobRepository.save(job);
+        }
     }
 
 
@@ -55,7 +61,7 @@ public class JobService implements IJobService {
     }
 
     @Override
-    public CompletableFuture<Job> analyzeJobMatching(Long jobId, Long userId, boolean forceAnalyze) {
+    public CompletableFuture<Job> analyzeSkillsMatching(Long jobId, Long userId, boolean forceAnalyze) {
         Profile profile = profileService.getProfileByUserId(userId);
         Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
@@ -93,6 +99,18 @@ public class JobService implements IJobService {
     public void deleteJobByIdAndUserId(Long jobId, Long userId) {
         Job job = getJobByIdAndUserId(jobId, userId); // ensures ownership
         jobRepository.delete(job);
+    }
+
+    @Override
+    public Job fullAnalyze(Long jobId, Long userId, boolean forceAnalyze) {
+        Profile profile = profileService.getProfileByUserId(userId);
+        Job job = analyzeSkillsMatching(jobId, userId, forceAnalyze).join();
+        jobRepository.save(job);
+        job = analyzeProjectsMatching(jobId, userId, forceAnalyze).join();
+        job.setInitialAnalyzeFailed(false);
+        jobRepository.save(job);
+        return jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
     }
 
     @Override
