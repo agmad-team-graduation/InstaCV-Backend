@@ -72,7 +72,7 @@ public class RemoteJobStorageService {
     /**
      * Scheduled task to automatically fetch new jobs every 2 minutes
      */
-    @Scheduled(fixedRate = 120000) // Every 120,000 milliseconds (2 minutes)
+    @Scheduled(fixedRate = 120000*30*6) //6 hours in milliseconds
     public void scheduledJobSync() {
         int newJobsCount = fetchAndSaveNewJobs();
         System.out.println("Scheduled job sync completed. Added " + newJobsCount + " new jobs.");
