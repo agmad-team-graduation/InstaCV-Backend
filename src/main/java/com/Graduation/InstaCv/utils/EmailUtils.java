@@ -19,7 +19,8 @@ public class EmailUtils {
             message.setTo(to);
             message.setSubject("Password Reset Request");
             message.setText("To reset your password, click the link below:\n\n" +
-                    frontendProps.getResetUrl() + resetToken + "\n\nThe link will expire in 30 minutes.");
+                    frontendProps.getResetUrl() + "?token=" +
+                    resetToken + "\n\nThe link will expire in 30 minutes.");
             mailSender.send(message);
         } catch (Exception e) {
             throw new EmailSendException("Failed to send email", e);

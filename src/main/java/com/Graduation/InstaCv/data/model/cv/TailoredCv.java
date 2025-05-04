@@ -1,6 +1,9 @@
 package com.Graduation.InstaCv.data.model.cv;
 
-import com.Graduation.InstaCv.data.model.cv.skills.UserSkillCv;
+import com.Graduation.InstaCv.data.model.cv.sections.EducationSection;
+import com.Graduation.InstaCv.data.model.cv.sections.ExperienceSection;
+import com.Graduation.InstaCv.data.model.cv.sections.ProjectSection;
+import com.Graduation.InstaCv.data.model.cv.sections.SkillSection;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.PersonalDetails;
 import com.Graduation.InstaCv.data.model.profile.Profile;
@@ -11,7 +14,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "tailored_cvs")
@@ -37,17 +39,17 @@ public class TailoredCv {
 
     private String summary;
 
-    @OneToMany(mappedBy = "cv", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<EducationCv> education;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private EducationSection educationSection;
 
-    @OneToMany(mappedBy = "cv", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ExperienceCv> experience;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private ExperienceSection experienceSection;
 
-    @OneToMany(mappedBy = "cv", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserSkillCv> skills;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private SkillSection skillSection;
 
-    @OneToMany(mappedBy = "cv", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProjectCv> projects;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private ProjectSection projectSection;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
