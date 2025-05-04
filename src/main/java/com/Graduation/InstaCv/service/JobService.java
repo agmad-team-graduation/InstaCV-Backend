@@ -35,8 +35,19 @@ public class JobService implements IJobService {
     }
 
     @Override
+    @Transactional
     @Async
-    public CompletableFuture<Job> analyzeJob(Long jobId, Long userId, boolean forceAnalyze) {
+    public void backgroundFullAnalyzeJob(Long jobId, Long userId, Boolean forceAnalyze) {
+        // No need to call skillExtraction (will be done internally)
+        Job job = analyzeJobMatching(jobId, userId, forceAnalyze).join();
+        jobRepository.save(job);
+        job = analyzeProjectsMatching(jobId, userId, forceAnalyze).join();
+        jobRepository.save(job);
+    }
+
+
+    @Override
+    public CompletableFuture<Job> analyzeSkillExtractionAsync(Long jobId, Long userId, boolean forceAnalyze) {
         Profile profile = profileService.getProfileByUserId(userId);
         return jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .map(job -> analyzeIfNeeded(job, forceAnalyze))
@@ -44,27 +55,31 @@ public class JobService implements IJobService {
     }
 
     @Override
-    public Job analyzeJobMatching(Long jobId, Long userId, boolean forceAnalyze) {
+    public CompletableFuture<Job> analyzeJobMatching(Long jobId, Long userId, boolean forceAnalyze) {
         Profile profile = profileService.getProfileByUserId(userId);
         Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
-        if (!forceAnalyze && job.isSkillMatchingAnalyzed()) return job;
-        job = analyzeIfNeeded(job, false).join();
-        job.setSkillMatchingAnalysis(jobSkillService.analyzeSkillsMatching(job, profile.getUser()));
-        job.setSkillMatchingAnalyzed(true);
-        return jobRepository.save(job);
+        if (!forceAnalyze && job.isSkillMatchingAnalyzed()) return CompletableFuture.completedFuture(job);
+        return analyzeIfNeeded(job, forceAnalyze).thenApply(job1 -> {
+            job1.setSkillMatchingAnalysis(jobSkillService.analyzeSkillsMatching(job1, profile.getUser()));
+            job1.setSkillMatchingAnalyzed(true);
+            job1.getSkillMatchingAnalysis().setJob(job1);
+            return jobRepository.save(job1);
+        });
     }
 
     @Override
-    public Job analyzeProjectsMatching(Long jobId, Long userId) {
+    public CompletableFuture<Job> analyzeProjectsMatching(Long jobId, Long userId, boolean forceAnalyze) {
         Profile profile = profileService.getProfileByUserId(userId);
         Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
-        job = analyzeIfNeeded(job, false).join();
-        job.setProjectMatchingAnalysis(jobSkillService.analyzeProjectsMatching(job, profile.getUser()));
-        job.getProjectMatchingAnalysis().setJob(job);
-        job.setProjectMatchingAnalyzed(true);
-        return jobRepository.save(job);
+        if (!forceAnalyze && job.isProjectMatchingAnalyzed()) return CompletableFuture.completedFuture(job);
+        return analyzeIfNeeded(job, forceAnalyze).thenApply(job1 -> {
+            job1.setProjectMatchingAnalysis(jobSkillService.analyzeProjectsMatching(job1, profile.getUser()));
+            job1.setProjectMatchingAnalyzed(true);
+            job1.getProjectMatchingAnalysis().setJob(job1);
+            return jobRepository.save(job1);
+        });
     }
 
     @Override
@@ -78,13 +93,6 @@ public class JobService implements IJobService {
     public void deleteJobByIdAndUserId(Long jobId, Long userId) {
         Job job = getJobByIdAndUserId(jobId, userId); // ensures ownership
         jobRepository.delete(job);
-    }
-
-    @Override
-    @Async
-    @Transactional
-    public void fullAnalyzeJobAsync(Long jobId, Long userId) {
-        analyzeJobMatching(jobId, userId, false);
     }
 
     @Override

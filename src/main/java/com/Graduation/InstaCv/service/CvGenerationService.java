@@ -54,26 +54,20 @@ public class CvGenerationService implements ICvGenerationService {
             return existingCv.get();
         }
 
-        // Get job
         Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
 
-        // Make sure job is analyzed
-        if (!job.isAnalyzed()) {
-            job = jobService.analyzeJob(jobId, user.getId(), false).join();
-            job = jobRepository.save(job);
+        if (!job.isAnalyzed() || !job.isSkillMatchingAnalyzed())
+            throw new ResourceNotFoundException("Job not analyzed yet with id: " + jobId);
+
+        try {
+            job = jobService.analyzeProjectsMatching(jobId, userId, false).join();
+            jobRepository.save(job);
+        } catch (Exception ignored) {
         }
 
-        // Make sure job is matching-analyzed
-        if (!job.isSkillMatchingAnalyzed()) {
-            job = jobService.analyzeJobMatching(jobId, userId, false);
-            job = jobRepository.save(job);
-        }
-
-        if (!job.isProjectMatchingAnalyzed()) {
-            job = jobService.analyzeProjectsMatching(jobId, userId);
-            job = jobRepository.save(job);
-        }
+        if (job.getProjectMatchingAnalysis() == null)
+            throw new ResourceNotFoundException("Job not project-analyzed yet with id: " + jobId);
 
         // Start building tailored CV
         TailoredCv tailoredCv = TailoredCv.builder()
@@ -84,14 +78,20 @@ public class CvGenerationService implements ICvGenerationService {
                 .build();
 
         List<MatchedSkill> matchedSkills = job.getSkillMatchingAnalysis().getMatchedSkills();
-        matchedSkills.sort(Comparator.comparing(MatchedSkill::getSimilarity).reversed());
+        matchedSkills.sort(Comparator.comparing(MatchedSkill::getSimilarity).
+
+                reversed());
 
         List<UserSkill> tailoredSkills = matchedSkills.stream()
                 .map(MatchedSkill::getUserSkill)
                 .toList();
 
         // convert to UserSkillCv
-        tailoredCv.setSkills(tailoredSkills.stream().map(userSkillCvMapper::mapFrom).toList());
+        tailoredCv.setSkills(tailoredSkills.stream().
+
+                map(userSkillCvMapper::mapFrom).
+
+                toList());
 
         // Sort experiences by date
         List<Experience> tailoredExperience = profile.getExperienceList().stream()
@@ -99,7 +99,11 @@ public class CvGenerationService implements ICvGenerationService {
                 .toList();
 
         // Convert to ExperienceCv
-        tailoredCv.setExperience(tailoredExperience.stream().map(experienceCvMapper::mapFrom).toList());
+        tailoredCv.setExperience(tailoredExperience.stream().
+
+                map(experienceCvMapper::mapFrom).
+
+                toList());
 
         // Sort education by date
         List<Education> tailoredEducation = profile.getEducationList().stream()
@@ -107,7 +111,11 @@ public class CvGenerationService implements ICvGenerationService {
                 .toList();
 
         // Convert to EducationCv
-        tailoredCv.setEducation(tailoredEducation.stream().map(educationCvMapper::mapFrom).toList());
+        tailoredCv.setEducation(tailoredEducation.stream().
+
+                map(educationCvMapper::mapFrom).
+
+                toList());
 
         // Include relevant projects
         List<Project> tailoredProjects = job.getProjectMatchingAnalysis().getProjectsMatchedWithSkills()
@@ -115,7 +123,11 @@ public class CvGenerationService implements ICvGenerationService {
                 .map(MatchedProject::getProject).toList();
 
         // Convert to ProjectCv
-        tailoredCv.setProjects(tailoredProjects.stream().map(projectCvMapper::mapFrom).toList());
+        tailoredCv.setProjects(tailoredProjects.stream().
+
+                map(projectCvMapper::mapFrom).
+
+                toList());
 
         // Generate summary
         String summary = generateProfileSummary(profile, job);
@@ -123,10 +135,18 @@ public class CvGenerationService implements ICvGenerationService {
 
 
         // Set relationships
-        tailoredCv.getEducation().forEach(x -> x.setCv(tailoredCv));
-        tailoredCv.getExperience().forEach(x -> x.setCv(tailoredCv));
-        tailoredCv.getProjects().forEach(x -> x.setCv(tailoredCv));
-        tailoredCv.getSkills().forEach(x -> x.setCv(tailoredCv));
+        tailoredCv.getEducation().
+
+                forEach(x -> x.setCv(tailoredCv));
+        tailoredCv.getExperience().
+
+                forEach(x -> x.setCv(tailoredCv));
+        tailoredCv.getProjects().
+
+                forEach(x -> x.setCv(tailoredCv));
+        tailoredCv.getSkills().
+
+                forEach(x -> x.setCv(tailoredCv));
 
 
         // Save and return
@@ -176,7 +196,7 @@ public class CvGenerationService implements ICvGenerationService {
     public TailoredCv updateCv(Long cvId, Long userId, TailoredCvDto tailoredCvDto) {
         // Get the CV and validate ownership
         TailoredCv existingCv = getCvByIdAndUserId(cvId, userId);
-        
+
         // Update basic fields
         if (tailoredCvDto.getPersonalDetails() != null) {
             existingCv.setPersonalDetails(tailoredCvDto.getPersonalDetails());
@@ -184,7 +204,7 @@ public class CvGenerationService implements ICvGenerationService {
         if (tailoredCvDto.getSummary() != null) {
             existingCv.setSummary(tailoredCvDto.getSummary());
         }
-        
+
         // Update education
         if (tailoredCvDto.getEducation() != null) {
             // Clear existing education
@@ -196,7 +216,7 @@ public class CvGenerationService implements ICvGenerationService {
                 existingCv.getEducation().add(education);
             });
         }
-        
+
         // Update experience
         if (tailoredCvDto.getExperience() != null) {
             // Clear existing experience
@@ -208,7 +228,7 @@ public class CvGenerationService implements ICvGenerationService {
                 existingCv.getExperience().add(experience);
             });
         }
-        
+
         // Update skills
         if (tailoredCvDto.getSkills() != null) {
             // Clear existing skills
@@ -220,7 +240,7 @@ public class CvGenerationService implements ICvGenerationService {
                 existingCv.getSkills().add(skill);
             });
         }
-        
+
         // Update projects
         if (tailoredCvDto.getProjects() != null) {
             // Clear existing projects
@@ -239,10 +259,10 @@ public class CvGenerationService implements ICvGenerationService {
                 existingCv.getProjects().add(project);
             });
         }
-                
+
         // Set updated timestamp
         existingCv.setUpdatedAt(LocalDateTime.now());
-        
+
         // Save and return
         return tailoredCvRepository.save(existingCv);
     }

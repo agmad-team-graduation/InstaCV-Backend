@@ -64,6 +64,7 @@ public class JobSkillService implements IJobSkillService {
                 .projects(user.getProfile().getProjects().stream().map(projectMapper::mapTo).toList())
                 .similarityThreshold(0.7f).build();
         ProjectsMatchingAnalysis projectsMatchingAnalysis = skillMatchingClient.matchProjectsSkills(request);
+        projectsMatchingAnalysis.setJob(job);
         projectsMatchingAnalysis.getAllAnalyzedProjects().forEach(matchedProject -> {
             matchedProject.setProjectsMatchingAnalysis(projectsMatchingAnalysis);
             matchedProject.getMatchedSkills().forEach(matchedSkill -> matchedSkill.setMatchedProject(matchedProject));

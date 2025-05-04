@@ -31,7 +31,7 @@ public class JobController {
     public ResponseEntity<JobDto> addJob(@RequestBody JobSimpleDto job) {
         Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
         Job savedJob = jobService.addJob(jobSimpleMapper.mapFrom(job, profile), profile);
-        jobService.fullAnalyzeJobAsync(savedJob.getId(), profile.getUser().getId());
+        jobService.backgroundFullAnalyzeJob(savedJob.getId(), profile.getUser().getId(), false);
         return new ResponseEntity<>(jobMapper.mapTo(savedJob), HttpStatus.CREATED);
     }
 
@@ -60,16 +60,16 @@ public class JobController {
             @PathVariable Long jobId,
             @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
-        return jobService.analyzeJob(jobId, userId, forceAnalyze)
+        return jobService.analyzeSkillExtractionAsync(jobId, userId, forceAnalyze)
                 .thenApply(job -> new ResponseEntity<>(jobMapper.mapTo(job), HttpStatus.OK));
     }
 
     @GetMapping("/skill-matching/{jobId}")
-    public JobDto getSkillMatching(
+    public CompletableFuture<ResponseEntity<JobDto>> getSkillMatching(
             @PathVariable Long jobId,
             @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
-        Job job = jobService.analyzeJobMatching(jobId, userId, forceAnalyze);
-        return jobMapper.mapTo(job);
+        return jobService.analyzeJobMatching(jobId, userId, forceAnalyze)
+                .thenApply(job -> new ResponseEntity<>(jobMapper.mapTo(job), HttpStatus.OK));
     }
 }
