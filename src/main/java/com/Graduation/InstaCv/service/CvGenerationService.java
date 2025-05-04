@@ -56,26 +56,13 @@ public class CvGenerationService implements ICvGenerationService {
             return existingCv.get();
         }
 
-        // Get job
         Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
 
-        // Make sure job is analyzed
-        if (!job.isAnalyzed()) {
-            job = jobService.analyzeJob(jobId, user.getId(), false).join();
-            job = jobRepository.save(job);
-        }
-
-        // Make sure job is matching-analyzed
-        if (!job.isSkillMatchingAnalyzed()) {
-            job = jobService.analyzeJobMatching(jobId, userId, false);
-            job = jobRepository.save(job);
-        }
-
-        if (!job.isProjectMatchingAnalyzed()) {
-            job = jobService.analyzeProjectsMatching(jobId, userId);
-            job = jobRepository.save(job);
-        }
+        if (job.isAnalyzeFailed()) // re-analyze the job if it failed
+            job = jobService.fullAnalyze(jobId, userId, false);
+        else if (!job.isAnalyzed() || !job.isSkillMatchingAnalyzed() || !job.isProjectMatchingAnalyzed()) // job is being analyzed
+            throw new ResourceNotFoundException("Job not analyzed yet with id: " + jobId);
 
         // Start building tailored CV
         TailoredCv tailoredCv = TailoredCv.builder()
@@ -97,8 +84,10 @@ public class CvGenerationService implements ICvGenerationService {
         // convert to UserSkillCv
         tailoredCv.setSkillSection(
                 SkillSection.builder().items(
-                        tailoredSkills.stream().map(userSkillCvMapper::mapFrom).toList()
-                ).build());
+                                tailoredSkills.stream().map(userSkillCvMapper::mapFrom).toList()
+                        ).sectionTitle("Skills")
+                        .build());
+
 
         // Sort experiences by date
         List<Experience> tailoredExperience = profile.getExperienceList().stream()
@@ -108,8 +97,10 @@ public class CvGenerationService implements ICvGenerationService {
         // Convert to ExperienceCv
         tailoredCv.setExperienceSection(
                 ExperienceSection.builder().items(
-                        tailoredExperience.stream().map(experienceCvMapper::mapFrom).toList()
-                ).build());
+                                tailoredExperience.stream().map(experienceCvMapper::mapFrom).toList()
+                        )
+                        .sectionTitle("Experience")
+                        .build());
 
         // Sort education by date
         List<Education> tailoredEducation = profile.getEducationList().stream()
@@ -119,8 +110,10 @@ public class CvGenerationService implements ICvGenerationService {
         // Convert to EducationCv
         tailoredCv.setEducationSection(
                 EducationSection.builder().items(
-                        tailoredEducation.stream().map(educationCvMapper::mapFrom).toList()
-                ).build());
+                                tailoredEducation.stream().map(educationCvMapper::mapFrom).toList()
+                        )
+                        .sectionTitle("Education")
+                        .build());
 
         // Include relevant projects
         List<Project> tailoredProjects = job.getProjectMatchingAnalysis().getProjectsMatchedWithSkills()
@@ -130,8 +123,10 @@ public class CvGenerationService implements ICvGenerationService {
         // Convert to ProjectCv
         tailoredCv.setProjectSection(
                 ProjectSection.builder().items(
-                        tailoredProjects.stream().map(projectCvMapper::mapFrom).toList()
-                ).build());
+                                tailoredProjects.stream().map(projectCvMapper::mapFrom).toList()
+                        )
+                        .sectionTitle("Projects")
+                        .build());
 
         // Generate summary
         String summary = generateProfileSummary(profile, job);

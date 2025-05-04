@@ -7,3 +7,7 @@ app = FastAPI()
 # Mount the two apps under different routes
 app.mount("/skills", skills_app)
 app.mount("/similarity", similarity_app)
+
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run("main:app", host="0.0.0.0", port=7860, reload=True)
