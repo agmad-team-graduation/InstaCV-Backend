@@ -6,6 +6,8 @@ import com.Graduation.InstaCv.data.model.profile.UserSkill;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 
 @Entity
@@ -26,11 +28,11 @@ public class MatchedSkill {
     @EqualsAndHashCode.Exclude
     private SkillMatchingAnalysis skillMatchingAnalysis;
 
-    @ManyToOne(optional = false)
+    @ManyToOne
     @JoinColumn(name = "job_skill_id")
     private JobSkill jobSkill;
 
-    @ManyToOne(optional = false)
+    @ManyToOne
     @JoinColumn(name = "user_skill_id")
     private UserSkill userSkill;
 

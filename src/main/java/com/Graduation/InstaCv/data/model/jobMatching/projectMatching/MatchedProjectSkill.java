@@ -25,11 +25,11 @@ public class MatchedProjectSkill {
     @EqualsAndHashCode.Exclude
     private MatchedProject matchedProject;
 
-    @ManyToOne(optional = false)
+    @ManyToOne
     @JoinColumn(name = "job_skill_id")
     private JobSkill jobSkill;
 
-    @ManyToOne(optional = false)
+    @ManyToOne
     @JoinColumn(name = "project_skill_id")
     private ProjectSkill projectSkill;
 

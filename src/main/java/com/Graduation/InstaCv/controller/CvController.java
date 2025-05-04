@@ -23,8 +23,7 @@ public class CvController {
 
     @PostMapping("/generate")
     public ResponseEntity<TailoredCvDto> generateCv(@RequestBody GenerateCvRequest request) {
-        TailoredCv tailoredCv = cvGenerationService.generateCv(SecurityUtils.getCurrentUserDetails().getId(),
-                request.getJobId());
+        TailoredCv tailoredCv = cvGenerationService.generateCv(SecurityUtils.getCurrentUserDetails().getId(), request.getJobId());
         return ResponseEntity.ok(cvMapper.mapTo(tailoredCv));
     }
 
