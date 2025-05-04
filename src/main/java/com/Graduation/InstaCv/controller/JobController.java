@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @RestController
@@ -45,7 +44,7 @@ public class JobController {
     public JobDto getJob(@PathVariable Long jobId) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         Job jobFound = jobService.getJobByIdAndUserId(jobId, userId);
-        if (jobFound.isInitialAnalyzeFailed())
+        if (jobFound.isAnalyzeFailed())
             jobFound = jobService.fullAnalyze(jobId, userId, false);
         return jobMapper.mapTo(jobFound);
     }
@@ -57,21 +56,21 @@ public class JobController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @GetMapping("/analyze/{jobId}")
-    public CompletableFuture<ResponseEntity<JobDto>> analyzeJob(
-            @PathVariable Long jobId,
-            @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
-        Long userId = SecurityUtils.getCurrentUserDetails().getId();
-        return jobService.analyzeSkillExtractionAsync(jobId, userId, forceAnalyze)
-                .thenApply(job -> new ResponseEntity<>(jobMapper.mapTo(job), HttpStatus.OK));
-    }
-
-    @GetMapping("/skill-matching/{jobId}")
-    public CompletableFuture<ResponseEntity<JobDto>> getSkillMatching(
-            @PathVariable Long jobId,
-            @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
-        Long userId = SecurityUtils.getCurrentUserDetails().getId();
-        return jobService.analyzeSkillsMatching(jobId, userId, forceAnalyze)
-                .thenApply(job -> new ResponseEntity<>(jobMapper.mapTo(job), HttpStatus.OK));
-    }
+//    @GetMapping("/analyze/{jobId}")
+//    public CompletableFuture<ResponseEntity<JobDto>> analyzeJob(
+//            @PathVariable Long jobId,
+//            @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
+//        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+//        return jobService.analyzeSkillExtractionAsync(jobId, userId, forceAnalyze)
+//                .thenApply(job -> new ResponseEntity<>(jobMapper.mapTo(job), HttpStatus.OK));
+//    }
+//
+//    @GetMapping("/skill-matching/{jobId}")
+//    public CompletableFuture<ResponseEntity<JobDto>> getSkillMatching(
+//            @PathVariable Long jobId,
+//            @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
+//        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+//        return jobService.analyzeSkillsMatching(jobId, userId, forceAnalyze)
+//                .thenApply(job -> new ResponseEntity<>(jobMapper.mapTo(job), HttpStatus.OK));
+//    }
 }

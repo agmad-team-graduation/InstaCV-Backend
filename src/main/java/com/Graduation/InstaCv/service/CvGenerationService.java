@@ -57,17 +57,10 @@ public class CvGenerationService implements ICvGenerationService {
         Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
 
-        if (!job.isAnalyzed() || !job.isSkillMatchingAnalyzed())
+        if (job.isAnalyzeFailed()) // re-analyze the job if it failed
+            job = jobService.fullAnalyze(jobId, userId, false);
+        else if (!job.isAnalyzed() || !job.isSkillMatchingAnalyzed() || !job.isProjectMatchingAnalyzed()) // job is being analyzed
             throw new ResourceNotFoundException("Job not analyzed yet with id: " + jobId);
-
-        try {
-            job = jobService.analyzeProjectsMatching(jobId, userId, false).join();
-            jobRepository.save(job);
-        } catch (Exception ignored) {
-        }
-
-        if (job.getProjectMatchingAnalysis() == null)
-            throw new ResourceNotFoundException("Job not project-analyzed yet with id: " + jobId);
 
         // Start building tailored CV
         TailoredCv tailoredCv = TailoredCv.builder()
