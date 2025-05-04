@@ -43,6 +43,8 @@ public class Job {
     private SkillMatchingAnalysis skillMatchingAnalysis;
     @OneToOne(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     private ProjectsMatchingAnalysis projectMatchingAnalysis;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private RemoteJobData remoteJobData;
 //    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
 //    private List<TailoredCv> tailoredCvs;
 
