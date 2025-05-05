@@ -82,7 +82,7 @@ public class RemoteJobStorageService {
      * Get all remote jobs from the database
      */
     public List<RemoteOkJobDto> getAllRemoteJobs() {
-        return jobRepository.findAllByRemoteJobDataIsNotNull().stream()
+        return jobRepository.findAllRemoteJobsSortedByDateDesc().stream()
                 .map(remoteJobMapper::toRemoteOkJobDto)
                 .collect(Collectors.toList());
     }

@@ -1,6 +1,8 @@
 package com.Graduation.InstaCv.controller;
 
 import com.Graduation.InstaCv.data.dto.RemoteOkJobDto;
+import com.Graduation.InstaCv.data.model.job.Job;
+import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.service.RemoteJobStorageService;
 import com.Graduation.InstaCv.service.RemoteOKJobScrappingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,4 +37,8 @@ public class RemoteOKJobScrappingController {
         return ResponseEntity.ok("Added " + newJobsCount + " new jobs");
     }
 
+    @GetMapping("/allRemote")
+    public List<RemoteOkJobDto> getAllRemoteJobs() {
+        return storageService.getAllRemoteJobs();
+    }
 }
