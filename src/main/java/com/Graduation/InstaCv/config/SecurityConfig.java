@@ -41,6 +41,7 @@ public class SecurityConfig {
             "/api/v1/auth/reset-password/validate",
             "/api/v1/auth/reset-password",
             "/api/v1/auth/forget-password",
+            "/api/v1/email/send-verification",
             // Google OAuth endpoints
             "/api/auth/oauth2/authorize/**",
     };

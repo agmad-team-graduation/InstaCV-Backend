@@ -6,6 +6,7 @@ import com.Graduation.InstaCv.data.dto.JobSimpleDto;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.mappers.ContextAwareMapper;
+import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.service.Interfaces.IJobService;
 import com.Graduation.InstaCv.service.Interfaces.IProfileService;
 import com.Graduation.InstaCv.utils.SecurityUtils;
@@ -25,6 +26,7 @@ public class JobController {
     private final IProfileService profileService;
     private final ContextAwareMapper<Job, JobDto, Profile> jobMapper;
     private final ContextAwareMapper<Job, JobSimpleDto, Profile> jobSimpleMapper;
+    private final JobRepository jobRepository;
 
     @PostMapping("/add")
     public ResponseEntity<JobDto> addJob(@RequestBody JobSimpleDto job) {
@@ -39,6 +41,7 @@ public class JobController {
         List<Job> jobsEntity = jobService.getJobsByUserId(SecurityUtils.getCurrentUserDetails().getId());
         return jobsEntity.stream().map(jobSimpleMapper::mapTo).collect(Collectors.toList());
     }
+
 
     @GetMapping("/{jobId}")
     public JobDto getJob(@PathVariable Long jobId) {
