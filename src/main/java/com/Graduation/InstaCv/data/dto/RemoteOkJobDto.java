@@ -18,12 +18,6 @@ public class RemoteOkJobDto {
 
     private List<String> tags;
 
-    @JsonProperty("salary_min")
-    private Integer salaryMin;
-
-    @JsonProperty("salary_max")
-    private Integer salaryMax;
-
     @JsonProperty("apply_url")
     private String applyUrl;
 

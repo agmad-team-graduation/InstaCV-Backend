@@ -37,8 +37,6 @@ public class RemoteJobMapper {
         // Create RemoteJobData entity
         RemoteJobData remoteJobData = RemoteJobData.builder()
                 .remoteId(dto.getId())
-                .salaryMin(dto.getSalaryMin())
-                .salaryMax(dto.getSalaryMax())
                 .applyUrl(dto.getApplyUrl())
                 .date(dto.getDate())
                 .job(job)
@@ -74,8 +72,6 @@ public class RemoteJobMapper {
         dto.setId(remoteData.getRemoteId());
         dto.setTitle(job.getTitle());
         dto.setCompany(job.getCompany());
-        dto.setSalaryMin(remoteData.getSalaryMin());
-        dto.setSalaryMax(remoteData.getSalaryMax());
         dto.setApplyUrl(remoteData.getApplyUrl());
         dto.setDescription(job.getDescription());
         dto.setDate(remoteData.getDate());

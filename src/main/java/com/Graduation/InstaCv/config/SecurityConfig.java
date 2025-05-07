@@ -44,6 +44,7 @@ public class SecurityConfig {
             // Google OAuth endpoints
             "/api/auth/oauth2/authorize/**",
 
+
             "/api/v1/jobs/allRemote"
     };
 

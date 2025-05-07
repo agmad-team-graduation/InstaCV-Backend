@@ -19,12 +19,6 @@ public class RemoteJobData {
     @Column(name = "remote_id")
     private String remoteId;  // Original ID from RemoteOK
 
-    @Column(name = "salary_min")
-    private Integer salaryMin;
-
-    @Column(name = "salary_max")
-    private Integer salaryMax;
-
     @Column(name = "apply_url", length = 2000)
     private String applyUrl;
 
