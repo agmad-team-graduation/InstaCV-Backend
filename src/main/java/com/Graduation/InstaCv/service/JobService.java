@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.service;
 
+import com.Graduation.InstaCv.data.dto.RemoteOkJobDto;
 import com.Graduation.InstaCv.data.dto.response.ExtractedJobSkillResponse;
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
@@ -49,6 +50,21 @@ public class JobService implements IJobService {
             job.setAnalyzeFailed(true);
             jobRepository.save(job);
         }
+    }
+
+    public Job extractSkillsRemoteJob(RemoteOkJobDto remoteJob, Job targetJob) {
+        StringBuilder description = new StringBuilder(remoteJob.getDescription());
+        if (remoteJob.getTags() != null && !remoteJob.getTags().isEmpty()) {
+            description.append("\n\nTags:");
+            for (String tag : remoteJob.getTags()) description.append(" ").append(tag);
+        }
+
+        CompletableFuture<JobKnowledgeResponse> knowledgePredictionsFuture = jobSkillService.extractKnowledge(description.toString());
+        CompletableFuture<JobSkillsResponse> skillsPredictionsFuture = jobSkillService.extractSkills(description.toString());
+
+        CompletableFuture.allOf(knowledgePredictionsFuture, skillsPredictionsFuture).join();
+
+        return updateJobWithAnalysis(targetJob, knowledgePredictionsFuture.join(), skillsPredictionsFuture.join());
     }
 
     @Override

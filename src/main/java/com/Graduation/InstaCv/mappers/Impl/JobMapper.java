@@ -12,9 +12,8 @@ import org.springframework.stereotype.Component;
 public class JobMapper implements ContextAwareMapper<Job, JobDto, Profile> {
     @Override
     public JobDto mapTo(Job job) {
-        return JobDto.builder()
+        JobDto res = JobDto.builder()
                 .id(job.getId())
-                .profileId(job.getProfile().getId())
                 .title(job.getTitle())
                 .company(job.getCompany())
                 .description(job.getDescription())
@@ -23,6 +22,10 @@ public class JobMapper implements ContextAwareMapper<Job, JobDto, Profile> {
                 .isSkillMatchingAnalyzed(job.isSkillMatchingAnalyzed())
                 .skillMatchingAnalysis(job.getSkillMatchingAnalysis())
                 .build();
+        if (job.getProfile() != null) {
+            res.setProfileId(job.getProfile().getId());
+        }
+        return res;
     }
 
     @Override

@@ -1,12 +1,14 @@
 package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.RemoteOkJobDto;
+import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.safety.Safelist;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -24,16 +26,12 @@ import java.util.stream.Collectors;
 import static com.Graduation.InstaCv.utils.DeveloperTags.DEV_TAGS;
 
 @Service
+@RequiredArgsConstructor
 public class RemoteOKJobScrappingService {
 
     private final RestTemplate restTemplate;
-    private static final String REMOTE_OK_API_URL = "https://remoteok.com/api";
-
-    @Autowired
-    public RemoteOKJobScrappingService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
-
+    @Value("${remoteok.api.url}")
+    private String REMOTE_OK_API_URL;
 
     // Helper method to check if a job is a developer job
     private boolean isDeveloperJob(RemoteOkJobDto job) {
@@ -60,7 +58,7 @@ public class RemoteOKJobScrappingService {
                     DateTimeFormatter.ISO_DATE_TIME);
 
             // Get date from two weeks ago
-            LocalDateTime twoWeeksAgo = LocalDateTime.now().minus(2, ChronoUnit.WEEKS);
+            LocalDateTime twoWeeksAgo = LocalDateTime.now().minusWeeks(2);
 
             // Return true if job date is after two weeks ago
             return jobDate.isAfter(twoWeeksAgo);
@@ -86,7 +84,7 @@ public class RemoteOKJobScrappingService {
 
             RemoteOkJobDto[] jobs = response.getBody();
 
-            if (jobs == null || jobs.length == 0) {
+            if (jobs.length == 0) {
                 return Collections.emptyList();
             }
 
@@ -98,7 +96,6 @@ public class RemoteOKJobScrappingService {
         } catch (Exception e) {
             // Log the exception
             System.err.println("Error fetching dev jobs: " + e.getMessage());
-            e.printStackTrace();
             return Collections.emptyList();
         }
     }
@@ -153,6 +150,11 @@ public class RemoteOKJobScrappingService {
                     .replaceAll("\\s{2,}", " ")  // Remove extra spaces
                     .replaceAll(" \\n", "\n")    // Clean up spaces before newlines
                     .replaceAll("\\n{3,}", "\n\n"); // Limit consecutive newlines
+
+            // TODO: Handle Very long descriptions
+            if (plainText.length() > 2000) {
+                plainText = plainText.substring(0, 2000) + "...";
+            }
 
             return plainText;
         } catch (Exception e) {

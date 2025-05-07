@@ -43,20 +43,20 @@ public class RemoteJobMapper {
                 .build();
         // Set remoteJobData to job
         job.setRemoteJobData(remoteJobData);
-        // Add tags as skills
-        List<JobSkill> skills = new ArrayList<>();
-        if (dto.getTags() != null) {
-            for (String tagValue : dto.getTags()) {
-                JobSkill skill = JobSkill.builder()
-                        .skill(tagValue)
-                        .skillType(SkillType.HARD)
-                        .job(job)
-                        .modelConfidence(1.0f)
-                        .build();
-                skills.add(skill);
-            }
-        }
-        job.setJobSkills(skills);
+//        // Add tags as skills
+//        List<JobSkill> skills = new ArrayList<>();
+//        if (dto.getTags() != null) {
+//            for (String tagValue : dto.getTags()) {
+//                JobSkill skill = JobSkill.builder()
+//                        .skill(tagValue)
+//                        .skillType(SkillType.HARD)
+//                        .job(job)
+//                        .modelConfidence(1.0f)
+//                        .build();
+//                skills.add(skill);
+//            }
+//        }
+//        job.setJobSkills(skills);
         return job;
     }
     /**
