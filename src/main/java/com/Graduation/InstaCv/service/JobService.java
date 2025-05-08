@@ -67,8 +67,6 @@ public class JobService implements IJobService {
         return updateJobWithAnalysis(targetJob, knowledgePredictionsFuture.join(), skillsPredictionsFuture.join());
     }
 
-
-
     @Override
     public Job analyzeSkillsMatching(Long jobId, Long userId, boolean forceAnalyze) {
         Profile profile = profileService.getProfileByUserId(userId);

@@ -23,6 +23,7 @@ public class RemoteJobStorageService {
     private final RemoteJobDataRepository remoteJobDataRepository;
     private final RemoteJobMapper remoteJobMapper;
     private final JobService jobService;
+    private static final Integer lastDaysCount = 14;
 
     /**
      * Fetches new jobs from RemoteOK API and saves them to the main job table
@@ -32,7 +33,7 @@ public class RemoteJobStorageService {
     @Transactional
     public int fetchAndSaveNewJobs() {
         // Get all jobs from the API
-        List<RemoteOkJobDto> apiJobs = scrappingService.getFilteredDevJobs(null, true);
+        List<RemoteOkJobDto> apiJobs = scrappingService.getFilteredDevJobs(lastDaysCount);
 
         if (apiJobs.isEmpty()) return 0;
 

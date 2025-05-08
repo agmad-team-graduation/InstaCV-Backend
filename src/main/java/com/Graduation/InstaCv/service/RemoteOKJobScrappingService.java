@@ -48,7 +48,7 @@ public class RemoteOKJobScrappingService {
     }
 
     // Helper method to check if a job was posted within the last two weeks
-    private boolean isPostedWithinLastTwoWeeks(RemoteOkJobDto job) {
+    private boolean isPostedWithinLastTwoWeeks(RemoteOkJobDto job, int lastDaysCount) {
         if (job.getDate() == null || job.getDate().isEmpty()) return false;
 
         try {
@@ -58,7 +58,7 @@ public class RemoteOKJobScrappingService {
                     DateTimeFormatter.ISO_DATE_TIME);
 
             // Get date from two weeks ago
-            LocalDateTime twoWeeksAgo = LocalDateTime.now().minusWeeks(2);
+            LocalDateTime twoWeeksAgo = LocalDateTime.now().minusDays(lastDaysCount);
 
             // Return true if job date is after two weeks ago
             return jobDate.isAfter(twoWeeksAgo);
@@ -100,30 +100,12 @@ public class RemoteOKJobScrappingService {
         }
     }
 
-
-    public List<RemoteOkJobDto> getFilteredDevJobs(String tech, boolean recent) {
-        // First get the base list depending on whether we want recent or all jobs
-        List<RemoteOkJobDto> baseJobList;
-        if (recent) {
-            baseJobList = getDevJobs().stream()
-                    .filter(this::isPostedWithinLastTwoWeeks)
-                    .collect(Collectors.toList());
-        } else {
-            baseJobList = getDevJobs();
+    public List<RemoteOkJobDto> getFilteredDevJobs(Integer lastDaysCount) {
+        List<RemoteOkJobDto> baseJobList = getDevJobs();
+        if (lastDaysCount != null && lastDaysCount > 0) {
+            baseJobList = baseJobList.stream().filter(job -> isPostedWithinLastTwoWeeks(job, lastDaysCount)).toList();
         }
-
-        // Apply technology filter if needed
-        List<RemoteOkJobDto> filteredJobs;
-        if (tech != null && !tech.trim().isEmpty()) {
-            filteredJobs = baseJobList.stream()
-                    .filter(job -> job.getTags() != null &&
-                            job.getTags().stream()
-                                    .anyMatch(tag -> tag.toLowerCase().contains(tech.toLowerCase())))
-                    .collect(Collectors.toList());
-        } else {
-            filteredJobs = baseJobList;
-        }
-        return filteredJobs;
+        return baseJobList;
     }
 
     private String cleanJobDescription(String htmlDescription) {
