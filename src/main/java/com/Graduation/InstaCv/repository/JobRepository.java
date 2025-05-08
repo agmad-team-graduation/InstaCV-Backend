@@ -9,9 +9,11 @@ import java.util.Optional;
 
 public interface JobRepository extends JpaRepository<Job, Long> {
     List<Job> findJobsByProfileId(Long profileId);
+
     Optional<Job> findJobByIdAndProfileId(Long jobId, Long profileId);
+
     boolean existsByIdAndProfileId(Long jobId, Long profileId);
-    List<Job> findAllByRemoteJobDataIsNotNull();
-    @Query("SELECT j FROM Job j JOIN j.remoteJobData r ORDER BY r.date DESC")
+
+    @Query("SELECT j FROM Job j JOIN j.remoteJobData r WHERE j.profile is null ORDER BY r.date DESC")
     List<Job> findAllRemoteJobsSortedByDateDesc();
 }

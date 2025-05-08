@@ -56,7 +56,10 @@ public class RemoteJobStorageService {
             jobEntities.add(jobEntity);
         }
 
-        jobRepository.saveAll(jobEntities);
+        jobEntities = jobRepository.saveAll(jobEntities);
+
+
+
         return newJobs.size();
     }
 
