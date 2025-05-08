@@ -35,7 +35,7 @@ public class EmailVerificationService {
 
         // Create new verification token
         String tokenValue = UUID.randomUUID().toString();
-        VerificationToken verificationToken = new VerificationToken(email, tokenValue, 24); // 24 hours expiry
+        VerificationToken verificationToken = new VerificationToken(name, email, tokenValue, 24); // 24 hours expiry
         tokenRepository.save(verificationToken);
 
         // Send verification email

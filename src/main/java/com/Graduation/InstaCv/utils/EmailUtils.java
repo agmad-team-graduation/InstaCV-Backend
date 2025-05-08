@@ -32,9 +32,8 @@ public class EmailUtils {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(to);
             message.setSubject("Email Verification");
-            message.setText("Hello, " + name + "\n" + "Welcome to InstaCv! Please verify your email address by clicking the link below:\n\n" +
-                    frontendProps.getVerificationUrl() + "?name=" +
-                    name + "&email=" + to + "&verificationToken=" + verificationToken + "\n\nThe link will expire in 24 hours.\n\n" +
+            message.setText("Hello, " + name + ".\n" + "Welcome to InstaCv! Please verify your email address by clicking the link below:\n\n" +
+                    frontendProps.getVerificationUrl() + "?verificationToken=" + verificationToken + "\n\nThe link will expire in 24 hours.\n\n" +
                     "If you did not create an account with us, please ignore this email.");
             mailSender.send(message);
         } catch (Exception e) {

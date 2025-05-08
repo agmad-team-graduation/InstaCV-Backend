@@ -22,6 +22,9 @@ public class VerificationToken {
     private String token;
 
     @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
     private String email;
 
     @Column(nullable = false)
@@ -29,7 +32,8 @@ public class VerificationToken {
 
     private boolean used = false;
 
-    public VerificationToken(String email, String tokenValue, int hours) {
+    public VerificationToken(String name ,String email, String tokenValue, int hours) {
+        this.name = name;
         this.email = email;
         this.token = tokenValue;
         this.expiryDate = LocalDateTime.now().plusHours(hours);
