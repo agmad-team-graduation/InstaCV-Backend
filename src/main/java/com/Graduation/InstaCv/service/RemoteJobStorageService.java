@@ -1,19 +1,20 @@
 package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.RemoteOkJobDto;
+import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.model.job.Job;
-import com.Graduation.InstaCv.mappers.Impl.RemoteJobMapper;
+import com.Graduation.InstaCv.data.model.profile.Profile;
+import com.Graduation.InstaCv.mappers.impl.jobs.RemoteJobMapper;
 import com.Graduation.InstaCv.repository.JobRepository;
+import com.Graduation.InstaCv.repository.ProfileRepository;
 import com.Graduation.InstaCv.repository.RemoteJobDataRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +24,8 @@ public class RemoteJobStorageService {
     private final RemoteJobDataRepository remoteJobDataRepository;
     private final RemoteJobMapper remoteJobMapper;
     private final JobService jobService;
-    private static final Integer lastDaysCount = 14;
+    private final ProfileRepository profileRepository;
+    private static final Integer lastDaysCount = 7;
 
     /**
      * Fetches new jobs from RemoteOK API and saves them to the main job table
@@ -49,26 +51,38 @@ public class RemoteJobStorageService {
 
         // Convert DTOs to Job entities and save them
         List<Job> jobEntities = new ArrayList<>();
+        List<Profile> profiles = profileRepository.findAll();
 
         // for each remoteJobDto and jobEntity, extract skills and save them
         for (RemoteOkJobDto remoteJob : newJobs) {
             Job jobEntity = remoteJobMapper.toJobEntity(remoteJob);
-            jobEntity = jobService.extractSkillsRemoteJob(remoteJob, jobEntity);
+            try {
+                jobEntity = jobService.extractSkills(jobEntity, true, false);
+            } catch (Exception e) {
+                jobEntity.setSkillExtractionStatus(AnalyzeStatus.FAILED);
+            }
+            jobEntity.setSkillExtractionStatus(AnalyzeStatus.COMPLETED);
             jobEntities.add(jobEntity);
         }
-
         jobEntities = jobRepository.saveAll(jobEntities);
 
-
-
-        return newJobs.size();
+        List<Job> fullyAnalyzedJobs = new ArrayList<>();
+        for (Job jobEntity : jobEntities) {
+            if (!jobEntity.getCompleteAnalysisStatus().equals(AnalyzeStatus.FAILED)) {
+                for (Profile profile : profiles)
+                    jobEntity = jobService.analyzeSkillsMatchingNoSave(jobEntity, profile, true, false);
+                fullyAnalyzedJobs.add(jobEntity);
+            }
+        }
+        fullyAnalyzedJobs = jobRepository.saveAll(fullyAnalyzedJobs);
+        return fullyAnalyzedJobs.size();
     }
 
     /**
      * Scheduled task to automatically fetch new jobs every 2 minutes
      */
 //    @Scheduled(fixedRate = 120000 * 30 * 6) // 6 hours in milliseconds
-    @Scheduled(fixedRate = 2 * 60 * 1000) // 2 minutes in milliseconds
+//    @Scheduled(fixedRate = 2 * 60 * 1000) // 2 minutes in milliseconds
     @Transactional
     public void scheduledJobSync() {
         int newJobsCount = fetchAndSaveNewJobs();

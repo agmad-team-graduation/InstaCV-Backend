@@ -1,9 +1,9 @@
 package com.Graduation.InstaCv.service;
 
-import com.Graduation.InstaCv.data.dto.RemoteOkJobDto;
 import com.Graduation.InstaCv.data.dto.response.ExtractedJobSkillResponse;
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
+import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.enums.SkillType;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.job.JobSkill;
@@ -36,61 +36,56 @@ public class JobService implements IJobService {
     }
 
     @Override
+    public Job fullAnalyze(Long jobId, Long userId, boolean isExternalJob, boolean forceAnalyze) {
+        Job job = analyzeSkillsMatching(jobId, userId, isExternalJob, forceAnalyze);
+        jobRepository.save(job);
+        job = analyzeProjectsMatching(jobId, userId, isExternalJob, forceAnalyze);
+        job.setCompleteAnalysisStatus(AnalyzeStatus.COMPLETED);
+        return jobRepository.save(job);
+    }
+
+    @Override
     @Transactional
     @Async
-    public void backgroundFullAnalyzeJob(Long jobId, Long userId, Boolean forceAnalyze) {
+    public void backgroundFullAnalyzeJob(Long jobId, Long userId, Boolean isExternalJob, Boolean forceAnalyze) {
+        Job job = getJobByIdAndUserId(jobId, userId);
         try {
-            // No need to call skillExtraction (will be done internally)
-            Job job = analyzeSkillsMatching(jobId, userId, forceAnalyze);
+            job.setCompleteAnalysisStatus(AnalyzeStatus.IN_PROGRESS);
             jobRepository.save(job);
-            job = analyzeProjectsMatching(jobId, userId, forceAnalyze);
+            jobRepository.flush();
+            // No need to call skillExtraction (will be done internally)
+            job = analyzeSkillsMatching(jobId, userId, isExternalJob, forceAnalyze);
+            jobRepository.save(job);
+            job = analyzeProjectsMatching(jobId, userId, isExternalJob, forceAnalyze);
+            job.setCompleteAnalysisStatus(AnalyzeStatus.COMPLETED);
             jobRepository.save(job);
         } catch (Exception e) {
-            Job job = getJobByIdAndUserId(jobId, userId);
-            job.setAnalyzeFailed(true);
+            job.setCompleteAnalysisStatus(AnalyzeStatus.FAILED);
             jobRepository.save(job);
         }
     }
 
-    public Job extractSkillsRemoteJob(RemoteOkJobDto remoteJob, Job targetJob) {
-        StringBuilder description = new StringBuilder(remoteJob.getDescription());
-        if (remoteJob.getTags() != null && !remoteJob.getTags().isEmpty()) {
-            description.append("\n\nTags:");
-            for (String tag : remoteJob.getTags()) description.append(" ").append(tag);
-        }
+    public Job extractSkills(Job job, boolean isExternal, boolean forceAnalyze) {
+        if (isExternal && job.getSkillExtractionStatus() == AnalyzeStatus.COMPLETED && !forceAnalyze) return job;
+        if (!isExternal && job.getCompleteAnalysisStatus() == AnalyzeStatus.COMPLETED && !forceAnalyze) return job;
 
-        CompletableFuture<JobKnowledgeResponse> knowledgePredictionsFuture = jobSkillService.extractKnowledge(description.toString());
-        CompletableFuture<JobSkillsResponse> skillsPredictionsFuture = jobSkillService.extractSkills(description.toString());
+        String description = isExternal ? job.getRemoteJobData().getModifiedDescription() : job.getDescription();
+
+        CompletableFuture<JobKnowledgeResponse> knowledgePredictionsFuture = jobSkillService.extractKnowledge(description);
+        CompletableFuture<JobSkillsResponse> skillsPredictionsFuture = jobSkillService.extractSkills(description);
 
         CompletableFuture.allOf(knowledgePredictionsFuture, skillsPredictionsFuture).join();
 
-        return updateJobWithAnalysis(targetJob, knowledgePredictionsFuture.join(), skillsPredictionsFuture.join());
+        return updateJobWithAnalysis(job, knowledgePredictionsFuture.join(), skillsPredictionsFuture.join());
     }
 
-    @Override
-    public Job analyzeSkillsMatching(Long jobId, Long userId, boolean forceAnalyze) {
-        Profile profile = profileService.getProfileByUserId(userId);
-        Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
-        if (!forceAnalyze && job.isSkillMatchingAnalyzed()) return job;
-        job = analyzeIfNeeded(job, forceAnalyze);
-        job.setSkillMatchingAnalysis(jobSkillService.analyzeSkillsMatching(job, profile.getUser()));
-        job.setSkillMatchingAnalyzed(true);
-        job.getSkillMatchingAnalysis().setJob(job);
-        return jobRepository.save(job);
-    }
-
-    @Override
-    public Job analyzeProjectsMatching(Long jobId, Long userId, boolean forceAnalyze) {
-        Profile profile = profileService.getProfileByUserId(userId);
-        Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
-        if (!forceAnalyze && job.isProjectMatchingAnalyzed()) return job;
-        job = analyzeIfNeeded(job, forceAnalyze);
-        job.setProjectMatchingAnalysis(jobSkillService.analyzeProjectsMatching(job, profile.getUser()));
-        job.setProjectMatchingAnalyzed(true);
-        job.getProjectMatchingAnalysis().setJob(job);
-        return jobRepository.save(job);
+    public Job analyzeSkillsMatchingNoSave(Job job, Profile profile, boolean isExternal, boolean forceAnalyze) {
+        if (!forceAnalyze && jobRepository.existsJobSkillMatchingAnalysis(job.getId(), profile.getId())) return job;
+        job = extractSkills(job, isExternal, forceAnalyze);
+        job.getSkillMatchingAnalyses().add(jobSkillService.analyzeSkillsMatching(job, profile.getUser()));
+        job.getSkillMatchingAnalyses().getLast().setJob(job);
+        job.getSkillMatchingAnalyses().getLast().setProfile(profile);
+        return job;
     }
 
     @Override
@@ -107,32 +102,39 @@ public class JobService implements IJobService {
     }
 
     @Override
-    public Job fullAnalyze(Long jobId, Long userId, boolean forceAnalyze) {
-        Profile profile = profileService.getProfileByUserId(userId);
-        Job job = analyzeSkillsMatching(jobId, userId, forceAnalyze);
-        jobRepository.save(job);
-        job = analyzeProjectsMatching(jobId, userId, forceAnalyze);
-        job.setAnalyzeFailed(false);
-        jobRepository.save(job);
-        return jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
-    }
-
-    @Override
     public List<Job> getJobsByUserId(Long userId) {
         Profile profile = profileService.getProfileByUserId(userId);
         return jobRepository.findJobsByProfileId(profile.getId());
     }
 
-    private Job analyzeIfNeeded(Job job, boolean forceAnalyze) {
-        if (job.isAnalyzed() && !forceAnalyze) return job;
+    // TODO: Move to another service?
+    private Job analyzeSkillsMatching(Long jobId, Long userId, boolean isExternal, boolean forceAnalyze) {
+        Profile profile = profileService.getProfileByUserId(userId);
+        Job job;
+        if (!isExternal)
+            job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
+        else
+            job = jobRepository.findJobByIdAndProfileIsNull(jobId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
+        return jobRepository.save(analyzeSkillsMatchingNoSave(job, profile, isExternal, forceAnalyze));
+    }
 
-        CompletableFuture<JobKnowledgeResponse> knowledgePredictionsFuture = jobSkillService.extractKnowledge(job.getDescription());
-        CompletableFuture<JobSkillsResponse> skillsPredictionsFuture = jobSkillService.extractSkills(job.getDescription());
-
-        CompletableFuture.allOf(knowledgePredictionsFuture, skillsPredictionsFuture).join();
-
-        return jobRepository.save(updateJobWithAnalysis(job, knowledgePredictionsFuture.join(), skillsPredictionsFuture.join()));
+    private Job analyzeProjectsMatching(Long jobId, Long userId, boolean isExternal, boolean forceAnalyze) {
+        Profile profile = profileService.getProfileByUserId(userId);
+        Job job;
+        if (!isExternal)
+            job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
+        else
+            job = jobRepository.findJobByIdAndProfileIsNull(jobId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
+        if (!forceAnalyze && jobRepository.existsJobProjectMatchingAnalysis(job.getId(), profile.getId())) return job;
+        job = extractSkills(job, isExternal, forceAnalyze);
+        job.getProjectMatchingAnalyses().add(jobSkillService.analyzeProjectsMatching(job, profile.getUser()));
+        job.getProjectMatchingAnalyses().getLast().setJob(job);
+        job.getProjectMatchingAnalyses().getLast().setProfile(profile);
+        return jobRepository.save(job);
     }
 
     private Job updateJobWithAnalysis(Job job, JobKnowledgeResponse knowledge, JobSkillsResponse skills) {
@@ -150,8 +152,6 @@ public class JobService implements IJobService {
         job.getJobSkills().clear();
         job.getJobSkills().addAll(hardSkills);
         job.getJobSkills().addAll(softSkills);
-
-        job.setAnalyzed(true);
 
         job.getJobSkills().forEach(jobSkill -> jobSkill.setJob(job));
         return job;

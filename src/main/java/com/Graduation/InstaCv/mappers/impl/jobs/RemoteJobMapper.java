@@ -1,8 +1,7 @@
-package com.Graduation.InstaCv.mappers.Impl;
+package com.Graduation.InstaCv.mappers.impl.jobs;
 
 
 import com.Graduation.InstaCv.data.dto.RemoteOkJobDto;
-import com.Graduation.InstaCv.data.enums.SkillType;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.job.JobSkill;
 import com.Graduation.InstaCv.data.model.job.RemoteJobData;
@@ -16,9 +15,7 @@ import java.util.stream.Collectors;
 public class RemoteJobMapper {
 
     /**
-
      * Converts a RemoteOkJobDto to a Job entity with associated RemoteJobData and JobSkills
-
      */
 
     public Job toJobEntity(RemoteOkJobDto dto) {
@@ -28,10 +25,6 @@ public class RemoteJobMapper {
                 .company(dto.getCompany())
                 .description(dto.getDescription())
                 .jobSkills(new ArrayList<>())
-                .isAnalyzed(false)
-                .isSkillMatchingAnalyzed(false)
-                .isProjectMatchingAnalyzed(false)
-                .analyzeFailed(false)
                 .build();
         job.setProfile(null); // Set profile to null for remote jobs
         // Create RemoteJobData entity
@@ -59,6 +52,7 @@ public class RemoteJobMapper {
 //        job.setJobSkills(skills);
         return job;
     }
+
     /**
      * Converts a Job entity back to a RemoteOkJobDto
      */

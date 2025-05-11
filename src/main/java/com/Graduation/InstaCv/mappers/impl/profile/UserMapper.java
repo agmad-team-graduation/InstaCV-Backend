@@ -1,4 +1,4 @@
-package com.Graduation.InstaCv.mappers.Impl;
+package com.Graduation.InstaCv.mappers.impl.profile;
 
 import com.Graduation.InstaCv.data.dto.UserDto;
 import com.Graduation.InstaCv.data.model.User;

@@ -1,7 +1,10 @@
 package com.Graduation.InstaCv.data.model.job;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "remote_job_data")
@@ -24,7 +27,20 @@ public class RemoteJobData {
 
     private String date;
 
+    @ElementCollection
+    private List<String> tags;
+
     @OneToOne
     @JoinColumn(name = "job_id")
     private Job job;
+
+    @JsonIgnore
+    public String getModifiedDescription() {
+        StringBuilder description = new StringBuilder(job.getDescription());
+        if (tags != null && !tags.isEmpty()) {
+            description.append("\n\nTags:");
+            for (String tag : tags) description.append(" ").append(tag);
+        }
+        return description.toString();
+    }
 }

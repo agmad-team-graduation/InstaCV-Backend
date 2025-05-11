@@ -3,6 +3,7 @@ package com.Graduation.InstaCv.data.model.jobMatching.skillMatching;
 
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.job.JobSkill;
+import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.data.model.profile.UserSkill;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -22,12 +23,17 @@ public class SkillMatchingAnalysis {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "job_id", nullable = false)
     @JsonIgnore
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Job job;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "profile_id", nullable = false)
+    @JsonIgnore
+    private Profile profile;
 
     @OneToMany(mappedBy = "skillMatchingAnalysis", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MatchedSkill> matchedSkills;
@@ -46,7 +52,7 @@ public class SkillMatchingAnalysis {
 
     public Float getMatchedSkillsPercentage() {
         if (matchedSkills == null || job.getJobSkills() == null || job.getJobSkills().isEmpty())
-            return null;
+            return 0f;
         return (float) matchedSkills.size() / job.getJobSkills().size() * 100;
     }
 }

@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.data.model.job;
 
+import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.enums.SkillType;
 import com.Graduation.InstaCv.data.model.jobMatching.projectMatching.ProjectsMatchingAnalysis;
 import com.Graduation.InstaCv.data.model.jobMatching.skillMatching.SkillMatchingAnalysis;
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -16,8 +18,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Table(name = "profile_jobs")
-@ToString(exclude = {"profile", "jobSkills", "skillMatchingAnalysis", "projectMatchingAnalysis", "remoteJobData"})
-@EqualsAndHashCode(exclude = {"profile", "jobSkills", "skillMatchingAnalysis", "projectMatchingAnalysis", "remoteJobData"})
 public class Job {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,21 +30,25 @@ public class Job {
     private String company;
     @Column(nullable = false, length = 20480)
     private String description;
-    private boolean isAnalyzed = false;
-    private boolean isSkillMatchingAnalyzed = false;
-    private boolean isProjectMatchingAnalyzed = false;
-    private boolean analyzeFailed = false;
-
+    // TODO: This is only used for scraped jobs
+    @Builder.Default
+    private AnalyzeStatus skillExtractionStatus = AnalyzeStatus.NOT_STARTED;
+    // TODO: This is only valid for a job added by a user (This is not Single Responsibility)
+    // And for scraped jobs, it represents the status of the skill extraction analysis
+    @Builder.Default
+    private AnalyzeStatus completeAnalysisStatus = AnalyzeStatus.NOT_STARTED;
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @Builder.Default
     private List<JobSkill> jobSkills = List.of();
 
-    @OneToOne(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
-    private SkillMatchingAnalysis skillMatchingAnalysis;
+    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<SkillMatchingAnalysis> skillMatchingAnalyses = new ArrayList<>();
 
-    @OneToOne(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
-    private ProjectsMatchingAnalysis projectMatchingAnalysis;
+    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ProjectsMatchingAnalysis> projectMatchingAnalyses = new ArrayList<>();
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private RemoteJobData remoteJobData;

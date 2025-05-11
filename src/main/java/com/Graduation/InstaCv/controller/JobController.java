@@ -3,6 +3,7 @@ package com.Graduation.InstaCv.controller;
 
 import com.Graduation.InstaCv.data.dto.JobDto;
 import com.Graduation.InstaCv.data.dto.JobSimpleDto;
+import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.mappers.ContextAwareMapper;
@@ -30,7 +31,7 @@ public class JobController {
     public ResponseEntity<JobDto> addJob(@RequestBody JobSimpleDto job) {
         Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
         Job savedJob = jobService.addJob(jobSimpleMapper.mapFrom(job, profile), profile);
-        jobService.backgroundFullAnalyzeJob(savedJob.getId(), profile.getUser().getId(), false);
+        jobService.backgroundFullAnalyzeJob(savedJob.getId(), profile.getUser().getId(), false, false);
         return new ResponseEntity<>(jobMapper.mapTo(savedJob), HttpStatus.CREATED);
     }
 
@@ -44,8 +45,8 @@ public class JobController {
     public JobDto getJob(@PathVariable Long jobId) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         Job jobFound = jobService.getJobByIdAndUserId(jobId, userId);
-        if (jobFound.isAnalyzeFailed())
-            jobFound = jobService.fullAnalyze(jobId, userId, false);
+        if (jobFound.getCompleteAnalysisStatus() == AnalyzeStatus.FAILED)
+            jobFound = jobService.fullAnalyze(jobId, userId, false, false);
         return jobMapper.mapTo(jobFound);
     }
 

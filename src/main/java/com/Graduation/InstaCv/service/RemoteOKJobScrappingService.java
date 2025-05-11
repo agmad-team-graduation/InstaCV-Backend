@@ -7,19 +7,16 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.safety.Safelist;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -48,7 +45,7 @@ public class RemoteOKJobScrappingService {
     }
 
     // Helper method to check if a job was posted within the last two weeks
-    private boolean isPostedWithinLastTwoWeeks(RemoteOkJobDto job, int lastDaysCount) {
+    private boolean isPostedWithinDaysCount(RemoteOkJobDto job, int lastDaysCount) {
         if (job.getDate() == null || job.getDate().isEmpty()) return false;
 
         try {
@@ -103,7 +100,7 @@ public class RemoteOKJobScrappingService {
     public List<RemoteOkJobDto> getFilteredDevJobs(Integer lastDaysCount) {
         List<RemoteOkJobDto> baseJobList = getDevJobs();
         if (lastDaysCount != null && lastDaysCount > 0) {
-            baseJobList = baseJobList.stream().filter(job -> isPostedWithinLastTwoWeeks(job, lastDaysCount)).toList();
+            baseJobList = baseJobList.stream().filter(job -> isPostedWithinDaysCount(job, lastDaysCount)).toList();
         }
         return baseJobList;
     }
@@ -114,9 +111,6 @@ public class RemoteOKJobScrappingService {
         }
 
         try {
-            // Parse the HTML
-            Document doc = Jsoup.parse(htmlDescription);
-
             // Clean the HTML - keep only basic formatting
             String cleanedHtml = Jsoup.clean(htmlDescription, Safelist.basic());
             Document cleanDoc = Jsoup.parse(cleanedHtml);
@@ -126,19 +120,11 @@ public class RemoteOKJobScrappingService {
                 li.before(new TextNode("• "));
             }
 
-            // Get text and improve formatting
-            String plainText = cleanDoc.text()
+            return cleanDoc.text()
                     .replaceAll("•", "\n• ") // Put each bullet point on a new line
                     .replaceAll("\\s{2,}", " ")  // Remove extra spaces
                     .replaceAll(" \\n", "\n")    // Clean up spaces before newlines
-                    .replaceAll("\\n{3,}", "\n\n"); // Limit consecutive newlines
-
-            // TODO: Handle Very long descriptions
-            if (plainText.length() > 2000) {
-                plainText = plainText.substring(0, 2000) + "...";
-            }
-
-            return plainText;
+                    .replaceAll("\\n{3,}", "\n\n");
         } catch (Exception e) {
             System.err.println("Error cleaning job description: " + e.getMessage());
             // Return the original if parsing fails

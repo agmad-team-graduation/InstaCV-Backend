@@ -1,4 +1,4 @@
-package com.Graduation.InstaCv.mappers.Impl.CV;
+package com.Graduation.InstaCv.mappers.impl.jobs;
 
 import com.Graduation.InstaCv.data.dto.JobSimpleDto;
 import com.Graduation.InstaCv.data.model.job.Job;
