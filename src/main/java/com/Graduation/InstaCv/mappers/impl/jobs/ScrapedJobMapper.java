@@ -22,6 +22,7 @@ public class ScrapedJobMapper implements Mapper<Job, ScrapedJobDto> {
                 .title(job.getTitle())
                 .company(job.getCompany())
                 .description(job.getDescription())
+                .htmlDescription(job.getRemoteJobData().getHtmlDescription())
                 .isAnalyzed(job.getSkillExtractionStatus() == AnalyzeStatus.COMPLETED)
                 .jobSkills(job.getJobSkills())
                 .applyUrl(job.getRemoteJobData().getApplyUrl())

@@ -1,17 +1,18 @@
 package com.Graduation.InstaCv.service;
 
-import com.Graduation.InstaCv.data.dto.RemoteOkJobDto;
+import com.Graduation.InstaCv.data.dto.RemoteOkJobResponse;
 import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.Profile;
-import com.Graduation.InstaCv.mappers.impl.jobs.RemoteJobMapper;
+import com.Graduation.InstaCv.mappers.impl.jobs.RemoteOkJobResponseMapper;
 import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.repository.ProfileRepository;
-import com.Graduation.InstaCv.repository.RemoteJobDataRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -21,8 +22,7 @@ import java.util.Set;
 public class RemoteJobStorageService {
     private final RemoteOKJobScrappingService scrappingService;
     private final JobRepository jobRepository;
-    private final RemoteJobDataRepository remoteJobDataRepository;
-    private final RemoteJobMapper remoteJobMapper;
+    private final RemoteOkJobResponseMapper remoteOkJobResponseMapper;
     private final JobService jobService;
     private final ProfileRepository profileRepository;
     private static final Integer lastDaysCount = 7;
@@ -33,17 +33,18 @@ public class RemoteJobStorageService {
      * @return The number of new jobs saved
      */
     @Transactional
-    public int fetchAndSaveNewJobs() {
+    @Scheduled(cron = "0 0 */3 * * *")
+    public int fetchAndSaveNewJobsFromRemoteOkApi() {
         // Get all jobs from the API
-        List<RemoteOkJobDto> apiJobs = scrappingService.getFilteredDevJobs(lastDaysCount);
+        List<RemoteOkJobResponse> apiJobs = scrappingService.getItJobs(lastDaysCount);
 
         if (apiJobs.isEmpty()) return 0;
 
         // Get existing remote job IDs from the database
-        Set<String> existingRemoteIds = remoteJobDataRepository.findAllRemoteIds();
+        Set<String> existingRemoteIds = jobRepository.findAllRemoteIds();
 
         // Filter out jobs that already exist in the database
-        List<RemoteOkJobDto> newJobs = apiJobs.stream()
+        List<RemoteOkJobResponse> newJobs = apiJobs.stream()
                 .filter(job -> !existingRemoteIds.contains(job.getId()))
                 .toList();
 
@@ -54,8 +55,8 @@ public class RemoteJobStorageService {
         List<Profile> profiles = profileRepository.findAll();
 
         // for each remoteJobDto and jobEntity, extract skills and save them
-        for (RemoteOkJobDto remoteJob : newJobs) {
-            Job jobEntity = remoteJobMapper.toJobEntity(remoteJob);
+        for (RemoteOkJobResponse remoteJob : newJobs) {
+            Job jobEntity = remoteOkJobResponseMapper.toJobEntity(remoteJob);
             try {
                 jobEntity = jobService.extractSkills(jobEntity, true, false);
             } catch (Exception e) {
@@ -66,27 +67,29 @@ public class RemoteJobStorageService {
         }
         jobEntities = jobRepository.saveAll(jobEntities);
 
-        List<Job> fullyAnalyzedJobs = new ArrayList<>();
         for (Job jobEntity : jobEntities) {
             if (!jobEntity.getCompleteAnalysisStatus().equals(AnalyzeStatus.FAILED)) {
                 for (Profile profile : profiles)
-                    jobEntity = jobService.analyzeSkillsMatchingNoSave(jobEntity, profile, true, false);
-                fullyAnalyzedJobs.add(jobEntity);
+                    jobService.analyzeSkillsMatchingNoSave(jobEntity, profile, true, false);
             }
         }
-        fullyAnalyzedJobs = jobRepository.saveAll(fullyAnalyzedJobs);
-        return fullyAnalyzedJobs.size();
+        return jobRepository.saveAll(jobEntities).size();
     }
 
-    /**
-     * Scheduled task to automatically fetch new jobs every 2 minutes
-     */
-//    @Scheduled(fixedRate = 120000 * 30 * 6) // 6 hours in milliseconds
-//    @Scheduled(fixedRate = 2 * 60 * 1000) // 2 minutes in milliseconds
+    @Scheduled(cron = "0 0 */1 * * *")
     @Transactional
-    public void scheduledJobSync() {
-        int newJobsCount = fetchAndSaveNewJobs();
-        System.out.println("Scheduled job sync completed. Added " + newJobsCount + " new jobs.");
+    public void analyzeRecentJobsForMissingProfiles() {
+        OffsetDateTime oneWeekAgo = OffsetDateTime.now().minusDays(lastDaysCount);
+        List<Job> recentJobs = jobRepository.findRecentRemoteJobs(oneWeekAgo);
+        List<Profile> allProfiles = profileRepository.findAll();
+        for (Job job : recentJobs) {
+            Set<Long> analyzedProfileIds = jobRepository.findProfileIdsAnalyzedForJob(job.getId());
+            for (Profile profile : allProfiles) {
+                if (!analyzedProfileIds.contains(profile.getId()))
+                    jobService.analyzeSkillsMatchingNoSave(job, profile, true, false);
+            }
+        }
+        jobRepository.saveAll(recentJobs);
     }
 
 

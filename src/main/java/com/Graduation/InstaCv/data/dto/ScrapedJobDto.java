@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
@@ -20,8 +21,9 @@ public class ScrapedJobDto {
     private String title;
     private String company;
     private String description;
+    private String htmlDescription;
     private String applyUrl;
-    private String date;
+    private OffsetDateTime date;
     private boolean isAnalyzed;
     private SkillMatchingAnalysis skillMatchingAnalysis;
     @JsonIgnore

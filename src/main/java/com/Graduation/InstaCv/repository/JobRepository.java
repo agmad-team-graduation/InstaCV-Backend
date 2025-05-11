@@ -5,8 +5,10 @@ import feign.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface JobRepository extends JpaRepository<Job, Long> {
     List<Job> findJobsByProfileId(Long profileId);
@@ -28,4 +30,13 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     @Query("SELECT COUNT(a) > 0 FROM Job j JOIN j.projectMatchingAnalyses a WHERE j.id = :jobId AND a.profile.id = :profileId")
     boolean existsJobProjectMatchingAnalysis(@Param("jobId") Long jobId, @Param("profileId") Long profileId);
+
+    @Query("SELECT r.remoteId FROM RemoteJobData r")
+    Set<String> findAllRemoteIds();
+
+    @Query("SELECT j FROM Job j JOIN j.remoteJobData r WHERE j.profile IS NULL AND r.date >= :fromDate")
+    List<Job> findRecentRemoteJobs(@Param("fromDate") OffsetDateTime fromDate);
+
+    @Query("SELECT a.profile.id FROM SkillMatchingAnalysis a WHERE a.job.id = :jobId")
+    Set<Long> findProfileIdsAnalyzedForJob(@Param("jobId") Long jobId);
 }

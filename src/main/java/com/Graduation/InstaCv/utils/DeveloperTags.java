@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.utils;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Constants class containing developer-related tags used for job filtering
@@ -10,17 +11,17 @@ public final class DeveloperTags {
     /**
      * Comprehensive list of development-related tags for filtering developer jobs
      */
-    public static final List<String> DEV_TAGS = List.of(
+    public static final Set<String> DEV_TAGS = Set.of(
             // General Development Terms
             "dev", "developer", "software", "programming", "engineer", "coder", "programmer",
-            "development", "engineering", "technical", "tech", "code", "coding",
+            "development", "engineering", "technical", "tech", "code", "coding", "analysis",
 
             // Programming Languages
             "java", "javascript", "python", "ruby", "go", "golang", "php", "scala", "kotlin", "swift",
             "typescript", "c", "c++", "c#", "csharp", "rust", "dart", "perl", "r", "groovy",
             "bash", "shell", "powershell", "objective-c", "clojure", "haskell", "elixir", "erlang",
             "julia", "lua", "matlab", "fortran", "assembly", "cobol", "vba", "delphi", "pascal",
-            "lisp", "scheme", "prolog", "ada", "solidity", "sql", "plsql", "tsql",
+            "lisp", "scheme", "prolog", "ada", "solidity", "plsql", "tsql",
 
             // Web Development
             "web", "html", "css", "scss", "sass", "less", "stylus", "tailwind", "bootstrap",
@@ -33,8 +34,8 @@ public final class DeveloperTags {
             "symfony", "yii", "phoenix", "fastapi", "asp.net", "dotnet", "struts", "play",
 
             // Mobile Development
-            "mobile", "android", "ios", "swift", "reactnative", "flutter", "xamarin", "ionic",
-            "cordova", "capacitor", "nativescript", "kotlin", "androidsdk", "objectivec",
+            "mobile", "android", "ios","reactnative", "flutter", "xamarin", "ionic",
+            "cordova", "capacitor", "nativescript",  "androidsdk", "objectivec",
 
             // DevOps & Infrastructure
             "devops", "sre", "infrastructure", "cloud", "aws", "azure", "gcp", "docker", "kubernetes",

@@ -56,22 +56,4 @@ public class JobController {
         jobService.deleteJobByIdAndUserId(jobId, userId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-
-//    @GetMapping("/analyze/{jobId}")
-//    public CompletableFuture<ResponseEntity<JobDto>> analyzeJob(
-//            @PathVariable Long jobId,
-//            @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
-//        Long userId = SecurityUtils.getCurrentUserDetails().getId();
-//        return jobService.analyzeSkillExtractionAsync(jobId, userId, forceAnalyze)
-//                .thenApply(job -> new ResponseEntity<>(jobMapper.mapTo(job), HttpStatus.OK));
-//    }
-//
-//    @GetMapping("/skill-matching/{jobId}")
-//    public CompletableFuture<ResponseEntity<JobDto>> getSkillMatching(
-//            @PathVariable Long jobId,
-//            @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
-//        Long userId = SecurityUtils.getCurrentUserDetails().getId();
-//        return jobService.analyzeSkillsMatching(jobId, userId, forceAnalyze)
-//                .thenApply(job -> new ResponseEntity<>(jobMapper.mapTo(job), HttpStatus.OK));
-//    }
 }

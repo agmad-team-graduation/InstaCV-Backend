@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
@@ -25,10 +26,12 @@ public class RemoteJobData {
     @Column(name = "apply_url", length = 2000)
     private String applyUrl;
 
-    private String date;
+    private OffsetDateTime date;
 
     @ElementCollection
     private List<String> tags;
+    @Column(length = 20480)
+    private String htmlDescription;
 
     @OneToOne
     @JoinColumn(name = "job_id")

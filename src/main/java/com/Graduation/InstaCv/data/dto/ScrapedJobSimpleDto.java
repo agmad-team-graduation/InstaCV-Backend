@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.OffsetDateTime;
 
 
 @Data
@@ -17,5 +18,5 @@ public class ScrapedJobSimpleDto {
     private String company;
     private String description;
     private String applyUrl;
-    private String date;
+    private OffsetDateTime date;
 }

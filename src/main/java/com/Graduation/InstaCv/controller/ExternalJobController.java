@@ -6,7 +6,6 @@ import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.mappers.impl.jobs.ScrapedJobMapper;
-import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.service.JobService;
 import com.Graduation.InstaCv.service.ProfileService;
 import com.Graduation.InstaCv.service.RemoteJobStorageService;
@@ -21,14 +20,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/jobs/scrape")
 @RequiredArgsConstructor
-public class ScrapedJobController {
+public class ExternalJobController {
     private final RemoteJobStorageService storageService;
     private final ScrapedJobService scrapedJobService;
     private final JobService jobService;
     private final Mapper<Job, ScrapedJobSimpleDto> simpleScrapedJobMapper;
     private final ScrapedJobMapper scrapedJobMapper;
     private final ProfileService profileService;
-    private final JobRepository jobRepository;
 
     @GetMapping("/all")
     public ResponseEntity<List<ScrapedJobSimpleDto>> getAllJobs() {
@@ -57,7 +55,7 @@ public class ScrapedJobController {
 
     @PostMapping("/sync")
     public ResponseEntity<String> syncJobs() {
-        int newJobsCount = storageService.fetchAndSaveNewJobs();
+        int newJobsCount = storageService.fetchAndSaveNewJobsFromRemoteOkApi();
         return ResponseEntity.ok("Added " + newJobsCount + " new jobs");
     }
 }
