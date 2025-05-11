@@ -3,6 +3,8 @@ package com.Graduation.InstaCv.service;
 import com.Graduation.InstaCv.data.dto.request.RegistrationRequest;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.VerificationToken;
+import com.Graduation.InstaCv.data.model.profile.PersonalDetails;
+import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.exceptions.InvalidRegistrationDataException;
 import com.Graduation.InstaCv.exceptions.InvalidTokenException;
 import com.Graduation.InstaCv.repository.UserRepository;
@@ -46,11 +48,20 @@ public class UserService implements IUserService {
         // check the verification token
         emailVerificationService.verifyEmail(token);
         // 5. Create and save the user
+        return createNewUser(email, name, request.getPassword());
+    }
+
+    public User createNewUser(String email, String name, String password) {
         User user = User.builder()
                 .name(name)
                 .email(email)
-                .password(passwordEncoder.encode(request.getPassword()))
+                .isProfileCreated(true)
+                .profile(Profile.builder()
+                        .personalDetails(PersonalDetails.builder().fullName(name).email(email).build())
+                        .build())
+                .password(passwordEncoder.encode(password))
                 .build();
+        user.getProfile().setUser(user);
         return userRepository.save(user);
     }
 
