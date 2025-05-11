@@ -33,7 +33,6 @@ public class User {
     // Add auth provider field
     @Column(name = "auth_provider")
     private AuthProvider authProvider = AuthProvider.LOCAL;
-
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();

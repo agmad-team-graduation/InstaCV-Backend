@@ -38,16 +38,20 @@ public class Profile {
     private GithubProfile githubProfile;
 
     @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Education> educationList;
+    @Builder.Default
+    private List<Education> educationList = List.of();
 
     @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Experience> experienceList;
+    @Builder.Default
+    private List<Experience> experienceList = List.of();
 
     @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserSkill> userSkills;
+    @Builder.Default
+    private List<UserSkill> userSkills = List.of();
 
     @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Project> projects;
+    @Builder.Default
+    private List<Project> projects = List.of();
 
 //    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
 //    private List<Job> addedJobs;
