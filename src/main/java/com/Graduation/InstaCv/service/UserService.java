@@ -4,7 +4,10 @@ import com.Graduation.InstaCv.data.dto.request.RegistrationRequest;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.exceptions.EmailAlreadyExistsException;
 import com.Graduation.InstaCv.exceptions.InvalidRegistrationDataException;
+import com.Graduation.InstaCv.exceptions.InvalidTokenException;
+import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.repository.UserRepository;
+import com.Graduation.InstaCv.repository.VerificationTokenRepository;
 import com.Graduation.InstaCv.service.Interfaces.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,34 +20,37 @@ import java.util.regex.Pattern;
 public class UserService implements IUserService {
 
     private final UserRepository userRepository;
-    
+    private final EmailVerificationService emailVerificationService;
+    private final VerificationTokenRepository verificationTokenRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public User registerUser(RegistrationRequest request) {
+
+        String token = request.getVerificationToken();
+
+        // 1. Check if token exists, is valid and not used
+
+        if (verificationTokenRepository.findValidToken(token).isEmpty()) {
+            throw new InvalidTokenException("Verification token is invalid, expired, or already used");
+        }
+
+        String email = verificationTokenRepository.findEmailByToken(token);
+        String name  = verificationTokenRepository.findNameByToken(token);
+
         // 1. Validate registration data
-        if (request.getEmail() == null || request.getEmail().isBlank() ||
+        if (email == null || email.isBlank() ||
                 request.getPassword() == null || request.getPassword().isBlank() ||
-                request.getName() == null || request.getName().isBlank()) {
+                name == null || name.isBlank()) {
             throw new InvalidRegistrationDataException("All fields are required: email, password, and name");
         }
 
-        // 2. Check email format
-        if (!isValidEmail(request.getEmail())) {
-            throw new InvalidRegistrationDataException("Invalid email format");
-        }
-
-        // 3. Check if email already exists
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new EmailAlreadyExistsException("Email " + request.getEmail() + " is already registered");
-        }
-
-
-
+        // check the verification token
+        emailVerificationService.verifyEmail(token);
         // 5. Create and save the user
         User user = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
+                .name(name)
+                .email(email)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
         return userRepository.save(user);
