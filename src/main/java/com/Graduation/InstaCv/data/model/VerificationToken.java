@@ -1,4 +1,4 @@
-package com.Graduation.InstaCv.model;
+package com.Graduation.InstaCv.data.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

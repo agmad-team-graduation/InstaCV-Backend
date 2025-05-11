@@ -1,9 +1,8 @@
 package com.Graduation.InstaCv.service;
 
-import com.Graduation.InstaCv.data.model.User;
+import com.Graduation.InstaCv.data.model.VerificationToken;
 import com.Graduation.InstaCv.exceptions.EmailAlreadyExistsException;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
-import com.Graduation.InstaCv.model.VerificationToken;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.repository.VerificationTokenRepository;
 import com.Graduation.InstaCv.utils.EmailUtils;
