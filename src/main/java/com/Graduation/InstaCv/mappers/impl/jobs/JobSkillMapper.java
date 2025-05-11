@@ -1,4 +1,4 @@
-package com.Graduation.InstaCv.mappers.Impl;
+package com.Graduation.InstaCv.mappers.impl.jobs;
 
 import com.Graduation.InstaCv.data.dto.response.ExtractedJobSkillResponse;
 import com.Graduation.InstaCv.data.model.job.JobSkill;

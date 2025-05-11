@@ -3,6 +3,7 @@ package com.Graduation.InstaCv.controller;
 
 import com.Graduation.InstaCv.data.dto.JobDto;
 import com.Graduation.InstaCv.data.dto.JobSimpleDto;
+import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.mappers.ContextAwareMapper;
@@ -32,7 +33,7 @@ public class JobController {
     public ResponseEntity<JobDto> addJob(@RequestBody JobSimpleDto job) {
         Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
         Job savedJob = jobService.addJob(jobSimpleMapper.mapFrom(job, profile), profile);
-        jobService.backgroundFullAnalyzeJob(savedJob.getId(), profile.getUser().getId(), false);
+        jobService.backgroundFullAnalyzeJob(savedJob.getId(), profile.getUser().getId(), false, false);
         return new ResponseEntity<>(jobMapper.mapTo(savedJob), HttpStatus.CREATED);
     }
 
@@ -47,8 +48,8 @@ public class JobController {
     public JobDto getJob(@PathVariable Long jobId) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         Job jobFound = jobService.getJobByIdAndUserId(jobId, userId);
-        if (jobFound.isAnalyzeFailed())
-            jobFound = jobService.fullAnalyze(jobId, userId, false);
+        if (jobFound.getCompleteAnalysisStatus() == AnalyzeStatus.FAILED)
+            jobFound = jobService.fullAnalyze(jobId, userId, false, false);
         return jobMapper.mapTo(jobFound);
     }
 
@@ -58,22 +59,4 @@ public class JobController {
         jobService.deleteJobByIdAndUserId(jobId, userId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-
-//    @GetMapping("/analyze/{jobId}")
-//    public CompletableFuture<ResponseEntity<JobDto>> analyzeJob(
-//            @PathVariable Long jobId,
-//            @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
-//        Long userId = SecurityUtils.getCurrentUserDetails().getId();
-//        return jobService.analyzeSkillExtractionAsync(jobId, userId, forceAnalyze)
-//                .thenApply(job -> new ResponseEntity<>(jobMapper.mapTo(job), HttpStatus.OK));
-//    }
-//
-//    @GetMapping("/skill-matching/{jobId}")
-//    public CompletableFuture<ResponseEntity<JobDto>> getSkillMatching(
-//            @PathVariable Long jobId,
-//            @RequestParam(name = "force", defaultValue = "false") boolean forceAnalyze) {
-//        Long userId = SecurityUtils.getCurrentUserDetails().getId();
-//        return jobService.analyzeSkillsMatching(jobId, userId, forceAnalyze)
-//                .thenApply(job -> new ResponseEntity<>(jobMapper.mapTo(job), HttpStatus.OK));
-//    }
 }

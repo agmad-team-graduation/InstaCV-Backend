@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.service;
 
+import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.cv.*;
 import com.Graduation.InstaCv.data.model.cv.items.CvItem;
@@ -59,10 +60,22 @@ public class CvGenerationService implements ICvGenerationService {
         Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
 
-        if (job.isAnalyzeFailed()) // re-analyze the job if it failed
-            job = jobService.fullAnalyze(jobId, userId, false);
-        else if (!job.isAnalyzed() || !job.isSkillMatchingAnalyzed() || !job.isProjectMatchingAnalyzed()) // job is being analyzed
+
+        if (job.getProfile() != null && job.getCompleteAnalysisStatus() == AnalyzeStatus.IN_PROGRESS)
+            // For AddedJob by profile, it's in progress while both (extracting skills OR analyzing matching for skill/projects)
+            // For ScrapedJob, it's never in progress (it's only flushed to db when analyzed)
+            // TODO: This is confusing as the status should be only for skill extraction, not for matching analysis?
             throw new ResourceNotFoundException("Job not analyzed yet with id: " + jobId);
+        else if (job.getProfile() == null && job.getSkillExtractionStatus() == AnalyzeStatus.IN_PROGRESS)
+            throw new ResourceNotFoundException("Job not analyzed yet with id: " + jobId);
+
+
+
+        // Analyze if it failed, or just use it if it was already analyzed
+        // TODO: Better approach, is to have a STATUS field for each skillMatchingAnalysis. To avoid two analyzes in parallel (You now only avoid skill extraction in parallel)
+        // TODO: Another approach, is to now save the job on the system until it's analyzed for all current system profiles (but how to fix the null ids issue, that i even saved to fix it?)
+        job = jobService.fullAnalyze(jobId, userId, true, false);
+        job = jobRepository.save(job);
 
         // Start building tailored CV
         TailoredCv tailoredCv = TailoredCv.builder()
@@ -73,8 +86,10 @@ public class CvGenerationService implements ICvGenerationService {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        List<MatchedSkill> matchedSkills = job.getSkillMatchingAnalysis().getMatchedSkills();
-        matchedSkills.sort(Comparator.comparing(MatchedSkill::getSimilarity).reversed());
+        List<MatchedSkill> matchedSkills = job.
+                getSkillMatchingAnalyses().stream().filter(analysis -> analysis.getProfile() == profile)
+                .findFirst().get().getMatchedSkills()
+                .stream().sorted(Comparator.comparing(MatchedSkill::getSimilarity).reversed()).toList();
 
         List<UserSkill> tailoredSkills = matchedSkills.stream()
                 .map(MatchedSkill::getUserSkill)
@@ -83,10 +98,20 @@ public class CvGenerationService implements ICvGenerationService {
 
         // convert to UserSkillCv
         tailoredCv.setSkillSection(
-                SkillSection.builder().items(
-                                tailoredSkills.stream().map(userSkillCvMapper::mapFrom).toList()
-                        ).sectionTitle("Skills")
-                        .build());
+                SkillSection.builder().
+
+                        items(
+                                tailoredSkills.stream().
+
+                                        map(userSkillCvMapper::mapFrom).
+
+                                        toList()
+                        ).
+
+                        sectionTitle("Skills")
+                                .
+
+                        build());
 
 
         // Sort experiences by date
@@ -96,11 +121,21 @@ public class CvGenerationService implements ICvGenerationService {
 
         // Convert to ExperienceCv
         tailoredCv.setExperienceSection(
-                ExperienceSection.builder().items(
-                                tailoredExperience.stream().map(experienceCvMapper::mapFrom).toList()
+                ExperienceSection.builder().
+
+                        items(
+                                tailoredExperience.stream().
+
+                                        map(experienceCvMapper::mapFrom).
+
+                                        toList()
                         )
-                        .sectionTitle("Experience")
-                        .build());
+                                .
+
+                        sectionTitle("Experience")
+                                .
+
+                        build());
 
         // Sort education by date
         List<Education> tailoredEducation = profile.getEducationList().stream()
@@ -109,34 +144,91 @@ public class CvGenerationService implements ICvGenerationService {
 
         // Convert to EducationCv
         tailoredCv.setEducationSection(
-                EducationSection.builder().items(
-                                tailoredEducation.stream().map(educationCvMapper::mapFrom).toList()
+                EducationSection.builder().
+
+                        items(
+                                tailoredEducation.stream().
+
+                                        map(educationCvMapper::mapFrom).
+
+                                        toList()
                         )
-                        .sectionTitle("Education")
-                        .build());
+                                .
+
+                        sectionTitle("Education")
+                                .
+
+                        build());
 
         // Include relevant projects
-        List<Project> tailoredProjects = job.getProjectMatchingAnalysis().getProjectsMatchedWithSkills()
+        List<Project> tailoredProjects = job.getProjectMatchingAnalyses().stream()
+                .filter(analysis -> analysis.getProfile() == profile)
+                .findFirst().get().getProjectsMatchedWithSkills()
                 .stream().sorted(Comparator.comparing(MatchedProject::getMatchedSkillsCount).reversed())
                 .map(MatchedProject::getProject).toList();
 
         // Convert to ProjectCv
         tailoredCv.setProjectSection(
-                ProjectSection.builder().items(
-                                tailoredProjects.stream().map(projectCvMapper::mapFrom).toList()
+                ProjectSection.builder().
+
+                        items(
+                                tailoredProjects.stream().
+
+                                        map(projectCvMapper::mapFrom).
+
+                                        toList()
                         )
-                        .sectionTitle("Projects")
-                        .build());
+                                .
+
+                        sectionTitle("Projects")
+                                .
+
+                        build());
 
         // Generate summary
         String summary = generateProfileSummary(profile, job);
         tailoredCv.setSummary(summary);
 
         // Set order index
-        setOrderIndex(tailoredCv.getEducationSection().getItems().stream().map(e -> (CvItem) e).toList());
-        setOrderIndex(tailoredCv.getExperienceSection().getItems().stream().map(e -> (CvItem) e).toList());
-        setOrderIndex(tailoredCv.getProjectSection().getItems().stream().map(e -> (CvItem) e).toList());
-        setOrderIndex(tailoredCv.getSkillSection().getItems().stream().map(e -> (CvItem) e).toList());
+        setOrderIndex(tailoredCv.getEducationSection().
+
+                getItems().
+
+                stream().
+
+                map(e -> (CvItem) e).
+
+                toList());
+
+        setOrderIndex(tailoredCv.getExperienceSection().
+
+                getItems().
+
+                stream().
+
+                map(e -> (CvItem) e).
+
+                toList());
+
+        setOrderIndex(tailoredCv.getProjectSection().
+
+                getItems().
+
+                stream().
+
+                map(e -> (CvItem) e).
+
+                toList());
+
+        setOrderIndex(tailoredCv.getSkillSection().
+
+                getItems().
+
+                stream().
+
+                map(e -> (CvItem) e).
+
+                toList());
 
         // Set order index for sections
         setOrderIndexOfSections(tailoredCv);

@@ -1,4 +1,4 @@
-package com.Graduation.InstaCv.mappers.Impl;
+package com.Graduation.InstaCv.mappers.impl.cv;
 
 import com.Graduation.InstaCv.data.dto.TailoredCvDto;
 import com.Graduation.InstaCv.data.model.cv.TailoredCv;

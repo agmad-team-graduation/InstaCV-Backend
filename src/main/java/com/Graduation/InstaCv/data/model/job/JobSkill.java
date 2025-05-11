@@ -7,19 +7,18 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"job"})
 @Entity
 @Table(name = "job_skills")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
+@ToString(exclude = {"job"})
 public class JobSkill extends BaseSkill {
     @ManyToOne(optional = false)
     @JoinColumn(name = "job_id")
     @JsonIgnore
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     private Job job;
 
     @JsonIgnore

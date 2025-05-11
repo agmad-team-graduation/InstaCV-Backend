@@ -2,10 +2,9 @@ package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.request.RegistrationRequest;
 import com.Graduation.InstaCv.data.model.User;
-import com.Graduation.InstaCv.exceptions.EmailAlreadyExistsException;
+import com.Graduation.InstaCv.data.model.VerificationToken;
 import com.Graduation.InstaCv.exceptions.InvalidRegistrationDataException;
 import com.Graduation.InstaCv.exceptions.InvalidTokenException;
-import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.repository.VerificationTokenRepository;
 import com.Graduation.InstaCv.service.Interfaces.IUserService;
@@ -31,12 +30,11 @@ public class UserService implements IUserService {
 
         // 1. Check if token exists, is valid and not used
 
-        if (verificationTokenRepository.findValidToken(token).isEmpty()) {
-            throw new InvalidTokenException("Verification token is invalid, expired, or already used");
-        }
+        VerificationToken verificationToken = verificationTokenRepository.findByToken(token)
+                .orElseThrow(() -> new InvalidTokenException("Invalid or expired verification token"));
 
-        String email = verificationTokenRepository.findEmailByToken(token);
-        String name  = verificationTokenRepository.findNameByToken(token);
+        String email = verificationToken.getEmail();
+        String name = verificationToken.getName();
 
         // 1. Validate registration data
         if (email == null || email.isBlank() ||

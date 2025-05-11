@@ -1,4 +1,4 @@
-package com.Graduation.InstaCv.mappers.Impl.CV;
+package com.Graduation.InstaCv.mappers.impl.cv;
 
 import com.Graduation.InstaCv.data.model.cv.items.EducationCv;
 import com.Graduation.InstaCv.data.model.profile.Education;
