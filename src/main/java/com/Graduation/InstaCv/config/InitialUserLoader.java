@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 @Profile({"dev", "dev-remote-ai"})
 public class InitialUserLoader implements CommandLineRunner {
     private final UserService userService;
+    private final UserRepository userRepo;
     @Value("${app.initial.user.email}")
     private String initEmail;
     @Value("${app.initial.user.password}")
@@ -26,6 +27,9 @@ public class InitialUserLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        if (userRepo.findByEmail(initEmail).isPresent()) {
+            return;
+        }
         userService.createNewUser(
                 initEmail,
                 initName,
