@@ -2,6 +2,9 @@ package com.Graduation.InstaCv.repository;
 
 import com.Graduation.InstaCv.data.model.job.Job;
 import feign.Param;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -39,4 +42,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     @Query("SELECT a.profile.id FROM SkillMatchingAnalysis a WHERE a.job.id = :jobId")
     Set<Long> findProfileIdsAnalyzedForJob(@Param("jobId") Long jobId);
+
+    @Query("SELECT j FROM Job j WHERE j.remoteJobData IS NOT NULL")
+    Page<Job> findAllRemoteJobs(Pageable pageable);
 }

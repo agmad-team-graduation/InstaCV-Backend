@@ -8,6 +8,8 @@ import com.Graduation.InstaCv.mappers.impl.jobs.RemoteOkJobResponseMapper;
 import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +27,7 @@ public class RemoteJobStorageService {
     private final RemoteOkJobResponseMapper remoteOkJobResponseMapper;
     private final JobService jobService;
     private final ProfileRepository profileRepository;
-    private static final Integer lastDaysCount = 7;
+    private static final Integer lastDaysCount = 10;
 
     /**
      * Fetches new jobs from RemoteOK API and saves them to the main job table
@@ -92,8 +94,7 @@ public class RemoteJobStorageService {
         jobRepository.saveAll(recentJobs);
     }
 
-
-    public List<Job> getAllRemoteJobs() {
-        return jobRepository.findAllRemoteJobsSortedByDateDesc();
+    public Page<Job> getAllRemoteJobs(Pageable pageable) {
+        return jobRepository.findAllRemoteJobs(pageable);
     }
 }
