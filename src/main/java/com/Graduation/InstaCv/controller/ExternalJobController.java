@@ -12,8 +12,13 @@ import com.Graduation.InstaCv.service.RemoteJobStorageService;
 import com.Graduation.InstaCv.service.ScrapedJobService;
 import com.Graduation.InstaCv.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 
@@ -29,12 +34,19 @@ public class ExternalJobController {
     private final ProfileService profileService;
 
     @GetMapping("/all")
-    public ResponseEntity<List<ScrapedJobSimpleDto>> getAllJobs() {
-        // TODO: Add pagination
-        List<Job> jobs = storageService.getAllRemoteJobs();
-        return ResponseEntity.ok(jobs.stream()
-                .map(simpleScrapedJobMapper::mapTo)
-                .toList());
+    public ResponseEntity<Page<ScrapedJobSimpleDto>> getAllJobs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "remoteJobData.date") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ?
+                Sort.Direction.ASC : Sort.Direction.DESC;
+
+        Pageable pageable = (Pageable) PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+        Page<Job> jobsPage = storageService.getAllRemoteJobs(pageable);
+
+        return ResponseEntity.ok(jobsPage.map(simpleScrapedJobMapper::mapTo));
     }
 
     @GetMapping("/{jobId}")
