@@ -53,6 +53,7 @@ public class JobSkillService implements IJobSkillService {
                 .similarityThreshold(0.7f).build();
         SkillMatchingAnalysis skillMatchingAnalysis = skillMatchingClient.matchSkills(request);
         skillMatchingAnalysis.setJob(job);
+        skillMatchingAnalysis.setProfile(user.getProfile());
         skillMatchingAnalysis.getMatchedSkills().forEach(matchedSkill -> matchedSkill.setSkillMatchingAnalysis(skillMatchingAnalysis));
         return skillMatchingAnalysis;
     }

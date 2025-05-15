@@ -68,6 +68,7 @@ public class JobService implements IJobService {
     public Job extractSkills(Job job, boolean isExternal, boolean forceAnalyze) {
         if (isExternal && job.getSkillExtractionStatus() == AnalyzeStatus.COMPLETED && !forceAnalyze) return job;
         if (!isExternal && job.getCompleteAnalysisStatus() == AnalyzeStatus.COMPLETED && !forceAnalyze) return job;
+        if (!job.getJobSkills().isEmpty() && !forceAnalyze) return job;
 
         String description = isExternal ? job.getRemoteJobData().getModifiedDescription() : job.getDescription();
 
@@ -79,9 +80,23 @@ public class JobService implements IJobService {
         return updateJobWithAnalysis(job, knowledgePredictionsFuture.join(), skillsPredictionsFuture.join());
     }
 
+    // TODO: Can the same problem of persistent (that i created analyzeSkillsMatchingWithSave to fix) happen here when we use
+    // analyzeSkillsMatchingNoSave no the external jobs? probably not because there is no half analysis for them in db?
+    // TODO: Just see how to handle with external jobs, I don't like this function, make it safe even if extractSkills returned newthings
     public Job analyzeSkillsMatchingNoSave(Job job, Profile profile, boolean isExternal, boolean forceAnalyze) {
         if (!forceAnalyze && jobRepository.existsJobSkillMatchingAnalysis(job.getId(), profile.getId())) return job;
         job = extractSkills(job, isExternal, forceAnalyze);
+        job.getSkillMatchingAnalyses().add(jobSkillService.analyzeSkillsMatching(job, profile.getUser()));
+        job.getSkillMatchingAnalyses().getLast().setJob(job);
+        job.getSkillMatchingAnalyses().getLast().setProfile(profile);
+        return job;
+    }
+
+
+    public Job analyzeSkillsMatchingWithSave(Job job, Profile profile, boolean isExternal, boolean forceAnalyze) {
+        if (!forceAnalyze && jobRepository.existsJobSkillMatchingAnalysis(job.getId(), profile.getId())) return job;
+        job = extractSkills(job, isExternal, forceAnalyze);
+        job = jobRepository.save(job);
         job.getSkillMatchingAnalyses().add(jobSkillService.analyzeSkillsMatching(job, profile.getUser()));
         job.getSkillMatchingAnalyses().getLast().setJob(job);
         job.getSkillMatchingAnalyses().getLast().setProfile(profile);
@@ -117,6 +132,8 @@ public class JobService implements IJobService {
         else
             job = jobRepository.findJobByIdAndProfileIsNull(jobId)
                     .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
+        if (!isExternal)
+            return jobRepository.save(analyzeSkillsMatchingWithSave(job, profile, isExternal, forceAnalyze));
         return jobRepository.save(analyzeSkillsMatchingNoSave(job, profile, isExternal, forceAnalyze));
     }
 
@@ -154,6 +171,7 @@ public class JobService implements IJobService {
         job.getJobSkills().addAll(softSkills);
 
         job.getJobSkills().forEach(jobSkill -> jobSkill.setJob(job));
+
         return job;
     }
 }
