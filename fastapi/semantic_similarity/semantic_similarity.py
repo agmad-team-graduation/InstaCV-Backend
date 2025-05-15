@@ -84,7 +84,7 @@ def match_projects_skills(req: ProjectsMatchingRequest):
             MatchedProject(project=project, matchedSkills=[], matchedSkillsCount=0) for project in projects
         ])
     elif not projects:
-        return MatchingSkillsResponse(allAnalyzedProjects=[])
+        return MatchingProjectsResponse(allAnalyzedProjects=[])
 
     job_texts = [job.skill for job in job_skills]
     job_embeddings = model.encode(job_texts, convert_to_tensor=True)
