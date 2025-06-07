@@ -50,7 +50,6 @@ public class SkillMatchingAnalysis {
             joinColumns = @JoinColumn(name = "analysis_id"),
             inverseJoinColumns = @JoinColumn(name = "user_skill_id")
     )
-    @Cascade(org.hibernate.annotations.CascadeType.ALL)
     private List<UserSkill> unmatchedUserSkills;
 
     public Float getMatchedSkillsPercentage() {

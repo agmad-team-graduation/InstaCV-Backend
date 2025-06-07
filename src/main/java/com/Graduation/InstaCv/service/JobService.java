@@ -7,6 +7,7 @@ import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.enums.SkillType;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.job.JobSkill;
+import com.Graduation.InstaCv.data.model.jobMatching.skillMatching.SkillMatchingAnalysis;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.mappers.Mapper;
@@ -37,41 +38,27 @@ public class JobService implements IJobService {
 
     @Override
     public Job fullAnalyze(Long jobId, Long userId, boolean isExternalJob, boolean forceAnalyze) {
-        Job job = getJobByIdAndUserId(jobId, userId);
+        Job job = getJob(jobId, userId, isExternalJob);
         jobRepository.save(extractSkills(job, isExternalJob, forceAnalyze));
         job = analyzeSkillsMatching(jobId, userId, isExternalJob, forceAnalyze);
         jobRepository.save(job);
         job = analyzeProjectsMatching(jobId, userId, isExternalJob, forceAnalyze);
-//        job.setCompleteAnalysisStatus(AnalyzeStatus.COMPLETED);
         return jobRepository.save(job);
     }
 
-//    @Override
-//    @Transactional
-//    @Async
-//    public void backgroundFullAnalyzeJob(Long jobId, Long userId, Boolean isExternalJob, Boolean forceAnalyze) {
-//        Job job = getJobByIdAndUserId(jobId, userId);
-//        try {
-//            job.setCompleteAnalysisStatus(AnalyzeStatus.IN_PROGRESS);
-//            jobRepository.save(job);
-//            jobRepository.flush();
-//            jobRepository.save(extractSkills(job, isExternalJob, forceAnalyze));
-//            job = analyzeSkillsMatching(jobId, userId, isExternalJob, forceAnalyze);
-//            jobRepository.save(job);
-//            job = analyzeProjectsMatching(jobId, userId, isExternalJob, forceAnalyze);
-//            job.setCompleteAnalysisStatus(AnalyzeStatus.COMPLETED);
-//            jobRepository.save(job);
-//        } catch (Exception e) {
-//            job.setCompleteAnalysisStatus(AnalyzeStatus.FAILED);
-//            jobRepository.save(job);
-//        }
-//    }
+    private Job getJob(Long jobId, Long userId, boolean isExternalJob){
+        Profile profile = profileService.getProfileByUserId(userId);
+        if (!isExternalJob) {
+            return jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId + " for user with id: " + userId));
+        } else {
+            return jobRepository.findJobByIdAndProfileIsNull(jobId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId + " for external job"));
+        }
+    }
 
     public Job extractSkills(Job job, boolean isExternal, boolean forceAnalyze) {
-        if (isExternal && job.getSkillExtractionStatus() == AnalyzeStatus.COMPLETED && !forceAnalyze) return job;
-        if (!isExternal && !job.getSkillMatchingAnalyses().isEmpty() && !forceAnalyze) return job;
-        if (!job.getJobSkills().isEmpty() && !forceAnalyze) return job;
-
+        if (job.getSkillExtractionStatus() == AnalyzeStatus.COMPLETED && !forceAnalyze) return job;
         String description = isExternal ? job.getRemoteJobData().getModifiedDescription() : job.getDescription();
 
         CompletableFuture<JobKnowledgeResponse> knowledgePredictionsFuture = jobSkillService.extractKnowledge(description);
@@ -85,20 +72,8 @@ public class JobService implements IJobService {
     // TODO: Can the same problem of persistent (that i created analyzeSkillsMatchingWithSave to fix) happen here when we use
     // analyzeSkillsMatchingNoSave no the external jobs? probably not because there is no half analysis for them in db?
     // TODO: Just see how to handle with external jobs, I don't like this function, make it safe even if extractSkills returned newthings
-    public Job analyzeSkillsMatchingNoSave(Job job, Profile profile, boolean isExternal, boolean forceAnalyze) {
+    public Job analyzeSkillsMatchingNoSave(Job job, Profile profile, boolean forceAnalyze) {
         if (!forceAnalyze && jobRepository.existsJobSkillMatchingAnalysis(job.getId(), profile.getId())) return job;
-        job = extractSkills(job, isExternal, forceAnalyze);
-        job.getSkillMatchingAnalyses().add(jobSkillService.analyzeSkillsMatching(job, profile.getUser()));
-        job.getSkillMatchingAnalyses().getLast().setJob(job);
-        job.getSkillMatchingAnalyses().getLast().setProfile(profile);
-        return job;
-    }
-
-
-    public Job analyzeSkillsMatchingWithSave(Job job, Profile profile, boolean isExternal, boolean forceAnalyze) {
-        if (!forceAnalyze && jobRepository.existsJobSkillMatchingAnalysis(job.getId(), profile.getId())) return job;
-//        job = extractSkills(job, isExternal, forceAnalyze);
-//        job = jobRepository.save(job);
         job.getSkillMatchingAnalyses().add(jobSkillService.analyzeSkillsMatching(job, profile.getUser()));
         job.getSkillMatchingAnalyses().getLast().setJob(job);
         job.getSkillMatchingAnalyses().getLast().setProfile(profile);
@@ -127,29 +102,14 @@ public class JobService implements IJobService {
     // TODO: Move to another service?
     private Job analyzeSkillsMatching(Long jobId, Long userId, boolean isExternal, boolean forceAnalyze) {
         Profile profile = profileService.getProfileByUserId(userId);
-        Job job;
-        if (!isExternal)
-            job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
-        else
-            job = jobRepository.findJobByIdAndProfileIsNull(jobId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
-        if (!isExternal)
-            return jobRepository.save(analyzeSkillsMatchingWithSave(job, profile, isExternal, forceAnalyze));
-        return jobRepository.save(analyzeSkillsMatchingNoSave(job, profile, isExternal, forceAnalyze));
+        Job job = getJob(jobId, userId, isExternal);
+        return jobRepository.save(analyzeSkillsMatchingNoSave(job, profile, forceAnalyze));
     }
 
     private Job analyzeProjectsMatching(Long jobId, Long userId, boolean isExternal, boolean forceAnalyze) {
         Profile profile = profileService.getProfileByUserId(userId);
-        Job job;
-        if (!isExternal)
-            job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
-        else
-            job = jobRepository.findJobByIdAndProfileIsNull(jobId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
+        Job job = getJob(jobId, userId, isExternal);
         if (!forceAnalyze && jobRepository.existsJobProjectMatchingAnalysis(job.getId(), profile.getId())) return job;
-//        job = extractSkills(job, isExternal, forceAnalyze);
         job.getProjectMatchingAnalyses().add(jobSkillService.analyzeProjectsMatching(job, profile.getUser()));
         job.getProjectMatchingAnalyses().getLast().setJob(job);
         job.getProjectMatchingAnalyses().getLast().setProfile(profile);
@@ -168,11 +128,15 @@ public class JobService implements IJobService {
         softSkills.forEach(jobSkill -> jobSkill.setSkillType(SkillType.SOFT));
 
         // Clear and add new skills, instead of directly setting to avoid orphan removal error
+        job.getProjectMatchingAnalyses().clear();
+        job.getSkillMatchingAnalyses().clear();
         job.getJobSkills().clear();
+
         job.getJobSkills().addAll(hardSkills);
         job.getJobSkills().addAll(softSkills);
 
         job.getJobSkills().forEach(jobSkill -> jobSkill.setJob(job));
+        job.setSkillExtractionStatus(AnalyzeStatus.COMPLETED);
 
         return job;
     }

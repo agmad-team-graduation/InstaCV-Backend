@@ -72,7 +72,7 @@ public class RemoteJobStorageService {
         for (Job jobEntity : jobEntities) {
             if (!jobEntity.getSkillExtractionStatus().equals(AnalyzeStatus.FAILED)) {
                 for (Profile profile : profiles)
-                    jobService.analyzeSkillsMatchingNoSave(jobEntity, profile, true, false);
+                    jobService.analyzeSkillsMatchingNoSave(jobEntity, profile, false);
             }
         }
         return jobRepository.saveAll(jobEntities).size();
@@ -88,7 +88,7 @@ public class RemoteJobStorageService {
             Set<Long> analyzedProfileIds = jobRepository.findProfileIdsAnalyzedForJob(job.getId());
             for (Profile profile : allProfiles) {
                 if (!analyzedProfileIds.contains(profile.getId()))
-                    jobService.analyzeSkillsMatchingNoSave(job, profile, true, false);
+                    jobService.analyzeSkillsMatchingNoSave(job, profile, false);
             }
         }
         jobRepository.saveAll(recentJobs);
