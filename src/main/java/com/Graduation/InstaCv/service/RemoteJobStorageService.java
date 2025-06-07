@@ -70,7 +70,7 @@ public class RemoteJobStorageService {
         jobEntities = jobRepository.saveAll(jobEntities);
 
         for (Job jobEntity : jobEntities) {
-            if (!jobEntity.getCompleteAnalysisStatus().equals(AnalyzeStatus.FAILED)) {
+            if (!jobEntity.getSkillExtractionStatus().equals(AnalyzeStatus.FAILED)) {
                 for (Profile profile : profiles)
                     jobService.analyzeSkillsMatchingNoSave(jobEntity, profile, true, false);
             }

@@ -104,7 +104,7 @@ public class ProfileService implements IProfileService {
             List<Job> profileJobs = jobRepository.findJobsByProfileId(existingProfile.getId());
             for (Job job : profileJobs) {
                 job.getSkillMatchingAnalyses().clear();
-                job.setCompleteAnalysisStatus(AnalyzeStatus.NOT_STARTED);
+//                job.setCompleteAnalysisStatus(AnalyzeStatus.NOT_STARTED);
             }
             jobRepository.saveAll(profileJobs);
             // TODO: Remove all matching for external jobs also, Test it
@@ -116,7 +116,6 @@ public class ProfileService implements IProfileService {
                                 .findFirst()
                                 .orElse(null)
                 );
-                job.setCompleteAnalysisStatus(AnalyzeStatus.NOT_STARTED);
             }
             jobRepository.saveAll(analyzedScrapedJobsByProfileId);
         }

@@ -61,14 +61,13 @@ public class CvGenerationService implements ICvGenerationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
 
 
-        if (job.getProfile() != null && job.getCompleteAnalysisStatus() == AnalyzeStatus.IN_PROGRESS)
-            // For AddedJob by profile, it's in progress while both (extracting skills OR analyzing matching for skill/projects)
-            // For ScrapedJob, it's never in progress (it's only flushed to db when analyzed)
-            // TODO: This is confusing as the status should be only for skill extraction, not for matching analysis?
+//        if (job.getProfile() != null && job.getCompleteAnalysisStatus() == AnalyzeStatus.IN_PROGRESS)
+//            // For AddedJob by profile, it's in progress while both (extracting skills OR analyzing matching for skill/projects)
+//            // For ScrapedJob, it's never in progress (it's only flushed to db when analyzed)
+//            // TODO: This is confusing as the status should be only for skill extraction, not for matching analysis?
+//            throw new ResourceNotFoundException("Job not analyzed yet with id: " + jobId);
+        if (job.getProfile() == null && job.getSkillExtractionStatus() == AnalyzeStatus.IN_PROGRESS)
             throw new ResourceNotFoundException("Job not analyzed yet with id: " + jobId);
-        else if (job.getProfile() == null && job.getSkillExtractionStatus() == AnalyzeStatus.IN_PROGRESS)
-            throw new ResourceNotFoundException("Job not analyzed yet with id: " + jobId);
-
 
 
         // Analyze if it failed, or just use it if it was already analyzed

@@ -27,7 +27,6 @@ public class JobController {
     private final IProfileService profileService;
     private final ContextAwareMapper<Job, JobDto, Profile> jobMapper;
     private final ContextAwareMapper<Job, JobSimpleDto, Profile> jobSimpleMapper;
-    private final JobRepository jobRepository;
 
     @PostMapping("/add")
     public ResponseEntity<JobDto> addJob(@RequestBody JobSimpleDto job) {
@@ -49,8 +48,7 @@ public class JobController {
     public JobDto getJob(@PathVariable Long jobId) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         Job jobFound = jobService.getJobByIdAndUserId(jobId, userId);
-        if (jobFound.getCompleteAnalysisStatus() == AnalyzeStatus.FAILED
-                || jobFound.getCompleteAnalysisStatus() == AnalyzeStatus.NOT_STARTED)
+        if (jobFound.getSkillMatchingAnalyses().isEmpty())
             jobFound = jobService.fullAnalyze(jobId, userId, false, true);
         return jobMapper.mapTo(jobFound);
     }

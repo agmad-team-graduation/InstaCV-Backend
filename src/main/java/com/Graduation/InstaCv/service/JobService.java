@@ -42,34 +42,34 @@ public class JobService implements IJobService {
         job = analyzeSkillsMatching(jobId, userId, isExternalJob, forceAnalyze);
         jobRepository.save(job);
         job = analyzeProjectsMatching(jobId, userId, isExternalJob, forceAnalyze);
-        job.setCompleteAnalysisStatus(AnalyzeStatus.COMPLETED);
+//        job.setCompleteAnalysisStatus(AnalyzeStatus.COMPLETED);
         return jobRepository.save(job);
     }
 
-    @Override
-    @Transactional
-    @Async
-    public void backgroundFullAnalyzeJob(Long jobId, Long userId, Boolean isExternalJob, Boolean forceAnalyze) {
-        Job job = getJobByIdAndUserId(jobId, userId);
-        try {
-            job.setCompleteAnalysisStatus(AnalyzeStatus.IN_PROGRESS);
-            jobRepository.save(job);
-            jobRepository.flush();
-            jobRepository.save(extractSkills(job, isExternalJob, forceAnalyze));
-            job = analyzeSkillsMatching(jobId, userId, isExternalJob, forceAnalyze);
-            jobRepository.save(job);
-            job = analyzeProjectsMatching(jobId, userId, isExternalJob, forceAnalyze);
-            job.setCompleteAnalysisStatus(AnalyzeStatus.COMPLETED);
-            jobRepository.save(job);
-        } catch (Exception e) {
-            job.setCompleteAnalysisStatus(AnalyzeStatus.FAILED);
-            jobRepository.save(job);
-        }
-    }
+//    @Override
+//    @Transactional
+//    @Async
+//    public void backgroundFullAnalyzeJob(Long jobId, Long userId, Boolean isExternalJob, Boolean forceAnalyze) {
+//        Job job = getJobByIdAndUserId(jobId, userId);
+//        try {
+//            job.setCompleteAnalysisStatus(AnalyzeStatus.IN_PROGRESS);
+//            jobRepository.save(job);
+//            jobRepository.flush();
+//            jobRepository.save(extractSkills(job, isExternalJob, forceAnalyze));
+//            job = analyzeSkillsMatching(jobId, userId, isExternalJob, forceAnalyze);
+//            jobRepository.save(job);
+//            job = analyzeProjectsMatching(jobId, userId, isExternalJob, forceAnalyze);
+//            job.setCompleteAnalysisStatus(AnalyzeStatus.COMPLETED);
+//            jobRepository.save(job);
+//        } catch (Exception e) {
+//            job.setCompleteAnalysisStatus(AnalyzeStatus.FAILED);
+//            jobRepository.save(job);
+//        }
+//    }
 
     public Job extractSkills(Job job, boolean isExternal, boolean forceAnalyze) {
         if (isExternal && job.getSkillExtractionStatus() == AnalyzeStatus.COMPLETED && !forceAnalyze) return job;
-        if (!isExternal && job.getCompleteAnalysisStatus() == AnalyzeStatus.COMPLETED && !forceAnalyze) return job;
+        if (!isExternal && !job.getSkillMatchingAnalyses().isEmpty() && !forceAnalyze) return job;
         if (!job.getJobSkills().isEmpty() && !forceAnalyze) return job;
 
         String description = isExternal ? job.getRemoteJobData().getModifiedDescription() : job.getDescription();

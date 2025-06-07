@@ -35,8 +35,8 @@ public class Job {
     private AnalyzeStatus skillExtractionStatus = AnalyzeStatus.NOT_STARTED;
     // TODO: This is only valid for a job added by a user (This is not Single Responsibility)
     // And for scraped jobs, it represents the status of the skill extraction analysis
-    @Builder.Default
-    private AnalyzeStatus completeAnalysisStatus = AnalyzeStatus.NOT_STARTED;
+//    @Builder.Default
+//    private AnalyzeStatus completeAnalysisStatus = AnalyzeStatus.NOT_STARTED;
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @Builder.Default
