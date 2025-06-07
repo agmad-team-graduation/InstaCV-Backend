@@ -99,13 +99,26 @@ public class ProfileService implements IProfileService {
                 existingExperienceList.add(experience);
             });
         }
-        if (updatedProfile.getProjects() != null || updatedProfile.getUserSkills() != null){
+
+        if (updatedProfile.getUserSkills() != null) {
             List<Job> profileJobs = jobRepository.findJobsByProfileId(existingProfile.getId());
-            for (Job job : profileJobs){
+            for (Job job : profileJobs) {
                 job.getSkillMatchingAnalyses().clear();
                 job.setCompleteAnalysisStatus(AnalyzeStatus.NOT_STARTED);
             }
             jobRepository.saveAll(profileJobs);
+            // TODO: Remove all matching for external jobs also, Test it
+            List<Job> analyzedScrapedJobsByProfileId = jobRepository.findAnalyzedScrapedJobsByProfileId(existingProfile.getId());
+            for (Job job : analyzedScrapedJobsByProfileId) {
+                job.getSkillMatchingAnalyses().remove(
+                        job.getSkillMatchingAnalyses().stream()
+                                .filter(analysis -> analysis.getProfile().getId().equals(existingProfile.getId()))
+                                .findFirst()
+                                .orElse(null)
+                );
+                job.setCompleteAnalysisStatus(AnalyzeStatus.NOT_STARTED);
+            }
+            jobRepository.saveAll(analyzedScrapedJobsByProfileId);
         }
 
         if (updatedProfile.getProjects() != null) {
