@@ -8,6 +8,8 @@ import com.Graduation.InstaCv.data.model.profile.UserSkill;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Cascade;
+
 
 import java.util.List;
 
@@ -48,6 +50,7 @@ public class SkillMatchingAnalysis {
             joinColumns = @JoinColumn(name = "analysis_id"),
             inverseJoinColumns = @JoinColumn(name = "user_skill_id")
     )
+    @Cascade(org.hibernate.annotations.CascadeType.ALL)
     private List<UserSkill> unmatchedUserSkills;
 
     public Float getMatchedSkillsPercentage() {

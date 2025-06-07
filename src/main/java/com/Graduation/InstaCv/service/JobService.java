@@ -37,7 +37,9 @@ public class JobService implements IJobService {
 
     @Override
     public Job fullAnalyze(Long jobId, Long userId, boolean isExternalJob, boolean forceAnalyze) {
-        Job job = analyzeSkillsMatching(jobId, userId, isExternalJob, forceAnalyze);
+        Job job = getJobByIdAndUserId(jobId, userId);
+        jobRepository.save(extractSkills(job, isExternalJob, forceAnalyze));
+        job = analyzeSkillsMatching(jobId, userId, isExternalJob, forceAnalyze);
         jobRepository.save(job);
         job = analyzeProjectsMatching(jobId, userId, isExternalJob, forceAnalyze);
         job.setCompleteAnalysisStatus(AnalyzeStatus.COMPLETED);
@@ -53,7 +55,7 @@ public class JobService implements IJobService {
             job.setCompleteAnalysisStatus(AnalyzeStatus.IN_PROGRESS);
             jobRepository.save(job);
             jobRepository.flush();
-            // No need to call skillExtraction (will be done internally)
+            jobRepository.save(extractSkills(job, isExternalJob, forceAnalyze));
             job = analyzeSkillsMatching(jobId, userId, isExternalJob, forceAnalyze);
             jobRepository.save(job);
             job = analyzeProjectsMatching(jobId, userId, isExternalJob, forceAnalyze);
@@ -95,8 +97,8 @@ public class JobService implements IJobService {
 
     public Job analyzeSkillsMatchingWithSave(Job job, Profile profile, boolean isExternal, boolean forceAnalyze) {
         if (!forceAnalyze && jobRepository.existsJobSkillMatchingAnalysis(job.getId(), profile.getId())) return job;
-        job = extractSkills(job, isExternal, forceAnalyze);
-        job = jobRepository.save(job);
+//        job = extractSkills(job, isExternal, forceAnalyze);
+//        job = jobRepository.save(job);
         job.getSkillMatchingAnalyses().add(jobSkillService.analyzeSkillsMatching(job, profile.getUser()));
         job.getSkillMatchingAnalyses().getLast().setJob(job);
         job.getSkillMatchingAnalyses().getLast().setProfile(profile);
@@ -147,7 +149,7 @@ public class JobService implements IJobService {
             job = jobRepository.findJobByIdAndProfileIsNull(jobId)
                     .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
         if (!forceAnalyze && jobRepository.existsJobProjectMatchingAnalysis(job.getId(), profile.getId())) return job;
-        job = extractSkills(job, isExternal, forceAnalyze);
+//        job = extractSkills(job, isExternal, forceAnalyze);
         job.getProjectMatchingAnalyses().add(jobSkillService.analyzeProjectsMatching(job, profile.getUser()));
         job.getProjectMatchingAnalyses().getLast().setJob(job);
         job.getProjectMatchingAnalyses().getLast().setProfile(profile);

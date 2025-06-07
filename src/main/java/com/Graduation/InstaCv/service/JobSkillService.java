@@ -13,6 +13,7 @@ import com.Graduation.InstaCv.data.model.jobMatching.projectMatching.ProjectsMat
 import com.Graduation.InstaCv.data.model.jobMatching.skillMatching.SkillMatchingAnalysis;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.Project;
+import com.Graduation.InstaCv.data.model.profile.UserSkill;
 import com.Graduation.InstaCv.gateways.JobSkillExtractionClient;
 import com.Graduation.InstaCv.gateways.SkillMatchingClient;
 import com.Graduation.InstaCv.mappers.Mapper;
@@ -54,7 +55,27 @@ public class JobSkillService implements IJobSkillService {
         SkillMatchingAnalysis skillMatchingAnalysis = skillMatchingClient.matchSkills(request);
         skillMatchingAnalysis.setJob(job);
         skillMatchingAnalysis.setProfile(user.getProfile());
-        skillMatchingAnalysis.getMatchedSkills().forEach(matchedSkill -> matchedSkill.setSkillMatchingAnalysis(skillMatchingAnalysis));
+        skillMatchingAnalysis.getMatchedSkills().forEach(matchedSkill -> {
+            matchedSkill.setSkillMatchingAnalysis(skillMatchingAnalysis);
+            matchedSkill.getUserSkill().setProfile(user.getProfile());
+            matchedSkill.getUserSkill().setLevel(
+                    user.getProfile().getUserSkills().stream()
+                            .filter(userSkill -> userSkill.getId().equals(matchedSkill.getUserSkill().getId()))
+                            .findFirst()
+                            .map(UserSkill::getLevel)
+                            .orElse(null)
+            );
+        });
+        skillMatchingAnalysis.getUnmatchedUserSkills().forEach(unmatchedSkill -> {
+            unmatchedSkill.setProfile(user.getProfile());
+            unmatchedSkill.setLevel(
+                    user.getProfile().getUserSkills().stream()
+                            .filter(userSkill -> userSkill.getId().equals(unmatchedSkill.getId()))
+                            .findFirst()
+                            .map(UserSkill::getLevel)
+                            .orElse(null)
+            );
+        });
         return skillMatchingAnalysis;
     }
 

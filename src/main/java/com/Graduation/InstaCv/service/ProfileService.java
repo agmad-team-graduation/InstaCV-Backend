@@ -1,13 +1,17 @@
 package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.ProfileDto;
+import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.github.RepoSkill;
+import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.*;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
+import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.repository.ProfileRepository;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.IProfileService;
+import com.Graduation.InstaCv.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +23,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ProfileService implements IProfileService {
     private ProfileRepository profileRepository;
+    private JobRepository jobRepository;
     private UserRepository userRepository;
 
     @Override
@@ -94,6 +99,15 @@ public class ProfileService implements IProfileService {
                 existingExperienceList.add(experience);
             });
         }
+        if (updatedProfile.getProjects() != null || updatedProfile.getUserSkills() != null){
+            List<Job> profileJobs = jobRepository.findJobsByProfileId(existingProfile.getId());
+            for (Job job : profileJobs){
+                job.getSkillMatchingAnalyses().clear();
+                job.setCompleteAnalysisStatus(AnalyzeStatus.NOT_STARTED);
+            }
+            jobRepository.saveAll(profileJobs);
+        }
+
         if (updatedProfile.getProjects() != null) {
             List<Project> existingProjects = existingProfile.getProjects();
             existingProjects.clear();
