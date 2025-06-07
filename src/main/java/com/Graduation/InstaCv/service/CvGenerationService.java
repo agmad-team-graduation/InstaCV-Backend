@@ -1,6 +1,5 @@
 package com.Graduation.InstaCv.service;
 
-import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.cv.*;
 import com.Graduation.InstaCv.data.model.cv.items.CvItem;
@@ -52,7 +51,7 @@ public class CvGenerationService implements ICvGenerationService {
         Profile profile = user.getProfile();
         if (profile == null) throw new ResourceNotFoundException("User has no profile");
 
-        Optional<TailoredCv> existingCv = tailoredCvRepository.findByIdAndProfileId(profile.getId(), jobId);
+        Optional<TailoredCv> existingCv = tailoredCvRepository.findByJobIdAndProfileId(jobId, profile.getId());
         if (existingCv.isPresent()) {
             return existingCv.get();
         }
@@ -60,21 +59,8 @@ public class CvGenerationService implements ICvGenerationService {
         Job job = jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
 
-
-        if (job.getProfile() != null && job.getCompleteAnalysisStatus() == AnalyzeStatus.IN_PROGRESS)
-            // For AddedJob by profile, it's in progress while both (extracting skills OR analyzing matching for skill/projects)
-            // For ScrapedJob, it's never in progress (it's only flushed to db when analyzed)
-            // TODO: This is confusing as the status should be only for skill extraction, not for matching analysis?
-            throw new ResourceNotFoundException("Job not analyzed yet with id: " + jobId);
-        else if (job.getProfile() == null && job.getSkillExtractionStatus() == AnalyzeStatus.IN_PROGRESS)
-            throw new ResourceNotFoundException("Job not analyzed yet with id: " + jobId);
-
-
-
-        // Analyze if it failed, or just use it if it was already analyzed
-        // TODO: Better approach, is to have a STATUS field for each skillMatchingAnalysis. To avoid two analyzes in parallel (You now only avoid skill extraction in parallel)
-        // TODO: Another approach, is to now save the job on the system until it's analyzed for all current system profiles (but how to fix the null ids issue, that i even saved to fix it?)
-        job = jobService.fullAnalyze(jobId, userId, true, false);
+        // make sure it's analyzed for the profile
+        job = jobService.fullAnalyze(jobId, userId, job.getProfile() == null, false);
         job = jobRepository.save(job);
 
         // Start building tailored CV
@@ -256,11 +242,8 @@ public class CvGenerationService implements ICvGenerationService {
     public TailoredCv getCvByJobIdAndUserId(Long jobId, Long userId) {
         Long profileId = profileRepository.findProfileIdByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user: " + userId));
-        boolean jobExists = jobRepository.existsByIdAndProfileId(jobId, profileId);
-        if (!jobExists)
-            throw new ResourceNotFoundException("Job not found for user: " + userId + " and job: " + jobId);
-        return tailoredCvRepository.findByJobId(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("CV not found for user: " + userId + " and job: " + jobId));
+        return tailoredCvRepository.findByJobIdAndProfileId(jobId, profileId)
+                .orElseThrow(() -> new ResourceNotFoundException("CV not found for job: " + jobId + " and user: " + userId));
     }
 
     private String generateProfileSummary(Profile profile, Job job) {

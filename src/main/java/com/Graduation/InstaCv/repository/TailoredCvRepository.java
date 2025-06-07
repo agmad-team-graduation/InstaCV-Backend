@@ -8,7 +8,6 @@ import java.util.Optional;
 
 public interface TailoredCvRepository extends JpaRepository<TailoredCv, Long> {
     List<TailoredCv> findByProfileId(Long userId);
+    Optional<TailoredCv> findByJobIdAndProfileId(Long jobId, Long userId);
     Optional<TailoredCv> findByIdAndProfileId(Long cvId, Long userId);
-
-    Optional<TailoredCv> findByJobId(Long jobId);
 }

@@ -27,14 +27,11 @@ public class JobController {
     private final IProfileService profileService;
     private final ContextAwareMapper<Job, JobDto, Profile> jobMapper;
     private final ContextAwareMapper<Job, JobSimpleDto, Profile> jobSimpleMapper;
-    private final JobRepository jobRepository;
 
     @PostMapping("/add")
     public ResponseEntity<JobDto> addJob(@RequestBody JobSimpleDto job) {
         Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
         Job savedJob = jobService.addJob(jobSimpleMapper.mapFrom(job, profile), profile);
-        // No need for this hassle, model is fast enough.
-//        jobService.backgroundFullAnalyzeJob(savedJob.getId(), profile.getUser().getId(), false, false);
         return new ResponseEntity<>(jobMapper.mapTo(savedJob), HttpStatus.CREATED);
     }
 
@@ -49,9 +46,8 @@ public class JobController {
     public JobDto getJob(@PathVariable Long jobId) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         Job jobFound = jobService.getJobByIdAndUserId(jobId, userId);
-        if (jobFound.getCompleteAnalysisStatus() == AnalyzeStatus.FAILED
-                || jobFound.getCompleteAnalysisStatus() == AnalyzeStatus.NOT_STARTED)
-            jobFound = jobService.fullAnalyze(jobId, userId, false, true);
+        if (jobFound.getSkillMatchingAnalyses().isEmpty())
+            jobFound = jobService.fullAnalyze(jobId, userId, false, false);
         return jobMapper.mapTo(jobFound);
     }
 

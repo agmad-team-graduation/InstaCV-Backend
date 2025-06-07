@@ -30,13 +30,8 @@ public class Job {
     private String company;
     @Column(nullable = false, length = 20480)
     private String description;
-    // TODO: This is only used for scraped jobs
     @Builder.Default
     private AnalyzeStatus skillExtractionStatus = AnalyzeStatus.NOT_STARTED;
-    // TODO: This is only valid for a job added by a user (This is not Single Responsibility)
-    // And for scraped jobs, it represents the status of the skill extraction analysis
-    @Builder.Default
-    private AnalyzeStatus completeAnalysisStatus = AnalyzeStatus.NOT_STARTED;
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     @Builder.Default

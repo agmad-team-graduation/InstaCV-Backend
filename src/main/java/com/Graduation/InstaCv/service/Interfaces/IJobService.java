@@ -9,14 +9,8 @@ import java.util.List;
 
 public interface IJobService {
     Job addJob(Job job, Profile profile);
-
     Job fullAnalyze(Long jobId, Long userId, boolean isExternalJob, boolean forceAnalyze);
-
     List<Job> getJobsByUserId(Long userId);
-    @Transactional
-    @Async
-    void backgroundFullAnalyzeJob(Long jobId, Long userId, Boolean isExternalJob, Boolean forceAnalyze);
-
     Job getJobByIdAndUserId(Long jobId, Long userId);
     void deleteJobByIdAndUserId(Long jobId, Long userId);
 }
