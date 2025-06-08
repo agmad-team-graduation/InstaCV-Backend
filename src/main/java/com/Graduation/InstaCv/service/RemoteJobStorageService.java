@@ -94,7 +94,21 @@ public class RemoteJobStorageService {
         jobRepository.saveAll(recentJobs);
     }
 
+    public void analyzeRecentJobsForProfile(Long profileId) {
+        OffsetDateTime oneWeekAgo = OffsetDateTime.now().minusDays(lastDaysCount);
+        List<Job> recentJobs = jobRepository.findRecentRemoteJobs(oneWeekAgo);
+        Profile profile = profileRepository.findById(profileId)
+                .orElseThrow(() -> new IllegalArgumentException("Profile not found with ID: " + profileId));
+
+        for (Job job : recentJobs) {
+            if (!jobRepository.existsJobSkillMatchingAnalysis(job.getId(), profile.getId())) {
+                jobService.analyzeSkillsMatchingNoSave(job, profile, false);
+            }
+        }
+        jobRepository.saveAll(recentJobs);
+    }
+
     public Page<Job> getAllRemoteJobs(Pageable pageable) {
-        return jobRepository.findAllRemoteJobs(pageable);
+        return jobRepository.findAllRemoteJobsPaginated(pageable);
     }
 }

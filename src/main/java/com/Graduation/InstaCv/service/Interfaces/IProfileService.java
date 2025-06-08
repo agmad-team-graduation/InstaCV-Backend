@@ -5,6 +5,9 @@ import com.Graduation.InstaCv.data.model.profile.Profile;
 
 public interface IProfileService {
     Profile getProfileByUserId(Long userId);
+
+    Long getProfileIdByUserId(Long userId);
+
     Profile createProfile(Long userId, Profile profile);
     Profile updateProfile(Long userId, ProfileDto profile);
     Profile addGithubSkillsIntoProfile(Long userId);

@@ -4,6 +4,7 @@ import com.Graduation.InstaCv.data.dto.response.ExtractedJobSkillResponse;
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
 import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
+import com.Graduation.InstaCv.data.enums.JobSortField;
 import com.Graduation.InstaCv.data.enums.SkillType;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.job.JobSkill;
@@ -13,11 +14,15 @@ import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.service.Interfaces.IJobService;
-import jakarta.transaction.Transactional;
+import com.Graduation.InstaCv.utils.JobsPaginationUtils;
 import lombok.AllArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -28,6 +33,7 @@ public class JobService implements IJobService {
     private final ProfileService profileService;
     private final JobSkillService jobSkillService;
     private final Mapper<JobSkill, ExtractedJobSkillResponse> jobSkillMapper;
+    private final JobsPaginationUtils jobsPaginationUtils;
 
     @Override
     public Job addJob(Job job, Profile profile) {
@@ -37,16 +43,19 @@ public class JobService implements IJobService {
     }
 
     @Override
-    public Job fullAnalyze(Long jobId, Long userId, boolean isExternalJob, boolean forceAnalyze) {
+    public Job fullAnalyze(Long jobId, Long userId, boolean isExternalJob, boolean forceAnalyze, boolean analyzeProjects) {
         Job job = getJob(jobId, userId, isExternalJob);
         jobRepository.save(extractSkills(job, isExternalJob, forceAnalyze));
         job = analyzeSkillsMatching(jobId, userId, isExternalJob, forceAnalyze);
-        jobRepository.save(job);
-        job = analyzeProjectsMatching(jobId, userId, isExternalJob, forceAnalyze);
-        return jobRepository.save(job);
+        job = jobRepository.save(job);
+        if (analyzeProjects) {
+            job = analyzeProjectsMatching(jobId, userId, isExternalJob, forceAnalyze);
+            return jobRepository.save(job);
+        } else
+            return job;
     }
 
-    private Job getJob(Long jobId, Long userId, boolean isExternalJob){
+    private Job getJob(Long jobId, Long userId, boolean isExternalJob) {
         Profile profile = profileService.getProfileByUserId(userId);
         if (!isExternalJob) {
             return jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
@@ -98,6 +107,33 @@ public class JobService implements IJobService {
         Profile profile = profileService.getProfileByUserId(userId);
         return jobRepository.findJobsByProfileId(profile.getId());
     }
+
+    @Override
+    public Page<Job> getRecommendedExternalJobsPaginated(Long profileId, Pageable pageable, JobSortField sortField) {
+        if (sortField.isCustomSort()) {
+            List<Job> jobs = jobRepository.findAnalyzedScrapedJobsByProfileId(profileId);
+
+            List<Job> sorted = jobs.stream()
+                    .sorted(Comparator.comparingDouble(job ->
+                            ((Job) job).getSkillMatchingAnalyses().stream()
+                                    .filter(a -> a.getProfile().getId().equals(profileId))
+                                    .findFirst()
+                                    .map(SkillMatchingAnalysis::getMatchedSkillsPercentage)
+                                    .orElse(0f)
+                    ).reversed()) // DESC by default
+                    .toList();
+
+            if (pageable.getSort().getOrderFor("MATCH_SCORE").getDirection().isAscending()) {
+                sorted = new ArrayList<>(sorted);
+                Collections.reverse(sorted);
+            }
+
+            return jobsPaginationUtils.createPageFromList(sorted, pageable);
+        } else {
+            return jobRepository.findAnalyzedScrapedJobsByProfileIdPaginated(profileId, pageable);
+        }
+    }
+
 
     // TODO: Move to another service?
     private Job analyzeSkillsMatching(Long jobId, Long userId, boolean isExternal, boolean forceAnalyze) {
