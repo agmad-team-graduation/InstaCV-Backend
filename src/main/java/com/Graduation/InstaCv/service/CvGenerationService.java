@@ -60,7 +60,7 @@ public class CvGenerationService implements ICvGenerationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId));
 
         // make sure it's analyzed for the profile
-        job = jobService.fullAnalyze(jobId, userId, job.getProfile() == null, false);
+        job = jobService.fullAnalyze(jobId, userId, job.getProfile() == null, false, true);
         job = jobRepository.save(job);
 
         // Start building tailored CV

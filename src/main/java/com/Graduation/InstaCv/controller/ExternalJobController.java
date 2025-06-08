@@ -52,11 +52,11 @@ public class ExternalJobController {
     @GetMapping("/{jobId}")
     public ResponseEntity<ScrapedJobDto> getJob(@PathVariable Long jobId) {
         Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
-        Job job = jobService.fullAnalyze(jobId, profile.getUser().getId(), true, false);
+        Job job = jobService.fullAnalyze(jobId, profile.getUser().getId(), true, false, false);
         return ResponseEntity.ok(scrapedJobMapper.mapTo(job, profile));
     }
 
-    @GetMapping("/recommended")
+    @GetMapping("/get-recommendations")
     public ResponseEntity<List<ScrapedJobDto>> getRecommendedJobs() {
         Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
         List<Job> jobs = scrapedJobService.getRecommendedJobs(profile.getId());
@@ -69,5 +69,15 @@ public class ExternalJobController {
     public ResponseEntity<String> syncJobs() {
         int newJobsCount = storageService.fetchAndSaveNewJobsFromRemoteOkApi();
         return ResponseEntity.ok("Added " + newJobsCount + " new jobs");
+    }
+
+    @PostMapping("/analyze-recommendations")
+    public ResponseEntity<List<ScrapedJobDto>> analyzeRecommendations() {
+        Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
+        storageService.analyzeRecentJobsForProfile(profile.getId());
+        List<Job> jobs = scrapedJobService.getRecommendedJobs(profile.getId());
+        return ResponseEntity.ok(jobs.stream()
+                .map(job -> scrapedJobMapper.mapTo(job, profile))
+                .toList());
     }
 }

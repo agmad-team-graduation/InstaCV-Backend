@@ -37,16 +37,19 @@ public class JobService implements IJobService {
     }
 
     @Override
-    public Job fullAnalyze(Long jobId, Long userId, boolean isExternalJob, boolean forceAnalyze) {
+    public Job fullAnalyze(Long jobId, Long userId, boolean isExternalJob, boolean forceAnalyze, boolean analyzeProjects) {
         Job job = getJob(jobId, userId, isExternalJob);
         jobRepository.save(extractSkills(job, isExternalJob, forceAnalyze));
         job = analyzeSkillsMatching(jobId, userId, isExternalJob, forceAnalyze);
-        jobRepository.save(job);
-        job = analyzeProjectsMatching(jobId, userId, isExternalJob, forceAnalyze);
-        return jobRepository.save(job);
+        job = jobRepository.save(job);
+        if (analyzeProjects) {
+            job = analyzeProjectsMatching(jobId, userId, isExternalJob, forceAnalyze);
+            return jobRepository.save(job);
+        } else
+            return job;
     }
 
-    private Job getJob(Long jobId, Long userId, boolean isExternalJob){
+    private Job getJob(Long jobId, Long userId, boolean isExternalJob) {
         Profile profile = profileService.getProfileByUserId(userId);
         if (!isExternalJob) {
             return jobRepository.findJobByIdAndProfileId(jobId, profile.getId())

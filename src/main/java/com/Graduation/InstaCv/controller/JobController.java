@@ -47,7 +47,7 @@ public class JobController {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         Job jobFound = jobService.getJobByIdAndUserId(jobId, userId);
         if (jobFound.getSkillMatchingAnalyses().isEmpty())
-            jobFound = jobService.fullAnalyze(jobId, userId, false, false);
+            jobFound = jobService.fullAnalyze(jobId, userId, false, false, false);
         return jobMapper.mapTo(jobFound);
     }
 

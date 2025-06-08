@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface IJobService {
     Job addJob(Job job, Profile profile);
-    Job fullAnalyze(Long jobId, Long userId, boolean isExternalJob, boolean forceAnalyze);
+    Job fullAnalyze(Long jobId, Long userId, boolean isExternalJob, boolean forceAnalyze, boolean analyzeProjects);
     List<Job> getJobsByUserId(Long userId);
     Job getJobByIdAndUserId(Long jobId, Long userId);
     void deleteJobByIdAndUserId(Long jobId, Long userId);
