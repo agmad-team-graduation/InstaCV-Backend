@@ -109,6 +109,6 @@ public class RemoteJobStorageService {
     }
 
     public Page<Job> getAllRemoteJobs(Pageable pageable) {
-        return jobRepository.findAllRemoteJobs(pageable);
+        return jobRepository.findAllRemoteJobsPaginated(pageable);
     }
 }

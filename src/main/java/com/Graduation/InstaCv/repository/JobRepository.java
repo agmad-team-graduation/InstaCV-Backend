@@ -28,6 +28,9 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     @Query("SELECT j FROM Job j JOIN j.skillMatchingAnalyses a WHERE j.profile IS NULL AND a.profile.id = :profileId")
     List<Job> findAnalyzedScrapedJobsByProfileId(@Param("profileId") Long profileId);
 
+    @Query("SELECT j FROM Job j JOIN j.skillMatchingAnalyses a WHERE j.profile IS NULL AND a.profile.id = :profileId")
+    Page<Job> findAnalyzedScrapedJobsByProfileIdPaginated(@Param("profileId") Long profileId, Pageable pageable);
+
     @Query("SELECT COUNT(a) > 0 FROM Job j JOIN j.skillMatchingAnalyses a WHERE j.id = :jobId AND a.profile.id = :profileId")
     boolean existsJobSkillMatchingAnalysis(@Param("jobId") Long jobId, @Param("profileId") Long profileId);
 
@@ -44,5 +47,5 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     Set<Long> findProfileIdsAnalyzedForJob(@Param("jobId") Long jobId);
 
     @Query("SELECT j FROM Job j WHERE j.remoteJobData IS NOT NULL")
-    Page<Job> findAllRemoteJobs(Pageable pageable);
+    Page<Job> findAllRemoteJobsPaginated(Pageable pageable);
 }

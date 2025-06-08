@@ -1,7 +1,6 @@
 package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.ProfileDto;
-import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.github.RepoSkill;
 import com.Graduation.InstaCv.data.model.job.Job;
@@ -11,7 +10,6 @@ import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.repository.ProfileRepository;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.IProfileService;
-import com.Graduation.InstaCv.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +29,13 @@ public class ProfileService implements IProfileService {
         return profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id " + userId));
     }
+
+    @Override
+    public Long getProfileIdByUserId(Long userId) {
+        return profileRepository.findProfileIdByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile ID not found for user with id " + userId));
+    }
+
 
     @Override
     public Profile createProfile(Long userId, Profile newProfile) {
