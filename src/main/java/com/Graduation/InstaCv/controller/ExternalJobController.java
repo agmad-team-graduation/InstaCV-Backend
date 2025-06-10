@@ -36,7 +36,7 @@ public class ExternalJobController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "DATE") JobSortField sortField,
             @RequestParam(defaultValue = "desc") String direction) {
-        Pageable pageable = jobsPaginationUtils.buildPageable(page, size, sortField, direction);
+        Pageable pageable = JobsPaginationUtils.buildPageable(page, size, sortField, direction);
         Page<Job> jobsPage = storageService.getAllRemoteJobs(pageable);
         Page<ScrapedJobSimpleDto> dtoPage = jobsPage.map(simpleScrapedJobMapper::mapTo);
         return ResponseEntity.ok(new PaginatedResponse<>(dtoPage));
@@ -69,7 +69,7 @@ public class ExternalJobController {
             @RequestParam(defaultValue = "MATCH_SCORE") JobSortField sortField,
             @RequestParam(defaultValue = "desc") String direction) {
         Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
-        Pageable pageable = jobsPaginationUtils.buildPageable(page, size, sortField, direction);
+        Pageable pageable = JobsPaginationUtils.buildPageable(page, size, sortField, direction);
         Page<Job> jobPage = jobService.getRecommendedExternalJobsPaginated(profile.getId(), pageable, sortField);
         Page<ScrapedJobDto> dtoPage = jobPage.map(job -> scrapedJobMapper.mapTo(job, profile));
         return ResponseEntity.ok(new PaginatedResponse<>(dtoPage));

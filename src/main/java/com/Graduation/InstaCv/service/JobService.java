@@ -102,10 +102,9 @@ public class JobService implements IJobService {
         jobRepository.delete(job);
     }
 
-    @Override
-    public List<Job> getJobsByUserId(Long userId) {
+    public Page<Job> getJobsByUserId(Long userId, Pageable pageable) {
         Profile profile = profileService.getProfileByUserId(userId);
-        return jobRepository.findJobsByProfileId(profile.getId());
+        return jobRepository.findJobsByProfileId(profile.getId(), pageable);
     }
 
     @Override

@@ -3,7 +3,9 @@ package com.Graduation.InstaCv.controller;
 
 import com.Graduation.InstaCv.data.dto.JobDto;
 import com.Graduation.InstaCv.data.dto.JobSimpleDto;
+import com.Graduation.InstaCv.data.dto.response.PaginatedResponse;
 import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
+import com.Graduation.InstaCv.data.enums.JobSortField;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.mappers.ContextAwareMapper;
@@ -15,7 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.Graduation.InstaCv.utils.JobsPaginationUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,9 +40,19 @@ public class JobController {
     }
 
     @GetMapping("/all")
-    public List<JobSimpleDto> getAllJobs() {
-        List<Job> jobsEntity = jobService.getJobsByUserId(SecurityUtils.getCurrentUserDetails().getId());
-        return jobsEntity.stream().map(jobSimpleMapper::mapTo).collect(Collectors.toList());
+    public ResponseEntity<PaginatedResponse<JobSimpleDto>> getAllJobs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "DATE") JobSortField sortField,
+            @RequestParam(defaultValue = "desc") String direction) {
+
+        Pageable pageable = JobsPaginationUtils.buildPageable(page, size, sortField, direction);
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+
+        Page<Job> jobsPage = jobService.getJobsByUserId(userId, pageable);
+        Page<JobSimpleDto> dtoPage = jobsPage.map(jobSimpleMapper::mapTo);
+
+        return ResponseEntity.ok(new PaginatedResponse<>(dtoPage));
     }
 
 
