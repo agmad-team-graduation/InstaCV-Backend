@@ -165,6 +165,20 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
+
+			<!-- Add this plugin to repackage your JAR -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<!-- no <version> needed when you use spring-boot-starter-parent -->
+				<!-- Optional: force a specific Main-Class if autodetection ever fails -->
+				<!--
+                <configuration>
+                  <mainClass>com.Graduation.InstaCv.InstaCvApplication</mainClass>
+                </configuration>
+                -->
+			</plugin>
+
 		</plugins>
 	</build>
 </project>
