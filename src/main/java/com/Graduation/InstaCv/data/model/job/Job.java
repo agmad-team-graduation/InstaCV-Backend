@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.data.model.job;
 
+import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.enums.SkillType;
 import com.Graduation.InstaCv.data.model.jobMatching.projectMatching.ProjectsMatchingAnalysis;
 import com.Graduation.InstaCv.data.model.jobMatching.skillMatching.SkillMatchingAnalysis;
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -20,29 +22,31 @@ public class Job {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne(optional = false)
+    @ManyToOne
     @JoinColumn(name = "profile_id")
-    @ToString.Exclude
     @JsonIgnore
-    @EqualsAndHashCode.Exclude
     private Profile profile;
     private String title;
     private String company;
-    @Column(nullable = false, length = 2048)
+    @Column(nullable = false, length = 20480)
     private String description;
-    private boolean isAnalyzed = false;
-    private boolean isSkillMatchingAnalyzed = false;
-    private boolean isProjectMatchingAnalyzed = false;
-    // This is the refactor of JobAnalysis object
+    @Builder.Default
+    private AnalyzeStatus skillExtractionStatus = AnalyzeStatus.NOT_STARTED;
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
+    @Builder.Default
     private List<JobSkill> jobSkills = List.of();
-    @OneToOne(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
-    private SkillMatchingAnalysis skillMatchingAnalysis;
-    @OneToOne(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
-    private ProjectsMatchingAnalysis projectMatchingAnalysis;
-//    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<TailoredCv> tailoredCvs;
+
+    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<SkillMatchingAnalysis> skillMatchingAnalyses = new ArrayList<>();
+
+    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ProjectsMatchingAnalysis> projectMatchingAnalyses = new ArrayList<>();
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private RemoteJobData remoteJobData;
 
     public List<JobSkill> getHardSkills() {
         return jobSkills.stream()

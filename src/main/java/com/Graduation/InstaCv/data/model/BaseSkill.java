@@ -20,7 +20,7 @@ public class BaseSkill {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 512)
     private String skill;
 
     public JobSkill asJobSkill() {

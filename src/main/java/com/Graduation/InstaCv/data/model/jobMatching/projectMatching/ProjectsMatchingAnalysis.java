@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.data.model.jobMatching.projectMatching;
 
 import com.Graduation.InstaCv.data.model.job.Job;
+import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,12 +20,17 @@ public class ProjectsMatchingAnalysis {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "job_id", nullable = false)
     @JsonIgnore
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @JoinColumn(name = "job_id", nullable = false)
     private Job job;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "profile_id", nullable = false)
+    @JsonIgnore
+    private Profile profile;
 
     @OneToMany(mappedBy = "projectsMatchingAnalysis", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MatchedProject> allAnalyzedProjects;

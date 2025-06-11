@@ -31,6 +31,13 @@ def match_skills(req: SkillsMatchingRequest):
     user_skills = req.userSkills
     threshold = req.similarityThreshold
 
+    if not job_skills or not user_skills:
+        return MatchingSkillsResponse(
+            matchedSkills=[],
+            unmatchedJobSkills=job_skills,
+            unmatchedUserSkills=user_skills
+        )
+
     job_texts = [j.skill for j in job_skills]
     user_texts = [u.skill for u in user_skills]
 
@@ -72,17 +79,30 @@ def match_projects_skills(req: ProjectsMatchingRequest):
     projects = req.projects
     threshold = req.similarityThreshold
 
+    if not job_skills:
+        return MatchingProjectsResponse(allAnalyzedProjects=[
+            MatchedProject(project=project, matchedSkills=[], matchedSkillsCount=0) for project in projects
+        ])
+    elif not projects:
+        return MatchingProjectsResponse(allAnalyzedProjects=[])
+
     job_texts = [job.skill for job in job_skills]
     job_embeddings = model.encode(job_texts, convert_to_tensor=True)
 
     matched_projects: List[MatchedProject] = []
 
     for project in projects:
+        if not project.skills:
+            matched_projects.append(MatchedProject(
+                project=project,
+                matchedSkills=[],
+                matchedSkillsCount=0
+            ))
+            continue
         project_texts = [ps.skill for ps in project.skills]
         project_embeddings = model.encode(project_texts, convert_to_tensor=True)
 
         similarity_matrix = util.cos_sim(job_embeddings, project_embeddings)
-
         matched_skills: List[MatchedProjectSkill] = []
 
         for i, job_skill in enumerate(job_skills):
@@ -104,7 +124,6 @@ def match_projects_skills(req: ProjectsMatchingRequest):
         ))
 
     return MatchingProjectsResponse(allAnalyzedProjects=matched_projects)
-
 
 # uvicorn semantic_similarity:app --host 0.0.0.0 --port 8001
 # if __name__ == "__main__":

@@ -9,4 +9,6 @@ import org.springframework.context.annotation.Configuration;
 @Data
 public class FrontendProperties {
     private String resetUrl;
+    private String oauth2SuccessUrl;
+    private String verificationUrl;
 }
