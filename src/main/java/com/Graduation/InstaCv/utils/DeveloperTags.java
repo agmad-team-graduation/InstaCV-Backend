@@ -12,47 +12,16 @@ public final class DeveloperTags {
      * Comprehensive list of development-related tags for filtering developer jobs
      */
     public static final Set<String> DEV_TAGS = Set.of(
-            // General Development Terms
-            "dev", "developer", "software", "programming", "engineer", "coder", "programmer",
-            "development", "engineering", "technical", "tech", "code", "coding", "analysis",
-
-            // Programming Languages
-            "java", "javascript", "python", "ruby", "go", "golang", "php", "scala", "kotlin", "swift",
-            "typescript", "c", "c++", "c#", "csharp", "rust", "dart", "perl", "r", "groovy",
-            "bash", "shell", "powershell", "objective-c", "clojure", "haskell", "elixir", "erlang",
-            "julia", "lua", "matlab", "fortran", "assembly", "cobol", "vba", "delphi", "pascal",
-            "lisp", "scheme", "prolog", "ada", "solidity", "plsql", "tsql",
-
-            // Web Development
-            "web", "html", "css", "scss", "sass", "less", "stylus", "tailwind", "bootstrap",
-            "frontend", "backend", "fullstack", "full-stack", "front-end", "back-end", "spa",
-            "pwa", "amp", "responsive", "webgl", "dom", "websocket", "canvas", "svg",
-
-            // Frameworks & Libraries
-            "react", "angular", "vue", "svelte", "ember", "backbone", "jquery", "nextjs", "nuxt",
-            "gatsby", "expressjs", "nestjs", "spring", "rails", "django", "flask", "laravel",
-            "symfony", "yii", "phoenix", "fastapi", "asp.net", "dotnet", "struts", "play",
-
-            // Mobile Development
-            "mobile", "android", "ios","reactnative", "flutter", "xamarin", "ionic",
-            "cordova", "capacitor", "nativescript",  "androidsdk", "objectivec",
-
-            // DevOps & Infrastructure
-            "devops", "sre", "infrastructure", "cloud", "aws", "azure", "gcp", "docker", "kubernetes",
-            "k8s", "terraform", "ansible", "chef", "puppet", "jenkins", "gitlab", "cicd", "ci/cd",
-
-            // Database & Data
-            "database", "db", "sql", "nosql", "mongodb", "postgresql", "mysql", "oracle", "sqlserver",
-            "redis", "elasticsearch", "cassandra", "dynamodb", "firebase", "neo4j", "couchdb",
-            "mariadb", "sqlite", "graphql", "rest", "api", "microservices",
-
-            // AI & Data Science
-            "ai", "ml", "machinelearning", "datascience", "deeplearning", "nlp", "cv", "computervision",
-            "tensorflow", "pytorch", "keras", "scikit", "pandas", "numpy", "jupyter", "hadoop", "spark",
-
-            // Other Tech Domains
-            "iot", "embedded", "gamedev", "gamedevelopment", "unity", "unreal", "blockchain", "crypto",
-            "vr", "ar", "xr", "security", "cybersecurity", "pentesting", "qa", "testing", "automation"
+            "developer", "backend", "front‑end", "full‑stack", "sys‑admin",
+            "ops", "devops", "cloud", "serverless",
+            "api", "software", "analyst", "architect",
+            "javascript", "python", "java", "golang",
+            "c", "c‑plus‑plus", "c‑sharp", "ruby", "php",
+            "scala", "objective‑c", "node", "angular", "react",
+            "react‑native", "vue", "graphql", "linux", "docker",
+            "git", "sql", "nosql", "postgres", "mongo", "apache",
+            "testing", "quality‑assurance", "infosec", "data‑science", "machine‑learning",
+            "blockchain", "web3", "saas", "ecommerce", "mobile", "ios", "android", "web"
     );
 
     // Private constructor to prevent instantiation
