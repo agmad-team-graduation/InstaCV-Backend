@@ -87,17 +87,4 @@ public class ProfileController {
         }
     }
 
-    @PostMapping("/parse-cv-preview")
-    public ResponseEntity<ProfileDto> parseCvPreview(@RequestParam("file") MultipartFile file) {
-        try {
-            // Just parse and return without saving
-            ProfileDto parsedProfile = aiCvParserService.parseCV(file);
-            return ResponseEntity.ok(parsedProfile);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Failed to parse CV");
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().<ProfileDto>build();
-        }
-    }
 }
