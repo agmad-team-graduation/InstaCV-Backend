@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import javax.validation.constraints.Size;
 import java.time.LocalDate;
 
 @Entity
@@ -40,7 +41,7 @@ public class Experience {
 
     @Column(name = "is_present")
     private boolean isPresent;
-
+    @Column(length = 20480)
     private String description;
 }
 
