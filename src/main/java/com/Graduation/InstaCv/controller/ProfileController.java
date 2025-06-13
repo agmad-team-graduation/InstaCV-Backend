@@ -57,7 +57,7 @@ public class ProfileController {
     }
 
     @PostMapping("/upload-cv")
-    public ResponseEntity<?> uploadCvAndCreateProfile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<ProfileDto> uploadCvAndCreateProfile(@RequestParam("file") MultipartFile file) {
         try {
             Long userId = SecurityUtils.getCurrentUserDetails().getId();
 
@@ -83,12 +83,12 @@ public class ProfileController {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Failed to process CV");
             error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().<ProfileDto>build();
         }
     }
 
     @PostMapping("/parse-cv-preview")
-    public ResponseEntity<?> parseCvPreview(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<ProfileDto> parseCvPreview(@RequestParam("file") MultipartFile file) {
         try {
             // Just parse and return without saving
             ProfileDto parsedProfile = aiCvParserService.parseCV(file);
@@ -97,7 +97,7 @@ public class ProfileController {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Failed to parse CV");
             error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().<ProfileDto>build();
         }
     }
 }

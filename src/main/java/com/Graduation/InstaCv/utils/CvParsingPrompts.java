@@ -7,17 +7,17 @@ public class CvParsingPrompts {
 
     public String getCvParsingPrompt(String cvText) {
         return """
-            You are a CV parser. Extract information from this CV and return ONLY a valid JSON object.
-            
-            Required JSON structure:
+            You are an advanced CV parser designed to extract and format information into a precise JSON structure. 
+
+            Required JSON format:
             %s
-            
+
             CV TEXT:
             %s
-            
-            Rules:
+
+            Parsing Instructions:
             %s
-            """.formatted(getJsonStructure(), cvText, getRules());
+            """.formatted(getJsonStructure(), cvText, getImprovedRules());
     }
 
     private String getJsonStructure() {
@@ -27,30 +27,30 @@ public class CvParsingPrompts {
                     "fullName": "extract full name",
                     "email": "extract email address",
                     "phone": "extract phone number",
-                    "address": "extract address or location"
+                    "address": "extract detailed address or location"
                 },
                 "educationList": [
                     {
-                        "degree": "degree or qualification name",
-                        "school": "school/university name",
-                        "city": "city where school is located",
-                        "country": "country where school is located",
-                        "startDate": "YYYY-MM-DD format",
-                        "endDate": "YYYY-MM-DD format or null if ongoing",
+                        "degree": "degree or qualification",
+                        "school": "institution name",
+                        "city": "city of institution",
+                        "country": "country of institution",
+                        "startDate": "YYYY-MM-DD",
+                        "endDate": "YYYY-MM-DD or null if ongoing",
                         "isPresent": false,
-                        "description": "any additional details or achievements"
+                        "description": "additional details or accomplishments"
                     }
                 ],
                 "experienceList": [
                     {
-                        "jobTitle": "position/role title",
-                        "company": "company name",
-                        "city": "city where job is/was located",
-                        "country": "country where job is/was located",
-                        "startDate": "YYYY-MM-DD format",
-                        "endDate": "YYYY-MM-DD format or null if current",
+                        "jobTitle": "role or position title",
+                        "company": "organization name",
+                        "city": "location city",
+                        "country": "location country",
+                        "startDate": "YYYY-MM-DD",
+                        "endDate": "YYYY-MM-DD or null if current",
                         "isPresent": false,
-                        "description": "job responsibilities and achievements"
+                        "description": "responsibilities and achievements"
                     }
                 ],
                 "userSkills": [
@@ -61,14 +61,14 @@ public class CvParsingPrompts {
                 ],
                 "projects": [
                     {
-                        "title": "project name",
-                        "startDate": "YYYY-MM-DD format or null",
-                        "endDate": "YYYY-MM-DD format or null",
+                        "title": "project title",
+                        "startDate": "YYYY-MM-DD or null",
+                        "endDate": "YYYY-MM-DD or null",
                         "isPresent": false,
-                        "description": "project description and achievements",
+                        "description": "project details and accomplishments",
                         "skills": [
                             {
-                                "skill": "technology or skill used"
+                                "skill": "technology or skill utilized"
                             }
                         ]
                     }
@@ -76,20 +76,17 @@ public class CvParsingPrompts {
             }""";
     }
 
-    private String getRules() {
+    private String getImprovedRules() {
         return """
-            - Return ONLY the JSON object, no explanations or markdown
-            - Use null for missing values, never use empty strings
-            - For skill levels, use only: BEGINNER, INTERMEDIATE, ADVANCED, or EXPERT
-            - Format ALL dates as YYYY-MM-DD (e.g., 2023-01-15)
-            - If only year is mentioned, use YYYY-01-01
-            - If only month and year, use YYYY-MM-01
-            - Set isPresent to true if the position/education/project is ongoing (no end date)
-            - If end date is "Present", "Current", "Now", or similar, set endDate to null and isPresent to true
-            - Extract city and country separately when possible
-            - If city is not mentioned but country is, set city to null
-            - For projects, extract technologies used as individual skill objects
-            - Ensure all arrays are present even if empty""";
+            - Output a clean JSON object only, without additional text or markdown formats.
+            - Use null explicitly for any missing data; do not use empty strings.
+            - Skill levels must be categorized as: BEGINNER, INTERMEDIATE, ADVANCED, or EXPERT.
+            - Format all dates strictly as YYYY-MM-DD (e.g., 2023-01-15); adapt when only partial date info is provided (e.g., YYYY-MM-01).
+            - Set isPresent to true if the activity is ongoing (no explicit end date).
+            - For unspecified end dates (like "Present"), set endDate to null and isPresent to true.
+            - Separate city and country details; if only country is specified, set city to null.
+            - Use projects to derive skills as distinct objects where applicable.
+            - Guarantee that all list fields (arrays) are included in the output even if they are empty.
+            """;
     }
-
 }

@@ -10,7 +10,6 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -70,20 +69,12 @@ public class AiCvParserService {
     }
 
     private ProfileDto extractProfileWithAI(String cvText) throws IOException {
-        // Truncate text if too long
         if (cvText.length() > maxTextLength) {
             cvText = cvText.substring(0, maxTextLength) + "...";
         }
 
-        // Get prompt from utility class
         String prompt = promptUtils.getCvParsingPrompt(cvText);
-
-        // For more detailed parsing, you can use:
-        // String prompt = promptUtils.getDetailedCvParsingPrompt(cvText);
-
         String jsonResponse = callGemini(prompt);
-
-        // Clean the response
         jsonResponse = cleanJsonResponse(jsonResponse);
 
         try {
@@ -92,14 +83,10 @@ public class AiCvParserService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse AI response: " + jsonResponse, e);
         }
-
-
     }
 
     private String cleanJsonResponse(String response) {
         response = response.trim();
-
-        // Remove markdown code blocks
         if (response.startsWith("```json")) {
             response = response.substring(7);
         }
@@ -109,8 +96,6 @@ public class AiCvParserService {
         if (response.endsWith("```")) {
             response = response.substring(0, response.length() - 3);
         }
-
-        // Find JSON object boundaries
         int firstBrace = response.indexOf('{');
         int lastBrace = response.lastIndexOf('}');
 
@@ -122,15 +107,12 @@ public class AiCvParserService {
     }
 
     private String callGemini(String prompt) throws IOException {
-        // Build URL with configurable model name
         String url = String.format(
                 "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
                 modelName, apiKey
         );
 
-        // Build request body
         Map<String, Object> requestBody = new HashMap<>();
-
         List<Map<String, Object>> contents = new ArrayList<>();
         Map<String, Object> content = new HashMap<>();
         List<Map<String, Object>> parts = new ArrayList<>();
@@ -141,7 +123,6 @@ public class AiCvParserService {
         contents.add(content);
         requestBody.put("contents", contents);
 
-        // Generation config for better JSON output
         Map<String, Object> generationConfig = new HashMap<>();
         generationConfig.put("temperature", 0.1);
         generationConfig.put("topK", 1);
@@ -168,7 +149,6 @@ public class AiCvParserService {
                 throw new IOException("Gemini API error: " + response.code() + " - " + responseBody);
             }
 
-            // Parse Gemini response
             Map<String, Object> responseMap = objectMapper.readValue(responseBody, Map.class);
             List<Map<String, Object>> candidates = (List<Map<String, Object>>) responseMap.get("candidates");
 
@@ -189,7 +169,6 @@ public class AiCvParserService {
     }
 
     private ProfileDto postProcessProfile(ProfileDto profile) {
-        // Ensure isPresent is set correctly based on endDate
         if (profile.getEducationList() != null) {
             profile.getEducationList().forEach(edu -> {
                 if (edu.getEndDate() == null && !edu.isPresent()) {
@@ -216,5 +195,4 @@ public class AiCvParserService {
 
         return profile;
     }
-
 }
