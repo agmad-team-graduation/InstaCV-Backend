@@ -14,6 +14,9 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface JobRepository extends JpaRepository<Job, Long> {
+
+    Page<Job> findJobsByProfileId(Long profileId, Pageable pageable);
+
     List<Job> findJobsByProfileId(Long profileId);
 
     Optional<Job> findJobByIdAndProfileId(Long jobId, Long profileId);

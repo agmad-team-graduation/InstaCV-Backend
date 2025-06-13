@@ -13,7 +13,7 @@ public interface IJobService {
 
     Job fullAnalyze(Long jobId, Long userId, boolean isExternalJob, boolean forceAnalyze, boolean analyzeProjects);
 
-    List<Job> getJobsByUserId(Long userId);
+    Page<Job> getJobsByUserId(Long userId, Pageable pageable);
 
     Job getJobByIdAndUserId(Long jobId, Long userId);
 

@@ -10,7 +10,7 @@ import java.util.List;
 
 @Component
 public class JobsPaginationUtils {
-    public Pageable buildPageable(int page, int size, JobSortField sortField, String direction) {
+    public static Pageable buildPageable(int page, int size, JobSortField sortField, String direction) {
         int validatedSize = Math.min(size, 30);
         Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
         if (sortField.isCustomSort())
