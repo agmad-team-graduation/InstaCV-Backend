@@ -243,6 +243,11 @@ public class ProfileService implements IProfileService {
             project.setSkills(List.of());
         }
 
+        project.getSkills().forEach(skill -> {
+            skill.setProject(project);
+            skill.setId(null); // Ensure the ID is null for a new entry
+        });
+
         // Add the new project to the profile
         profile.getProjects().add(project);
 
