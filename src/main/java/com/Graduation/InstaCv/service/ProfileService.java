@@ -202,4 +202,51 @@ public class ProfileService implements IProfileService {
         // Save the updated profile
         return profileRepository.save(profile);
     }
+
+    @Override
+    public Profile addSkill(Long userId, UserSkill skill) {
+        // Fetch the user's profile
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id " + userId));
+
+        // Check if the skill already exists in the profile
+        boolean skillExists = profile.getUserSkills().stream()
+                .anyMatch(existingSkill -> existingSkill.getSkill().equalsIgnoreCase(skill.getSkill()));
+
+        if (skillExists) {
+            throw new IllegalStateException("Skill already exists in the profile");
+        }
+
+        // Set the profile for the new skill
+        skill.setProfile(profile);
+        skill.setId(null); // Ensure the ID is null for a new entry
+
+        // Add the new skill to the profile
+        profile.getUserSkills().add(skill);
+
+        // Save the updated profile
+        return profileRepository.save(profile);
+    }
+
+    @Override
+    public Profile addProject(Long userId, Project project) {
+        // Fetch the user's profile
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id " + userId));
+
+        // Set the profile for the new project
+        project.setProfile(profile);
+        project.setId(null); // Ensure the ID is null for a new entry
+
+        // Initialize skills if they are null
+        if (project.getSkills() == null) {
+            project.setSkills(List.of());
+        }
+
+        // Add the new project to the profile
+        profile.getProjects().add(project);
+
+        // Save the updated profile
+        return profileRepository.save(profile);
+    }
 }

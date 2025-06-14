@@ -124,6 +124,7 @@ public class GithubService implements IGithubService {
                                 .description(repo.getDescription())
                                 .languages(languages)
                                 .readmeContent(readmeContent)
+                                .htmlUrl(repo.getHtmlUrl())
                                 .build();
                     }).collect(Collectors.toList());
 

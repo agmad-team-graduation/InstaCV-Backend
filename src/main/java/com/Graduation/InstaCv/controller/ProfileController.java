@@ -1,8 +1,11 @@
 package com.Graduation.InstaCv.controller;
 
 import com.Graduation.InstaCv.data.dto.ProfileDto;
+import com.Graduation.InstaCv.data.model.BaseSkill;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.profile.Profile;
+import com.Graduation.InstaCv.data.model.profile.Project;
+import com.Graduation.InstaCv.data.model.profile.UserSkill;
 import com.Graduation.InstaCv.mappers.ContextAwareMapper;
 import com.Graduation.InstaCv.service.AiCvParserService;
 import com.Graduation.InstaCv.service.Interfaces.IProfileService;
@@ -14,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -32,6 +36,13 @@ public class ProfileController {
         return profileMapper.mapTo(profile);
     }
 
+    @GetMapping("/me/skills")
+    public List<UserSkill> getSkills() {
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        Profile profile = profileService.getProfileByUserId(userId);
+        return profile.getUserSkills();
+    }
+
     @PostMapping("/create")
     public ProfileDto createProfile(@RequestBody ProfileDto profileDto) {
         // Extract userId from the security context
@@ -47,6 +58,22 @@ public class ProfileController {
         Profile updatedProfile = profileService.updateProfile(userId, profileDto);
         return profileMapper.mapTo(updatedProfile);
     }
+
+    @PutMapping("/add-skill")
+    public ProfileDto addSkillToProfile(@RequestBody UserSkill skill) {
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        Profile updatedProfile = profileService.addSkill(userId, skill);
+        return profileMapper.mapTo(updatedProfile);
+    }
+
+    @PutMapping("/add-project")
+    public ProfileDto addProjectToProfile(@RequestBody Project project){
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        Profile updatedProfile = profileService.addProject(userId, project);
+        return profileMapper.mapTo(updatedProfile);
+    }
+
+
 
     @PutMapping("/add-github-skills")
     public ProfileDto addGithubSkillsIntoProfile() {
