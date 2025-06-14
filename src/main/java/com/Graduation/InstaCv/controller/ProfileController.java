@@ -60,25 +60,11 @@ public class ProfileController {
     public ResponseEntity<ProfileDto> uploadCvAndCreateProfile(@RequestParam("file") MultipartFile file) {
         try {
             Long userId = SecurityUtils.getCurrentUserDetails().getId();
-
             // Parse CV using AI
             ProfileDto parsedProfile = aiCvParserService.parseCV(file);
-
-            // Check if user already has a profile
-            try {
-                Profile existingProfile = profileService.getProfileByUserId(userId);
-                // Update existing profile
-                Profile updatedProfile = profileService.updateProfile(userId, parsedProfile);
-                return ResponseEntity.ok(profileMapper.mapTo(updatedProfile));
-            } catch (Exception e) {
-                // Create new profile
-                Profile createdProfile = profileService.createProfile(
-                        userId,
-                        profileMapper.mapFrom(parsedProfile, null)
-                );
-                return ResponseEntity.status(HttpStatus.CREATED)
-                        .body(profileMapper.mapTo(createdProfile));
-            }
+            // Update existing profile
+            Profile updatedProfile = profileService.updateProfile(userId, parsedProfile);
+            return ResponseEntity.ok(profileMapper.mapTo(updatedProfile));
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Failed to process CV");

@@ -125,6 +125,26 @@ public class ProfileService implements IProfileService {
         }
 
         if (updatedProfile.getProjects() != null) {
+            // remove project skills usages in projectAnalysis, and any job
+            List<Job> profileJobs = jobRepository.findJobsByProfileId(existingProfile.getId());
+            for (Job job : profileJobs) {
+                job.getProjectMatchingAnalyses().clear();
+            }
+            jobRepository.saveAll(profileJobs);
+            // TODO: Remove all matching for external jobs also, Test it
+            List<Job> analyzedScrapedJobsByProfileId = jobRepository.findAnalyzedScrapedJobsByProfileId(existingProfile.getId());
+            for (Job job : analyzedScrapedJobsByProfileId) {
+                job.getProjectMatchingAnalyses().remove(
+                        job.getProjectMatchingAnalyses().stream()
+                                .filter(analysis -> analysis.getProfile().getId().equals(existingProfile.getId()))
+                                .findFirst()
+                                .orElse(null)
+                );
+            }
+            jobRepository.saveAll(analyzedScrapedJobsByProfileId);
+        }
+
+        if (updatedProfile.getProjects() != null) {
             List<Project> existingProjects = existingProfile.getProjects();
             existingProjects.clear();
             updatedProfile.getProjects().forEach(project -> {
