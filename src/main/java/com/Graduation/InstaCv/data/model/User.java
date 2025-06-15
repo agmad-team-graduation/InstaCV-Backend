@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 
 @Entity
@@ -30,6 +31,11 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonBackReference // To prevent infinite loop
     private Profile profile;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Nullable
+    private UserPhoto photo;
+
     // Add auth provider field
     @Column(name = "auth_provider")
     private AuthProvider authProvider = AuthProvider.LOCAL;
