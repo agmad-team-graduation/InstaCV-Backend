@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +48,9 @@ public class Job {
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private RemoteJobData remoteJobData;
+
+
+    private OffsetDateTime addDate;
 
     public List<JobSkill> getHardSkills() {
         return jobSkills.stream()
