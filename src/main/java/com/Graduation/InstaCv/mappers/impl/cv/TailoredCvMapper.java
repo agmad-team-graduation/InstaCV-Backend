@@ -18,7 +18,8 @@ public class TailoredCvMapper implements ContextAwareMapper<TailoredCv, Tailored
                 "education", tailoredCv.getEducationSection().getOrderIndex(),
                 "experience", tailoredCv.getExperienceSection().getOrderIndex(),
                 "project", tailoredCv.getProjectSection().getOrderIndex(),
-                "skill", tailoredCv.getSkillSection().getOrderIndex()
+                "skill", tailoredCv.getSkillSection().getOrderIndex(),
+                "summary", tailoredCv.getSummarySection().getOrderIndex()
         );
         TailoredCvDto.TailoredCvDtoBuilder tailoredCvDtoBuilder = TailoredCvDto.builder()
                 .id(tailoredCv.getId())
@@ -28,7 +29,7 @@ public class TailoredCvMapper implements ContextAwareMapper<TailoredCv, Tailored
                 .experienceSection(tailoredCv.getExperienceSection())
                 .skillSection(tailoredCv.getSkillSection())
                 .projectSection(tailoredCv.getProjectSection())
-                .summary(tailoredCv.getSummary())
+                .summarySection(tailoredCv.getSummarySection())
                 .createdAt(tailoredCv.getCreatedAt())
                 .updatedAt(tailoredCv.getUpdatedAt())
                 .sectionsOrder(sectionsOrder);
@@ -46,7 +47,7 @@ public class TailoredCvMapper implements ContextAwareMapper<TailoredCv, Tailored
                 .experienceSection(tailoredCvDto.getExperienceSection())
                 .skillSection(tailoredCvDto.getSkillSection())
                 .projectSection(tailoredCvDto.getProjectSection())
-                .summary(tailoredCvDto.getSummary())
+                .summarySection(tailoredCvDto.getSummarySection())
                 .createdAt(tailoredCvDto.getCreatedAt())
                 .updatedAt(tailoredCvDto.getUpdatedAt())
                 .build();

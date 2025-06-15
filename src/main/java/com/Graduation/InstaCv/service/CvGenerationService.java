@@ -135,8 +135,13 @@ public class CvGenerationService implements ICvGenerationService {
                 ).sectionTitle("Projects").build());
 
         // Generate summary
-        String summary = generateProfileSummary(profile, job);
-        tailoredCv.setSummary(summary);
+        String summaryText = generateProfileSummary(profile, job);
+        tailoredCv.setSummarySection(
+                SummarySection.builder()
+                        .summary(summaryText)
+                        .sectionTitle("Summary")
+                        .build()
+        );
 
         // Set order index
         setOrderIndex(
@@ -248,8 +253,13 @@ public class CvGenerationService implements ICvGenerationService {
                 ).sectionTitle("Projects").build());
 
         // Generate summary
-        String summary = generateProfileSummary(profile, null);
-        tailoredCv.setSummary(summary);
+        String summaryText = generateProfileSummary(profile, null);
+        tailoredCv.setSummarySection(
+                SummarySection.builder()
+                        .summary(summaryText)
+                        .sectionTitle("Summary")
+                        .build()
+        );
 
         // Set order index
         setOrderIndex(
@@ -325,9 +335,14 @@ public class CvGenerationService implements ICvGenerationService {
         if (tailoredCvDto.getPersonalDetails() != null) {
             tailoredCv.setPersonalDetails(tailoredCvDto.getPersonalDetails());
         }
-        if (tailoredCvDto.getSummary() != null) {
-            tailoredCv.setSummary(tailoredCvDto.getSummary());
+        if (tailoredCvDto.getSummarySection() != null) {
+            if (tailoredCv.getSummarySection() == null) tailoredCv.setSummarySection(new SummarySection());
+            tailoredCv.getSummarySection().setHidden(tailoredCvDto.getSummarySection().isHidden());
+            tailoredCv.getSummarySection().setSectionTitle(tailoredCvDto.getSummarySection().getSectionTitle());
+            tailoredCv.getSummarySection().setOrderIndex(tailoredCvDto.getSummarySection().getOrderIndex());
+            tailoredCv.getSummarySection().setSummary(tailoredCvDto.getSummarySection().getSummary());
         }
+
         if (tailoredCvDto.getEducationSection() != null) {
             if (tailoredCv.getEducationSection() == null) tailoredCv.setEducationSection(new EducationSection());
             tailoredCv.getEducationSection().setHidden(tailoredCvDto.getEducationSection().isHidden());
@@ -403,10 +418,11 @@ public class CvGenerationService implements ICvGenerationService {
     }
 
     private void setOrderIndexOfSections(TailoredCv cv) {
-        cv.getEducationSection().setOrderIndex(1);
-        cv.getExperienceSection().setOrderIndex(2);
-        cv.getProjectSection().setOrderIndex(3);
-        cv.getSkillSection().setOrderIndex(4);
+        cv.getSummarySection().setOrderIndex(1);
+        cv.getEducationSection().setOrderIndex(2);
+        cv.getExperienceSection().setOrderIndex(3);
+        cv.getProjectSection().setOrderIndex(4);
+        cv.getSkillSection().setOrderIndex(5);
     }
 
     /**
@@ -425,13 +441,14 @@ public class CvGenerationService implements ICvGenerationService {
 
     private void validateOrSetOrderIndexOfSections(TailoredCv cv) {
         Set<Integer> orderIndexes = new HashSet<>();
+        orderIndexes.add(cv.getSummarySection().getOrderIndex());
         orderIndexes.add(cv.getEducationSection().getOrderIndex());
         orderIndexes.add(cv.getExperienceSection().getOrderIndex());
         orderIndexes.add(cv.getProjectSection().getOrderIndex());
         orderIndexes.add(cv.getSkillSection().getOrderIndex());
         Integer minOrderIndex = Collections.min(orderIndexes);
         Integer maxOrderIndex = Collections.max(orderIndexes);
-        if (orderIndexes.size() != 4 || orderIndexes.contains(null) || minOrderIndex <= 0 || maxOrderIndex > 4)
+        if (orderIndexes.size() != 5 || orderIndexes.contains(null) || minOrderIndex <= 0 || maxOrderIndex > 5)
             setOrderIndexOfSections(cv);
     }
 }
