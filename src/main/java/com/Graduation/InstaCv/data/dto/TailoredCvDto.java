@@ -17,6 +17,7 @@ import java.util.Map;
 public class TailoredCvDto {
     private Long id;
     private Long jobId;
+    private String cvTitle;
     private PersonalDetails personalDetails;
     private SummarySection summarySection;
     private EducationSection educationSection;

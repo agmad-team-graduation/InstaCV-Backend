@@ -24,6 +24,7 @@ public class TailoredCvMapper implements ContextAwareMapper<TailoredCv, Tailored
         TailoredCvDto.TailoredCvDtoBuilder tailoredCvDtoBuilder = TailoredCvDto.builder()
                 .id(tailoredCv.getId())
                 .jobId(tailoredCv.getJob() == null ? null : tailoredCv.getJob().getId())
+                .cvTitle(tailoredCv.getCvTitle())
                 .personalDetails(tailoredCv.getPersonalDetails())
                 .educationSection(tailoredCv.getEducationSection())
                 .experienceSection(tailoredCv.getExperienceSection())
@@ -40,6 +41,7 @@ public class TailoredCvMapper implements ContextAwareMapper<TailoredCv, Tailored
     public TailoredCv mapFrom(TailoredCvDto tailoredCvDto, Job job) {
         return TailoredCv.builder()
                 .id(tailoredCvDto.getId())
+                .cvTitle(tailoredCvDto.getCvTitle())
                 .profile(job.getProfile())
                 .job(job)
                 .personalDetails(tailoredCvDto.getPersonalDetails())

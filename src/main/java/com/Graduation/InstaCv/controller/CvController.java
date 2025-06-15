@@ -67,4 +67,11 @@ public class CvController {
         cvGenerationService.deleteCv(cvId, SecurityUtils.getCurrentUserDetails().getId());
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/update-title")
+    public ResponseEntity<TailoredCvDto> updateCvTitle(@RequestParam Long cvId, @RequestParam String title) {
+        cvGenerationService.updateCvTitle(cvId, SecurityUtils.getCurrentUserDetails().getId(), title);
+        TailoredCv tailoredCv = cvGenerationService.getCvByIdAndUserId(cvId, SecurityUtils.getCurrentUserDetails().getId());
+        return ResponseEntity.ok(cvMapper.mapTo(tailoredCv));
+    }
 }

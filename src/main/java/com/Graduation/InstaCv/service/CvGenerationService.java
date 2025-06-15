@@ -22,6 +22,7 @@ import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.ICvGenerationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -42,6 +43,7 @@ public class CvGenerationService implements ICvGenerationService {
 
 
     @Override
+    @Transactional
     public TailoredCv generateCv(Long userId, Long jobId) {
         // Check if CV already exists for this user and job
         User user = userRepository.findById(userId)
@@ -172,10 +174,14 @@ public class CvGenerationService implements ICvGenerationService {
         setOrderIndexOfSections(tailoredCv);
 
         // Save and return
-        return tailoredCvRepository.save(tailoredCv);
+        tailoredCv = tailoredCvRepository.save(tailoredCv);
+        tailoredCvRepository.updateCvTitle(tailoredCv.getId(), "Resume #" + tailoredCv.getId());
+        tailoredCv.setCvTitle("Resume #" + tailoredCv.getId());
+        return tailoredCv;
     }
 
     @Override
+    @Transactional
     public TailoredCv generateCv(Long userId, boolean createEmptyCv) {
         // Check if CV already exists for this user and job
         User user = userRepository.findById(userId)
@@ -194,12 +200,22 @@ public class CvGenerationService implements ICvGenerationService {
                 .build();
 
         if (createEmptyCv) {
+            tailoredCv.setSummarySection(
+                    SummarySection.builder()
+                            .summary("Fill in your summary here.")
+                            .sectionTitle("Summary")
+                            .build()
+            );
+            tailoredCv.setSkillSection(SkillSection.builder().sectionTitle("Skills").build());
+            tailoredCv.setExperienceSection(ExperienceSection.builder().sectionTitle("Experience").build());
+            tailoredCv.setEducationSection(EducationSection.builder().sectionTitle("Education").build());
+            tailoredCv.setProjectSection(ProjectSection.builder().sectionTitle("Projects").build());
             setOrderIndexOfSections(tailoredCv);
-            tailoredCv.getSkillSection().setSectionTitle("Skills");
-            tailoredCv.getExperienceSection().setSectionTitle("Experience");
-            tailoredCv.getEducationSection().setSectionTitle("Education");
-            tailoredCv.getProjectSection().setSectionTitle("Projects");
-            return tailoredCvRepository.save(tailoredCv);
+
+            tailoredCv = tailoredCvRepository.save(tailoredCv);
+            tailoredCvRepository.updateCvTitle(tailoredCv.getId(), "Resume #" + tailoredCv.getId());
+            tailoredCv.setCvTitle("Resume #" + tailoredCv.getId());
+            return tailoredCv;
         }
 
         List<UserSkill> tailoredSkills = profile.getUserSkills().stream()
@@ -290,7 +306,10 @@ public class CvGenerationService implements ICvGenerationService {
         setOrderIndexOfSections(tailoredCv);
 
         // Save and return
-        return tailoredCvRepository.save(tailoredCv);
+        tailoredCv = tailoredCvRepository.save(tailoredCv);
+        tailoredCvRepository.updateCvTitle(tailoredCv.getId(), "Resume #" + tailoredCv.getId());
+        tailoredCv.setCvTitle("Resume #" + tailoredCv.getId());
+        return tailoredCv;
     }
 
     @Override
@@ -331,6 +350,9 @@ public class CvGenerationService implements ICvGenerationService {
     public TailoredCv updateCv(Long cvId, Long userId, TailoredCvDto tailoredCvDto) {
         // Get the CV and validate ownership
         TailoredCv tailoredCv = getCvByIdAndUserId(cvId, userId);
+        if (tailoredCvDto.getCvTitle() != null) {
+            tailoredCv.setCvTitle(tailoredCvDto.getCvTitle());
+        }
         // update the CV with the provided data and save it
         if (tailoredCvDto.getPersonalDetails() != null) {
             tailoredCv.setPersonalDetails(tailoredCvDto.getPersonalDetails());
@@ -410,6 +432,16 @@ public class CvGenerationService implements ICvGenerationService {
         TailoredCv tailoredCv = getCvByIdAndUserId(cvId, userId);
         // Delete the CV
         tailoredCvRepository.delete(tailoredCv);
+    }
+
+    @Override
+    public void updateCvTitle(Long cvId, Long userId, String title) {
+        // Get the CV and validate ownership
+        TailoredCv tailoredCv = getCvByIdAndUserId(cvId, userId);
+        // Update the title
+        tailoredCv.setCvTitle(title);
+        // Save the updated CV
+        tailoredCvRepository.save(tailoredCv);
     }
 
     private void setOrderIndex(List<CvItem> items) {

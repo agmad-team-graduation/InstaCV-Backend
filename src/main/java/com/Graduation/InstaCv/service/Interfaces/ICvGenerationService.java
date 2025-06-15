@@ -19,4 +19,5 @@ public interface ICvGenerationService {
     TailoredCv updateCv(Long cvId, Long userId, TailoredCvDto tailoredCvDto);
 
     void deleteCv(Long cvId, Long userId);
+    void updateCvTitle(Long cvId, Long userId, String title);
 }

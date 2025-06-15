@@ -23,6 +23,8 @@ public class TailoredCv {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String cvTitle;
+
     @ManyToOne
     @JoinColumn(name = "profile_id", referencedColumnName = "id")
     private Profile profile;
