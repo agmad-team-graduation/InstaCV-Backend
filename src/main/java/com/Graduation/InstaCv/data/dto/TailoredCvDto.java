@@ -1,9 +1,6 @@
 package com.Graduation.InstaCv.data.dto;
 
-import com.Graduation.InstaCv.data.model.cv.sections.EducationSection;
-import com.Graduation.InstaCv.data.model.cv.sections.ExperienceSection;
-import com.Graduation.InstaCv.data.model.cv.sections.ProjectSection;
-import com.Graduation.InstaCv.data.model.cv.sections.SkillSection;
+import com.Graduation.InstaCv.data.model.cv.sections.*;
 import com.Graduation.InstaCv.data.model.profile.PersonalDetails;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,8 +17,9 @@ import java.util.Map;
 public class TailoredCvDto {
     private Long id;
     private Long jobId;
+    private String cvTitle;
     private PersonalDetails personalDetails;
-    private String summary;
+    private SummarySection summarySection;
     private EducationSection educationSection;
     private ExperienceSection experienceSection;
     private SkillSection skillSection;

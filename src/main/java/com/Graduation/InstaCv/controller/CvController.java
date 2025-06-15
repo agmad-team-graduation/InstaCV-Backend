@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.controller;
 
 import com.Graduation.InstaCv.data.dto.TailoredCvDto;
+import com.Graduation.InstaCv.data.dto.request.CreateCvRequest;
 import com.Graduation.InstaCv.data.dto.request.GenerateCvRequest;
 import com.Graduation.InstaCv.data.model.cv.TailoredCv;
 import com.Graduation.InstaCv.data.model.job.Job;
@@ -25,6 +26,13 @@ public class CvController {
     public ResponseEntity<TailoredCvDto> generateCv(@RequestBody GenerateCvRequest request) {
         TailoredCv tailoredCv = cvGenerationService.generateCv(SecurityUtils.getCurrentUserDetails().getId(), request.getJobId());
         return ResponseEntity.ok(cvMapper.mapTo(tailoredCv));
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<TailoredCvDto> createCv(@RequestBody CreateCvRequest request) {
+        TailoredCv createdCv = cvGenerationService.generateCv(SecurityUtils.getCurrentUserDetails().getId(),
+                request.isCreateEmptyCv());
+        return ResponseEntity.ok(cvMapper.mapTo(createdCv));
     }
 
     @PutMapping("/{cvId}")
@@ -54,4 +62,16 @@ public class CvController {
         return ResponseEntity.ok(cvMapper.mapTo(tailoredCv));
     }
 
+    @DeleteMapping("/{cvId}")
+    public ResponseEntity<Void> deleteCv(@PathVariable Long cvId) {
+        cvGenerationService.deleteCv(cvId, SecurityUtils.getCurrentUserDetails().getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/update-title")
+    public ResponseEntity<TailoredCvDto> updateCvTitle(@RequestParam Long cvId, @RequestParam String title) {
+        cvGenerationService.updateCvTitle(cvId, SecurityUtils.getCurrentUserDetails().getId(), title);
+        TailoredCv tailoredCv = cvGenerationService.getCvByIdAndUserId(cvId, SecurityUtils.getCurrentUserDetails().getId());
+        return ResponseEntity.ok(cvMapper.mapTo(tailoredCv));
+    }
 }

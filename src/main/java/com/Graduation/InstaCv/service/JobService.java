@@ -39,6 +39,7 @@ public class JobService implements IJobService {
     public Job addJob(Job job, Profile profile) {
         job.setId(null);
         job.setProfile(profile);
+        job.setAddDate(java.time.OffsetDateTime.now());
         return jobRepository.save(job);
     }
 

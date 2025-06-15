@@ -18,6 +18,7 @@ public class JobMapper implements ContextAwareMapper<Job, JobDto, Profile> {
                 .title(job.getTitle())
                 .company(job.getCompany())
                 .description(job.getDescription())
+                .addDate(job.getAddDate())
                 .isAnalyzed(job.getSkillExtractionStatus() == AnalyzeStatus.COMPLETED)
                 .jobSkills(job.getJobSkills())
                 .isSkillMatchingAnalyzed(!job.getSkillMatchingAnalyses().isEmpty())
