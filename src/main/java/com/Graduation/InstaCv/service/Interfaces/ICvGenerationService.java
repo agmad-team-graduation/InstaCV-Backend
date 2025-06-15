@@ -8,6 +8,8 @@ import java.util.List;
 public interface ICvGenerationService {
     TailoredCv generateCv(Long userId, Long jobId);
 
+    TailoredCv generateCv(Long userId, boolean createEmptyCv);
+
     TailoredCv getCvByIdAndUserId(Long cvId, Long userId);
 
     List<TailoredCv> getCvsByUserId(Long userId);
@@ -15,4 +17,6 @@ public interface ICvGenerationService {
     TailoredCv getCvByJobIdAndUserId(Long userId, Long jobId);
 
     TailoredCv updateCv(Long cvId, Long userId, TailoredCvDto tailoredCvDto);
+
+    void deleteCv(Long cvId, Long userId);
 }

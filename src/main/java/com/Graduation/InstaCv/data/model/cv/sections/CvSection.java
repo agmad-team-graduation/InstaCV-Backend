@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.data.model.cv.sections;
 
+import com.Graduation.InstaCv.data.model.cv.TailoredCv;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

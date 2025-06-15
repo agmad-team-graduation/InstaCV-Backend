@@ -17,5 +17,5 @@ import java.util.List;
 public class ProjectSection extends CvSection {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orderIndex ASC")
-    private List<ProjectCv> items;
+    private List<ProjectCv> items = List.of();
 }

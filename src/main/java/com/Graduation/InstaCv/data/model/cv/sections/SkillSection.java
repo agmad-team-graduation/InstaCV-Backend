@@ -17,5 +17,5 @@ import java.util.List;
 public class SkillSection extends CvSection {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orderIndex ASC")
-    private List<UserSkillCv> items;
+    private List<UserSkillCv> items = List.of();
 } 
