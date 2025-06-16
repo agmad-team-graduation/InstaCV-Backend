@@ -11,4 +11,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GithubAccessTokenRequest {
     private String accessToken;
+    private boolean forceRefresh;
 }

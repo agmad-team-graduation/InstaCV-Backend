@@ -13,4 +13,5 @@ public interface IProfileService {
     Profile addGithubSkillsIntoProfile(Long userId);
     Profile addSkill(Long userId, UserSkill skill);
     Profile addProject(Long userId, Project project);
+    void deleteGithubProfile(Long userId);
 }
