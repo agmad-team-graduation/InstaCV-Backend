@@ -9,7 +9,7 @@ public interface IProfileService {
     Profile getProfileByUserId(Long userId);
     Long getProfileIdByUserId(Long userId);
     Profile createProfile(Long userId, Profile profile);
-    Profile updateProfile(Long userId, ProfileDto profile);
+    Profile updateProfile(Long userId, ProfileDto updatedProfile, boolean overwrite);
     Profile addGithubSkillsIntoProfile(Long userId);
     Profile addSkill(Long userId, UserSkill skill);
     Profile addProject(Long userId, Project project);
