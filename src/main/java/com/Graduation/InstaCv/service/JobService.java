@@ -3,6 +3,7 @@ package com.Graduation.InstaCv.service;
 import com.Graduation.InstaCv.data.dto.response.ExtractedJobSkillResponse;
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
+import com.Graduation.InstaCv.data.dto.response.JobllmResponseDTO;
 import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.enums.JobSortField;
 import com.Graduation.InstaCv.data.enums.SkillType;
@@ -11,6 +12,7 @@ import com.Graduation.InstaCv.data.model.job.JobSkill;
 import com.Graduation.InstaCv.data.model.jobMatching.skillMatching.SkillMatchingAnalysis;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
+import com.Graduation.InstaCv.gateways.GroqChatCompletionClient;
 import com.Graduation.InstaCv.mappers.Mapper;
 import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.service.Interfaces.IJobService;
@@ -34,12 +36,14 @@ public class JobService implements IJobService {
     private final JobSkillService jobSkillService;
     private final Mapper<JobSkill, ExtractedJobSkillResponse> jobSkillMapper;
     private final JobsPaginationUtils jobsPaginationUtils;
+    private final GroqChatCompletionClient llmClient;
 
     @Override
     public Job addJob(Job job, Profile profile) {
         job.setId(null);
         job.setProfile(profile);
         job.setAddDate(java.time.OffsetDateTime.now());
+        JobthroughLLM(job.getId());
         return jobRepository.save(job);
     }
 
@@ -54,6 +58,53 @@ public class JobService implements IJobService {
             return jobRepository.save(job);
         } else
             return job;
+    }
+
+    private void JobthroughLLM(Long JobID)
+    {
+        // get the job by ID
+        Job job = jobRepository.findById(JobID)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + JobID));
+
+        // Extract the description
+        String description = job.getDescription();
+
+        String systemPrompt = """
+                You are a helpful assistant that processes raw job descriptions for technical roles.. Your task is to:
+                1. Clean and rewrite the job description to be clear, well-structured, and easy for NLP extraction.
+                2. Extract the job title and company name if mentioned.
+                3. Summarize the job in a short 2-3 line paragraph.
+                4. Return ONLY a valid JSON object with the following keys:\s
+                   - "job_title": string
+                   - "company_name": string or null
+                   - "summary": string
+                   - "rewritten_description": string
+                
+                Important: Your response must be a valid JSON string, without any explanation or extra text.
+                Example of a valid response:
+                {
+                    "job_title": "Software Engineer",
+                    "company_name": "Tech Company",
+                    "summary": "We are looking for a skilled software engineer to join our team.",
+                    "rewritten_description": "As a software engineer, you will be responsible for developing and maintaining software applications."
+                }
+                """;
+
+        String userContent = """
+                Please process the following job description:
+                %s
+                """.formatted(description);
+
+        // Call the LLM service to process the job description
+        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent);
+
+        JobllmResponseDTO jobllmResponseDTO = llmClient.parseJobLlmResponse(llmResponse);
+
+        // Update the job entity with the LLM response
+        job.setTitle(jobllmResponseDTO.getJobTitle());
+        job.setCompany(jobllmResponseDTO.getCompanyName());
+        job.setSummary(jobllmResponseDTO.getSummary());
+        job.setDescription(jobllmResponseDTO.getRewrittenDescription());
     }
 
     private Job getJob(Long jobId, Long userId, boolean isExternalJob) {

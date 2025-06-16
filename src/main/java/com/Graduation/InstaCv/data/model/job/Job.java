@@ -29,6 +29,7 @@ public class Job {
     private Profile profile;
     private String title;
     private String company;
+    private String summary;
     @Column(nullable = false, length = 20480)
     private String description;
     @Builder.Default
