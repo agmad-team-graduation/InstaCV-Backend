@@ -43,8 +43,8 @@ public class JobService implements IJobService {
         job.setId(null);
         job.setProfile(profile);
         job.setAddDate(java.time.OffsetDateTime.now());
-        JobthroughLLM(job.getId());
-        return jobRepository.save(job);
+        job = jobRepository.save(job);
+        return JobthroughLLM(job.getId());
     }
 
     @Override
@@ -60,8 +60,7 @@ public class JobService implements IJobService {
             return job;
     }
 
-    private void JobthroughLLM(Long JobID)
-    {
+    private Job JobthroughLLM(Long JobID) {
         // get the job by ID
         Job job = jobRepository.findById(JobID)
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + JobID));
@@ -79,7 +78,7 @@ public class JobService implements IJobService {
                    - "company_name": string or null
                    - "summary": string
                    - "rewritten_description": string
-                
+                                
                 Important: Your response must be a valid JSON string, without any explanation or extra text.
                 Example of a valid response:
                 {
@@ -105,6 +104,8 @@ public class JobService implements IJobService {
         job.setCompany(jobllmResponseDTO.getCompanyName());
         job.setSummary(jobllmResponseDTO.getSummary());
         job.setDescription(jobllmResponseDTO.getRewrittenDescription());
+
+        return job;
     }
 
     private Job getJob(Long jobId, Long userId, boolean isExternalJob) {
