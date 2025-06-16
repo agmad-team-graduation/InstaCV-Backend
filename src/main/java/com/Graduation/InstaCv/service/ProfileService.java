@@ -254,4 +254,22 @@ public class ProfileService implements IProfileService {
         // Save the updated profile
         return profileRepository.save(profile);
     }
+
+    @Override
+    public void deleteGithubProfile(Long userId) {
+        // Fetch the user's profile
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id " + userId));
+
+        // Check if the GitHub profile exists
+        if (profile.getGithubProfile() == null) {
+            throw new IllegalStateException("GitHub profile does not exist for user with id " + userId);
+        }
+
+        // Remove the GitHub profile from the user's profile
+        profile.setGithubProfile(null);
+
+        // Save the updated profile
+        profileRepository.save(profile);
+    }
 }

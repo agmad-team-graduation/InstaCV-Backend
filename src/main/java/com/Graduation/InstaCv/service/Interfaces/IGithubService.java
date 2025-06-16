@@ -6,7 +6,7 @@ import com.Graduation.InstaCv.data.dto.response.GithubAuthLink;
 import com.Graduation.InstaCv.data.model.github.GithubProfile;
 
 public interface IGithubService {
-    GithubProfile getUserProfile(GithubAccessTokenRequest request, boolean forceRefresh);
+    GithubProfile getUserProfile(GithubAccessTokenRequest request);
 
     GithubAccessTokenResponse getAccessToken(String code);
 
