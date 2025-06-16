@@ -22,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -128,11 +127,29 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Photo not found for user: " + userId));
     }
 
-
     public boolean hasPhoto() {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         return userPhotoRepository.existsByUserId(userId);
     }
 
+    public User getCurrentUser() {
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + userId));
+    }
 
+    public void saveUserPhoto(UserPhoto photo) {
+        User user = photo.getUser();
+        // Delete old photo if exists
+        userPhotoRepository.findByUserId(user.getId()).ifPresent(oldPhoto -> {
+            if (oldPhoto.getPhotoPublicId() != null) {
+                cloudinaryService.deletePhoto(oldPhoto.getPhotoPublicId());
+            }
+            userPhotoRepository.delete(oldPhoto);
+        });
+        
+        // Save new photo
+        user.setPhoto(photo);
+        userPhotoRepository.save(photo);
+    }
 } 

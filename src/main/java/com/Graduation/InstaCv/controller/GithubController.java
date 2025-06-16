@@ -44,10 +44,8 @@ public class GithubController {
 
 
     @PostMapping("/profile")
-    public ResponseEntity<GithubProfile> profile(@CookieValue(value = "github_token", required = false) String githubToken) {
-        if (githubToken == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        return ResponseEntity.ok(githubService.getUserProfile(new GithubAccessTokenRequest(githubToken)));
+    public ResponseEntity<GithubProfile> profile(@CookieValue(value = "github_token", required = false) String githubToken,
+                                                 @RequestParam(required = false, defaultValue = "false") boolean forceRefresh) {
+        return ResponseEntity.ok(githubService.getUserProfile(new GithubAccessTokenRequest(githubToken), forceRefresh));
     }
 }
