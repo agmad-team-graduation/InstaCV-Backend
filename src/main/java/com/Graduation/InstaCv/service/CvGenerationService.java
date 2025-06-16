@@ -83,7 +83,7 @@ public class CvGenerationService implements ICvGenerationService {
 
         List<UserSkill> tailoredSkills = matchedSkills.stream()
                 .map(MatchedSkill::getUserSkill)
-                .sorted(Comparator.comparing(UserSkill::getLevel).reversed())
+                .sorted(Comparator.comparing(UserSkill::getLevel, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .toList();
 
         // convert to UserSkillCv
@@ -97,7 +97,7 @@ public class CvGenerationService implements ICvGenerationService {
 
         // Sort experiences by date
         List<Experience> tailoredExperience = profile.getExperienceList().stream()
-                .sorted(Comparator.comparing(Experience::getStartDate).reversed())
+                .sorted(Comparator.comparing(Experience::getStartDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .toList();
 
         // Convert to ExperienceCv
@@ -110,7 +110,7 @@ public class CvGenerationService implements ICvGenerationService {
 
         // Sort education by date
         List<Education> tailoredEducation = profile.getEducationList().stream()
-                .sorted(Comparator.comparing(Education::getStartDate).reversed())
+                .sorted(Comparator.comparing(Education::getStartDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .toList();
 
         // Convert to EducationCv
@@ -219,8 +219,9 @@ public class CvGenerationService implements ICvGenerationService {
         }
 
         List<UserSkill> tailoredSkills = profile.getUserSkills().stream()
-                .sorted(Comparator.comparing(UserSkill::getLevel).reversed())
+                .sorted(Comparator.comparing(UserSkill::getLevel, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .toList();
+
 
         // convert to UserSkillCv
         tailoredCv.setSkillSection(
@@ -233,7 +234,7 @@ public class CvGenerationService implements ICvGenerationService {
 
         // Sort experiences by date
         List<Experience> tailoredExperience = profile.getExperienceList().stream()
-                .sorted(Comparator.comparing(Experience::getStartDate).reversed())
+                .sorted(Comparator.comparing(Experience::getStartDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .toList();
 
         // Convert to ExperienceCv
@@ -246,7 +247,7 @@ public class CvGenerationService implements ICvGenerationService {
 
         // Sort education by date
         List<Education> tailoredEducation = profile.getEducationList().stream()
-                .sorted(Comparator.comparing(Education::getStartDate).reversed())
+                .sorted(Comparator.comparing(Education::getStartDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                 .toList();
 
         // Convert to EducationCv

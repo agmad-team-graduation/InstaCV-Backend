@@ -7,6 +7,7 @@ import com.Graduation.InstaCv.data.dto.response.GithubUserResponse;
 import com.Graduation.InstaCv.data.dto.request.AccessTokenRequest;
 import com.Graduation.InstaCv.data.dto.response.GithubAccessTokenResponse;
 import com.Graduation.InstaCv.data.dto.response.GithubAuthLink;
+import com.Graduation.InstaCv.data.model.UserPhoto;
 import com.Graduation.InstaCv.data.model.github.GithubProfile;
 import com.Graduation.InstaCv.data.model.github.GithubRepository;
 import com.Graduation.InstaCv.data.model.github.RepoSkill;
@@ -48,12 +49,15 @@ public class GithubService implements IGithubService {
     private final GithubSkillRepository githubSkillRepository;
     private final ProfileRepository profileRepository;
 
-    public GithubService(GithubAuthClient githubAuthClient, GithubApiClient githubApiClient, WebClient.Builder webClientBuilder, GithubSkillRepository githubSkillRepository, ProfileRepository profileRepository) {
+    private final UserService userService;
+
+    public GithubService(GithubAuthClient githubAuthClient, GithubApiClient githubApiClient, WebClient.Builder webClientBuilder, GithubSkillRepository githubSkillRepository, ProfileRepository profileRepository, UserService userService) {
         this.githubAuthClient = githubAuthClient;
         this.githubApiClient = githubApiClient;
         this.webClientBuilder = webClientBuilder;
         this.githubSkillRepository = githubSkillRepository;
         this.profileRepository = profileRepository;
+        this.userService = userService;
     }
 
     public GithubAuthLink getAuthorizationUrl() {
@@ -72,7 +76,7 @@ public class GithubService implements IGithubService {
         return githubAuthClient.getAccessToken(requestDto);
     }
 
-    public GithubProfile getUserProfile(GithubAccessTokenRequest request) {
+    public GithubProfile getUserProfile(GithubAccessTokenRequest request, boolean forceRefresh) {
         try {
             Long userId = SecurityUtils.getCurrentUserDetails().getId();
             Profile profile = profileRepository.findByUserId(userId)
@@ -80,7 +84,7 @@ public class GithubService implements IGithubService {
 
             GithubProfile oldGithubProfile = profile.getGithubProfile();
 
-            if ((request == null || StringUtil.isNullOrEmpty(request.getAccessToken())) && oldGithubProfile != null)
+            if (!forceRefresh && oldGithubProfile != null)
                 // Make a copy to avoid lazy loading issues
                 return GithubProfile.builder()
                         .username(oldGithubProfile.getUsername())
@@ -91,10 +95,25 @@ public class GithubService implements IGithubService {
                         .skills(oldGithubProfile.getSkills())
                         .build();
 
-            assert request != null;
+            if (request == null || StringUtil.isNullOrEmpty(request.getAccessToken())) {
+                throw new IllegalArgumentException("Access token is required to fetch GitHub profile");
+            }
+
             String accessToken = request.getAccessToken();
             String tokenHeader = "token " + accessToken;
             GithubUserResponse userDetails = githubApiClient.getUser(tokenHeader);
+
+            if (!userService.hasPhoto()) {
+                // Create a new UserPhoto with GitHub's avatar URL
+                UserPhoto githubPhoto = UserPhoto.builder()
+                        .user(userService.getCurrentUser())
+                        .photoUrl(userDetails.getAvatar_url())
+                        .photoFormat("url")  // Since it's a direct URL, not a file
+                        .uploadedAt(new Date())
+                        .build();
+                userService.saveUserPhoto(githubPhoto);
+            }
+
             // If accessToken is valid, we can fetch the user details and remove the old profile, else it throws error
             if (oldGithubProfile != null) {
                 profile.setGithubProfile(null);

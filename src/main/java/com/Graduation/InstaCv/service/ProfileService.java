@@ -132,7 +132,7 @@ public class ProfileService implements IProfileService {
             }
             jobRepository.saveAll(profileJobs);
             // TODO: Remove all matching for external jobs also, Test it
-            List<Job> analyzedScrapedJobsByProfileId = jobRepository.findAnalyzedScrapedJobsByProfileId(existingProfile.getId());
+            List<Job> analyzedScrapedJobsByProfileId = jobRepository.findProjectAnalyzedScrapedJobsByProfileId(existingProfile.getId());
             for (Job job : analyzedScrapedJobsByProfileId) {
                 job.getProjectMatchingAnalyses().remove(
                         job.getProjectMatchingAnalyses().stream()
