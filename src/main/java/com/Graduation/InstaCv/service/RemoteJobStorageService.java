@@ -59,6 +59,7 @@ public class RemoteJobStorageService {
         // for each remoteJobDto and jobEntity, extract skills and save them
         for (RemoteOkJobResponse remoteJob : newJobs) {
             Job jobEntity = remoteOkJobResponseMapper.toJobEntity(remoteJob);
+            jobService.JobthroughLLM(jobEntity);
             try {
                 jobEntity = jobService.extractSkills(jobEntity, true, false);
             } catch (Exception e) {
@@ -67,6 +68,7 @@ public class RemoteJobStorageService {
             jobEntity.setSkillExtractionStatus(AnalyzeStatus.COMPLETED);
             jobEntities.add(jobEntity);
         }
+
         jobEntities = jobRepository.saveAll(jobEntities);
 
         for (Job jobEntity : jobEntities) {

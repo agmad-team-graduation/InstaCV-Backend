@@ -111,7 +111,7 @@ public class JobService implements IJobService {
         if (jobllmResponseDTO.getRewrittenDescription() != null && !jobllmResponseDTO.getRewrittenDescription().isEmpty())
             job.setDescription(jobllmResponseDTO.getRewrittenDescription());
 
-        return jobRepository.save(job);
+        return job;
     }
 
     private Job getJob(Long jobId, Long userId, boolean isExternalJob) {
