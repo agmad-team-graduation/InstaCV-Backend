@@ -43,7 +43,7 @@ public class JobService implements IJobService {
         job.setId(null);
         job.setProfile(profile);
         job.setAddDate(java.time.OffsetDateTime.now());
-        JobthroughLLM(job.getId());
+        JobthroughLLM(job);
         return jobRepository.save(job);
     }
 
@@ -60,34 +60,34 @@ public class JobService implements IJobService {
             return job;
     }
 
-    private void JobthroughLLM(Long JobID)
-    {
-        // get the job by ID
-        Job job = jobRepository.findById(JobID)
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + JobID));
+    @Override
+    public Job JobthroughLLM(Long jobID) {
+        Job job = jobRepository.findById(jobID)
+                .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobID));
+        return JobthroughLLM(job);
+    }
 
+    @Override
+    public Job JobthroughLLM(Job job)
+    {
         // Extract the description
         String description = job.getDescription();
 
         String systemPrompt = """
-                You are a helpful assistant that processes raw job descriptions for technical roles.. Your task is to:
+                You are a helpful assistant that processes raw job descriptions for technical roles. Your task is to:
                 1. Clean and rewrite the job description to be clear, well-structured, and easy for NLP extraction.
                 2. Extract the job title and company name if mentioned.
                 3. Summarize the job in a short 2-3 line paragraph.
-                4. Return ONLY a valid JSON object with the following keys:\s
+                4. Return ONLY a valid JSON object with the following keys:
                    - "job_title": string
                    - "company_name": string or null
                    - "summary": string
                    - "rewritten_description": string
                 
-                Important: Your response must be a valid JSON string, without any explanation or extra text.
+                CRITICAL: Your response must be ONLY the JSON object. Do not include any reasoning, thinking, explanation, or extra text before or after the JSON. Do not use markdown formatting or code blocks.
+                
                 Example of a valid response:
-                {
-                    "job_title": "Software Engineer",
-                    "company_name": "Tech Company",
-                    "summary": "We are looking for a skilled software engineer to join our team.",
-                    "rewritten_description": "As a software engineer, you will be responsible for developing and maintaining software applications."
-                }
+                {"job_title": "Software Engineer", "company_name": "Tech Company", "summary": "We are looking for a skilled software engineer to join our team.", "rewritten_description": "As a software engineer, you will be responsible for developing and maintaining software applications."}
                 """;
 
         String userContent = """
@@ -98,13 +98,20 @@ public class JobService implements IJobService {
         // Call the LLM service to process the job description
         String llmResponse = llmClient.chatCompletion(systemPrompt, userContent);
 
-        JobllmResponseDTO jobllmResponseDTO = llmClient.parseJobLlmResponse(llmResponse);
+        // Parse the JSON response into DTO
+        JobllmResponseDTO jobllmResponseDTO = llmClient.extractAndParseJson(llmResponse, JobllmResponseDTO.class);
 
         // Update the job entity with the LLM response
-        job.setTitle(jobllmResponseDTO.getJobTitle());
-        job.setCompany(jobllmResponseDTO.getCompanyName());
-        job.setSummary(jobllmResponseDTO.getSummary());
-        job.setDescription(jobllmResponseDTO.getRewrittenDescription());
+        if (jobllmResponseDTO.getJobTitle() != null && !jobllmResponseDTO.getJobTitle().isEmpty())
+            job.setTitle(jobllmResponseDTO.getJobTitle());
+        if (jobllmResponseDTO.getSummary() != null && !jobllmResponseDTO.getSummary().isEmpty())
+            job.setSummary(jobllmResponseDTO.getSummary());
+        if (jobllmResponseDTO.getCompanyName() != null && !jobllmResponseDTO.getCompanyName().isEmpty())
+            job.setCompany(jobllmResponseDTO.getCompanyName());
+        if (jobllmResponseDTO.getRewrittenDescription() != null && !jobllmResponseDTO.getRewrittenDescription().isEmpty())
+            job.setDescription(jobllmResponseDTO.getRewrittenDescription());
+
+        return jobRepository.save(job);
     }
 
     private Job getJob(Long jobId, Long userId, boolean isExternalJob) {

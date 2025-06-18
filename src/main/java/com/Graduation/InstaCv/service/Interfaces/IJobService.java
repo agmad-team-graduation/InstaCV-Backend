@@ -15,6 +15,10 @@ public interface IJobService {
 
     Page<Job> getJobsByUserId(Long userId, Pageable pageable);
 
+    Job JobthroughLLM(Job job);
+
+    Job JobthroughLLM(Long jobID);
+
     Job getJobByIdAndUserId(Long jobId, Long userId);
 
     void deleteJobByIdAndUserId(Long jobId, Long userId);
