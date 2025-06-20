@@ -36,7 +36,7 @@ public interface GroqChatCompletionClient {
                         new GroqChatCompletionRequest.Message("system", systemContent),
                         new GroqChatCompletionRequest.Message("user", userContent)
                 ))
-                .model("qwen/qwen3-32b")
+                .model("llama-3.3-70b-versatile")
                 .temperature(0.6)
                 .maxCompletionTokens(4096)
                 .topP(0.95)
