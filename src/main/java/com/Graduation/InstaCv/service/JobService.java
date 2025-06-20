@@ -69,35 +69,34 @@ public class JobService implements IJobService {
     }
 
     @Override
-    public Job jobThroughLLM(Job job)
-    {
+    public Job jobThroughLLM(Job job) {
         // Extract the description
         String description = job.getDescription();
 
         String systemPrompt = """
                 You are a specialized assistant that processes noisy job descriptions from Remote OK for optimal skill extraction by NLP models. Your task is to:
-                
+                                
                 1. REMOVE: Company marketing, excessive branding, application instructions, benefits details, company history, redundant phrases, buzzwords, and non-technical fluff
                 2. PRIORITIZE & PRESERVE: Technical skills, programming languages, frameworks, tools, libraries, years of experience, education requirements, specific technologies, development methodologies, and core technical responsibilities
                 3. STRUCTURE: Organize the cleaned description to highlight technical requirements clearly and concisely
                 4. EXTRACT: Job title (standardized format) and company name if clearly mentioned
                 5. SUMMARIZE: Create a focused 2-3 sentence summary emphasizing key technical requirements and role responsibilities
-                
+                                
                 OPTIMIZATION FOR SKILL EXTRACTION:
                 - Group similar technical skills together
                 - Use standard technology names (React.js not "React", Node.js not "Node")
                 - Include experience levels with technologies when mentioned
                 - Preserve specific version numbers or technical specifications
                 - Maintain clear separation between required vs preferred skills
-                
+                                
                 Return ONLY a valid JSON object with these keys:
                 - "job_title": string (clean, standardized format like "Full Stack Developer", "DevOps Engineer")
                 - "company_name": string or null
                 - "summary": string (focus on role type and key technical requirements)
                 - "rewritten_description": string (clean, skill-focused, structured for NLP extraction)
-                
+                                
                 CRITICAL: Response must be ONLY the JSON object. No markdown, explanations, or extra text.
-                
+                                
                 Example:
                 {"job_title": "Full Stack Developer", "company_name": "TechCorp", "summary": "Senior Full Stack Developer position requiring React.js, Node.js, and AWS experience for building scalable web applications. Requires 4+ years experience with modern JavaScript stack.", "rewritten_description": "Full Stack Developer position requiring 4+ years experience. Required technical skills: React.js, Node.js, JavaScript ES6+, HTML5, CSS3, MongoDB, REST APIs, Git. AWS experience required including EC2, S3, Lambda. Responsibilities: Develop responsive web applications, design database schemas, implement REST APIs, code reviews, unit testing. Preferred: TypeScript, Docker, Kubernetes, CI/CD pipelines. Bachelor's degree in Computer Science or equivalent experience required."}
                 """;
@@ -106,6 +105,10 @@ public class JobService implements IJobService {
                 Please process the following job description:
                 %s
                 """.formatted(description);
+
+        if (willExceedTokenLimit(systemPrompt, userContent)) {
+            throw new IllegalArgumentException("The combined length of the system prompt and user content exceeds the token limit for the LLM. Please shorten the input.");
+        }
 
         // Call the LLM service to process the job description
         String llmResponse = llmClient.chatCompletion(systemPrompt, userContent);
@@ -124,6 +127,13 @@ public class JobService implements IJobService {
             job.setDescription(jobllmResponseDTO.getRewrittenDescription());
 
         return job;
+    }
+
+    private boolean willExceedTokenLimit(String systemPrompt, String userContent) {
+        String combinedContent = systemPrompt + userContent;
+        int wordsCount = combinedContent.split("\\s+").length;
+        int tokenCount = (int) Math.ceil(wordsCount / 0.75); // Rough estimate: 1 token ~ 0.75 words
+        return tokenCount > 6000;
     }
 
     private Job getJob(Long jobId, Long userId, boolean isExternalJob) {

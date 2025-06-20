@@ -61,14 +61,23 @@ public class RemoteJobStorageService {
         // for each remoteJobDto and jobEntity, extract skills and save them
         for (RemoteOkJobResponse remoteJob : newJobs) {
             Job jobEntity = remoteOkJobResponseMapper.toJobEntity(remoteJob);
-            try{
+
+            boolean skip = false;
+            try {
                 jobService.jobThroughLLM(jobEntity);
-                if (remoteJob != newJobs.get(newJobs.size() - 1)) {
-                    Thread.sleep(1000);
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                System.out.println("LLM analysis failed for job: " + remoteJob.getId() + ", skipping skill extraction.");
+//                skip = true;
             }
+//            try {
+//                if (skip || remoteJob != newJobs.get(newJobs.size() - 1)) {
+//                    Thread.sleep(2000);
+//                }
+//            } catch (InterruptedException e) {
+//                Thread.currentThread().interrupt();
+//            }
+//            if (skip) continue;
+
             try {
                 jobEntity = jobService.extractSkills(jobEntity, true, false);
             } catch (Exception e) {
