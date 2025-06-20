@@ -70,7 +70,7 @@ public class UserService implements IUserService {
 //                        .build())
                 .password(passwordEncoder.encode(password))
                 .build();
-        user.getProfile().setUser(user);
+//        user.getProfile().setUser(user);
         return userRepository.save(user);
     }
 

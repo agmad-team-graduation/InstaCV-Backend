@@ -23,6 +23,9 @@ public class UserMapper implements Mapper<User, UserDto> {
                 .name(user.getName())
                 .email(user.getEmail())
                 .isProfileCreated(ofNullable(user.getProfile()).isPresent())
+                .isGithubConnected(ofNullable(user.getProfile()).isPresent()
+                        && ofNullable(user.getProfile().getGithubProfile()).isPresent()
+                )
                 .photoUrl(
                         Optional.ofNullable(user.getPhoto())
                                 .map(UserPhoto::getPhotoUrl)
