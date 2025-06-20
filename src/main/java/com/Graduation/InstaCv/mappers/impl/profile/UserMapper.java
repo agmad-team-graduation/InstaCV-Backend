@@ -2,9 +2,14 @@ package com.Graduation.InstaCv.mappers.impl.profile;
 
 import com.Graduation.InstaCv.data.dto.UserDto;
 import com.Graduation.InstaCv.data.model.User;
+import com.Graduation.InstaCv.data.model.UserPhoto;
 import com.Graduation.InstaCv.mappers.Mapper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
 
 @Component
 @AllArgsConstructor
@@ -16,9 +21,14 @@ public class UserMapper implements Mapper<User, UserDto> {
         UserDto.UserDtoBuilder builder = UserDto.builder()
                 .id(user.getId())
                 .name(user.getName())
-                .email(user.getEmail());
-        if (user.getProfile() != null)
-            builder.profile(profileMapper.mapTo(user.getProfile()));
+                .email(user.getEmail())
+                .photoUrl(
+                        Optional.ofNullable(user.getPhoto())
+                                .map(UserPhoto::getPhotoUrl)
+                                .orElse(null)
+                );
+//        if (user.getProfile() != null)
+//            builder.profile(profileMapper.mapTo(user.getProfile()));
         return builder.build();
     }
 
@@ -29,8 +39,8 @@ public class UserMapper implements Mapper<User, UserDto> {
                 .name(userDto.getName())
                 .email(userDto.getEmail());
         User user = builder.build();
-        if (userDto.getProfile() != null)
-            builder.profile(profileMapper.mapFrom(userDto.getProfile(), user));
+//        if (userDto.getProfile() != null)
+//            builder.profile(profileMapper.mapFrom(userDto.getProfile(), user));
         return user;
     }
 }

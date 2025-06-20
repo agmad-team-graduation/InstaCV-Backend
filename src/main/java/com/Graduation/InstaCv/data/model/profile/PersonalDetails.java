@@ -24,4 +24,6 @@ public class PersonalDetails {
     private String address;
     @Column(name="job_title")
     private String jobTitle;
+    @Column(name="about")
+    private String about;
 }

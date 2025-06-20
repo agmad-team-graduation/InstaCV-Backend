@@ -152,4 +152,9 @@ public class UserService implements IUserService {
         user.setPhoto(photo);
         userPhotoRepository.save(photo);
     }
+
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + userId));
+    }
 } 

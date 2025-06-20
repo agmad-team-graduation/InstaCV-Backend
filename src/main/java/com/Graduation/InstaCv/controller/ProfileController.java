@@ -55,7 +55,7 @@ public class ProfileController {
     public ProfileDto updateProfile(@RequestBody ProfileDto profileDto) {
         // Extract userId from the security context
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
-        Profile updatedProfile = profileService.updateProfile(userId, profileDto);
+        Profile updatedProfile = profileService.updateProfile(userId, profileDto, true);
         return profileMapper.mapTo(updatedProfile);
     }
 
@@ -67,12 +67,11 @@ public class ProfileController {
     }
 
     @PutMapping("/add-project")
-    public ProfileDto addProjectToProfile(@RequestBody Project project){
+    public ProfileDto addProjectToProfile(@RequestBody Project project) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         Profile updatedProfile = profileService.addProject(userId, project);
         return profileMapper.mapTo(updatedProfile);
     }
-
 
 
     @PutMapping("/add-github-skills")
@@ -84,13 +83,14 @@ public class ProfileController {
     }
 
     @PostMapping("/upload-cv")
-    public ResponseEntity<ProfileDto> uploadCvAndCreateProfile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<ProfileDto> uploadCvAndCreateProfile(@RequestParam("file") MultipartFile file,
+                                                               @RequestParam("overwrite") boolean overwrite) {
         try {
             Long userId = SecurityUtils.getCurrentUserDetails().getId();
             // Parse CV using AI
             ProfileDto parsedProfile = aiCvParserService.parseCV(file);
             // Update existing profile
-            Profile updatedProfile = profileService.updateProfile(userId, parsedProfile);
+            Profile updatedProfile = profileService.updateProfile(userId, parsedProfile, overwrite);
             return ResponseEntity.ok(profileMapper.mapTo(updatedProfile));
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();

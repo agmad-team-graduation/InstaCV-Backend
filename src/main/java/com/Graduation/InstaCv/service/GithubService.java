@@ -76,7 +76,8 @@ public class GithubService implements IGithubService {
         return githubAuthClient.getAccessToken(requestDto);
     }
 
-    public GithubProfile getUserProfile(GithubAccessTokenRequest request, boolean forceRefresh) {
+    public GithubProfile getUserProfile(GithubAccessTokenRequest request) {
+        boolean forceRefresh = request.isForceRefresh();
         try {
             Long userId = SecurityUtils.getCurrentUserDetails().getId();
             Profile profile = profileRepository.findByUserId(userId)

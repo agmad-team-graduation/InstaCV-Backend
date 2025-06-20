@@ -78,7 +78,7 @@ public class ProfileService implements IProfileService {
     }
 
     @Override
-    public Profile updateProfile(Long userId, ProfileDto updatedProfile) {
+    public Profile updateProfile(Long userId, ProfileDto updatedProfile, boolean overwrite) {
         Profile existingProfile = getProfileByUserId(userId);
         if (existingProfile == null)
             throw new ResourceNotFoundException("Profile not found for user to update with id " + userId);
@@ -88,7 +88,7 @@ public class ProfileService implements IProfileService {
 
         if (updatedProfile.getEducationList() != null) {
             List<Education> existingEducationList = existingProfile.getEducationList();
-            existingEducationList.clear();
+            if (overwrite) existingEducationList.clear();
             updatedProfile.getEducationList().forEach(education -> {
                 education.setId(null);
                 education.setProfile(existingProfile);
@@ -97,7 +97,7 @@ public class ProfileService implements IProfileService {
         }
         if (updatedProfile.getExperienceList() != null) {
             List<Experience> existingExperienceList = existingProfile.getExperienceList();
-            existingExperienceList.clear();
+            if (overwrite) existingExperienceList.clear();
             updatedProfile.getExperienceList().forEach(experience -> {
                 experience.setId(null);
                 experience.setProfile(existingProfile);
@@ -146,7 +146,7 @@ public class ProfileService implements IProfileService {
 
         if (updatedProfile.getProjects() != null) {
             List<Project> existingProjects = existingProfile.getProjects();
-            existingProjects.clear();
+            if (overwrite) existingProjects.clear();
             updatedProfile.getProjects().forEach(project -> {
                 project.setId(null);
                 project.setProfile(existingProfile);
@@ -161,7 +161,7 @@ public class ProfileService implements IProfileService {
         }
         if (updatedProfile.getUserSkills() != null) {
             List<UserSkill> existingUserSkills = existingProfile.getUserSkills();
-            existingUserSkills.clear();
+            if (overwrite) existingUserSkills.clear();
             updatedProfile.getUserSkills().forEach(userSkill -> {
                 userSkill.setId(null);
                 userSkill.setProfile(existingProfile);
@@ -253,5 +253,23 @@ public class ProfileService implements IProfileService {
 
         // Save the updated profile
         return profileRepository.save(profile);
+    }
+
+    @Override
+    public void deleteGithubProfile(Long userId) {
+        // Fetch the user's profile
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id " + userId));
+
+        // Check if the GitHub profile exists
+        if (profile.getGithubProfile() == null) {
+            throw new IllegalStateException("GitHub profile does not exist for user with id " + userId);
+        }
+
+        // Remove the GitHub profile from the user's profile
+        profile.setGithubProfile(null);
+
+        // Save the updated profile
+        profileRepository.save(profile);
     }
 }
