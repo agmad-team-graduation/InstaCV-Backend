@@ -278,6 +278,8 @@ public class JobService implements IJobService {
                 - Medium: Practical application and experience
                 - Hard: Advanced concepts and complex problem-solving
                 
+                For the expectedAnswer field: Provide the direct answer content WITHOUT prefacing phrases like "The answer should be", "The candidate should say", "A good answer would be", etc. Just provide the actual answer content directly.
+                
                 Return ONLY a valid JSON object with the following structure:
                 {
                   "questions": [
@@ -285,12 +287,12 @@ public class JobService implements IJobService {
                       "question": "string",
                       "category": "string",
                       "difficulty": "string",
-                      "expectedAnswer": "string"
+                      "expectedAnswer": "string (direct answer content only)"
                     }
                   ]
                 }
                 
-                CRITICAL: Your response must be ONLY the JSON object. Do not include any reasoning, thinking, explanation, or extra text before or after the JSON. Do not use markdown formatting or code blocks.
+                CRITICAL: Your response must be ONLY the JSON object. No reasoning, thinking, explanation, or extra text. No markdown formatting or code blocks.
                 """;
 
         String userContent = """
