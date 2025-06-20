@@ -3,6 +3,8 @@ package com.Graduation.InstaCv.controller;
 
 import com.Graduation.InstaCv.data.dto.JobDto;
 import com.Graduation.InstaCv.data.dto.JobSimpleDto;
+import com.Graduation.InstaCv.data.dto.request.InterviewQuestionsRequest;
+import com.Graduation.InstaCv.data.dto.response.InterviewQuestionsResponse;
 import com.Graduation.InstaCv.data.dto.response.PaginatedResponse;
 import com.Graduation.InstaCv.data.enums.JobSortField;
 import com.Graduation.InstaCv.data.model.job.Job;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.Graduation.InstaCv.utils.JobsPaginationUtils;
@@ -74,6 +77,18 @@ public class JobController {
         Job job = jobService.jobThroughLLM(jobId);
 
         return ResponseEntity.ok(job);
+    }
+
+    @PostMapping("/interview-questions")
+    public ResponseEntity<InterviewQuestionsResponse> generateInterviewQuestions(
+            @Valid @RequestBody InterviewQuestionsRequest request) {
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        InterviewQuestionsResponse response = jobService.generateInterviewQuestions(
+                request.getJobId(), 
+                request.getNumberOfQuestions(), 
+                userId
+        );
+        return ResponseEntity.ok(response);
     }
 
 }

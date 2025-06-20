@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.response.ExtractedJobSkillResponse;
+import com.Graduation.InstaCv.data.dto.response.InterviewQuestionsResponse;
 import com.Graduation.InstaCv.data.dto.response.JobKnowledgeResponse;
 import com.Graduation.InstaCv.data.dto.response.JobSkillsResponse;
 import com.Graduation.InstaCv.data.dto.response.JobllmResponseDTO;
@@ -244,5 +245,68 @@ public class JobService implements IJobService {
         job.setSkillExtractionStatus(AnalyzeStatus.COMPLETED);
 
         return job;
+    }
+
+    public InterviewQuestionsResponse generateInterviewQuestions(Long jobId, Integer numberOfQuestions, Long userId) {
+        // Get the job and verify ownership
+        Job job = getJobByIdAndUserId(jobId, userId);
+        
+        String systemPrompt = """
+                You are an expert HR professional and technical interviewer. Your task is to generate relevant interview questions for a specific job based on its description.
+                
+                Your goal is to create diverse, practical interview questions that would help assess a candidate's suitability for the role.
+                
+                Categories to consider:
+                - Technical Skills: Questions about specific technologies, programming languages, tools mentioned in the job
+                - Problem Solving: Scenario-based questions and coding challenges
+                - Experience: Questions about past projects and experiences
+                - Soft Skills: Communication, teamwork, leadership questions
+                - Company Culture: Questions about work style and cultural fit
+                
+                Difficulty levels:
+                - Easy: Basic knowledge and understanding
+                - Medium: Practical application and experience
+                - Hard: Advanced concepts and complex problem-solving
+                
+                Return ONLY a valid JSON object with the following structure:
+                {
+                  "questions": [
+                    {
+                      "question": "string",
+                      "category": "string",
+                      "difficulty": "string",
+                      "expectedAnswer": "string"
+                    }
+                  ]
+                }
+                
+                CRITICAL: Your response must be ONLY the JSON object. Do not include any reasoning, thinking, explanation, or extra text before or after the JSON. Do not use markdown formatting or code blocks.
+                """;
+
+        String userContent = """
+                Generate exactly %d interview questions for the following job:
+                
+                Job Title: %s
+                Company: %s
+                Job Description: %s
+                
+                Make sure to create a good mix of technical and soft skill questions with varying difficulty levels.
+                """.formatted(numberOfQuestions, 
+                              job.getTitle() != null ? job.getTitle() : "Not specified", 
+                              job.getCompany() != null ? job.getCompany() : "Not specified", 
+                              job.getDescription());
+
+        // Call the LLM service to generate interview questions
+        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent);
+
+        // Parse the JSON response
+        InterviewQuestionsResponse response = llmClient.extractAndParseJson(llmResponse, InterviewQuestionsResponse.class);
+        
+        // Set additional job information
+        response.setJobId(job.getId());
+        response.setJobTitle(job.getTitle());
+        response.setCompany(job.getCompany());
+        
+        return response;
     }
 }

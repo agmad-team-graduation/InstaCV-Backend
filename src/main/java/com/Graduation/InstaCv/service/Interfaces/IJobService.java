@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.service.Interfaces;
 
+import com.Graduation.InstaCv.data.dto.response.InterviewQuestionsResponse;
 import com.Graduation.InstaCv.data.enums.JobSortField;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.Profile;
@@ -22,4 +23,6 @@ public interface IJobService {
     void deleteJobByIdAndUserId(Long jobId, Long userId);
 
     Page<Job> getRecommendedExternalJobsPaginated(Long profileId, Pageable pageable, JobSortField sortField);
+
+    InterviewQuestionsResponse generateInterviewQuestions(Long jobId, Integer numberOfQuestions, Long userId);
 }
