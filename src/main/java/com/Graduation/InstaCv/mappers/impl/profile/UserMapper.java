@@ -22,6 +22,7 @@ public class UserMapper implements Mapper<User, UserDto> {
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
+                .isProfileCreated(ofNullable(user.getProfile()).isPresent())
                 .photoUrl(
                         Optional.ofNullable(user.getPhoto())
                                 .map(UserPhoto::getPhotoUrl)

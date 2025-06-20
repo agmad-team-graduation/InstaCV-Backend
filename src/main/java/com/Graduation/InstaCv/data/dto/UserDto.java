@@ -15,4 +15,5 @@ public class UserDto {
     private String name;
     private String email;
     private String photoUrl;
+    private boolean isProfileCreated;
 }

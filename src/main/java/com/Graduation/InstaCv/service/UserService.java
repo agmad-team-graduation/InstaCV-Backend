@@ -64,10 +64,10 @@ public class UserService implements IUserService {
         User user = User.builder()
                 .name(name)
                 .email(email)
-                .isProfileCreated(true)
-                .profile(Profile.builder()
-                        .personalDetails(PersonalDetails.builder().fullName(name).email(email).build())
-                        .build())
+                .isProfileCreated(false)
+//                .profile(Profile.builder()
+//                        .personalDetails(PersonalDetails.builder().fullName(name).email(email).build())
+//                        .build())
                 .password(passwordEncoder.encode(password))
                 .build();
         user.getProfile().setUser(user);
