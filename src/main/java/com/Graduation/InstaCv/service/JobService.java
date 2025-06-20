@@ -43,7 +43,7 @@ public class JobService implements IJobService {
         job.setId(null);
         job.setProfile(profile);
         job.setAddDate(java.time.OffsetDateTime.now());
-        JobthroughLLM(job);
+        jobThroughLLM(job);
         return jobRepository.save(job);
     }
 
@@ -61,14 +61,14 @@ public class JobService implements IJobService {
     }
 
     @Override
-    public Job JobthroughLLM(Long jobID) {
+    public Job jobThroughLLM(Long jobID) {
         Job job = jobRepository.findById(jobID)
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobID));
-        return JobthroughLLM(job);
+        return jobThroughLLM(job);
     }
 
     @Override
-    public Job JobthroughLLM(Job job)
+    public Job jobThroughLLM(Job job)
     {
         // Extract the description
         String description = job.getDescription();

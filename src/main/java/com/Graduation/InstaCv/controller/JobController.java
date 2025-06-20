@@ -4,13 +4,11 @@ package com.Graduation.InstaCv.controller;
 import com.Graduation.InstaCv.data.dto.JobDto;
 import com.Graduation.InstaCv.data.dto.JobSimpleDto;
 import com.Graduation.InstaCv.data.dto.response.PaginatedResponse;
-import com.Graduation.InstaCv.data.enums.AnalyzeStatus;
 import com.Graduation.InstaCv.data.enums.JobSortField;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.gateways.GroqChatCompletionClient;
 import com.Graduation.InstaCv.mappers.ContextAwareMapper;
-import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.service.Interfaces.IJobService;
 import com.Graduation.InstaCv.service.Interfaces.IProfileService;
 import com.Graduation.InstaCv.utils.SecurityUtils;
@@ -21,8 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.Graduation.InstaCv.utils.JobsPaginationUtils;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -75,7 +71,7 @@ public class JobController {
 
     @GetMapping("/{jobId}/llm")
     public ResponseEntity<Job> analyzeJobWithLLM(@PathVariable Long jobId) {
-        Job job = jobService.JobthroughLLM(jobId);
+        Job job = jobService.jobThroughLLM(jobId);
 
         return ResponseEntity.ok(job);
     }

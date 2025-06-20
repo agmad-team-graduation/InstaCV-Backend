@@ -6,8 +6,6 @@ import com.Graduation.InstaCv.data.model.profile.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-
 public interface IJobService {
     Job addJob(Job job, Profile profile);
 
@@ -15,9 +13,9 @@ public interface IJobService {
 
     Page<Job> getJobsByUserId(Long userId, Pageable pageable);
 
-    Job JobthroughLLM(Job job);
+    Job jobThroughLLM(Job job);
 
-    Job JobthroughLLM(Long jobID);
+    Job jobThroughLLM(Long jobID);
 
     Job getJobByIdAndUserId(Long jobId, Long userId);
 

@@ -27,7 +27,7 @@ public class RemoteJobStorageService {
     private final RemoteOkJobResponseMapper remoteOkJobResponseMapper;
     private final JobService jobService;
     private final ProfileRepository profileRepository;
-    private static final Integer lastDaysCount = 10;
+    private static final Integer lastDaysCount = 3;
 
     /**
      * Fetches new jobs from RemoteOK API and saves them to the main job table
@@ -50,6 +50,8 @@ public class RemoteJobStorageService {
                 .filter(job -> !existingRemoteIds.contains(job.getId()))
                 .toList();
 
+        System.out.println("New jobs fetched from RemoteOK API: " + newJobs.size());
+
         if (newJobs.isEmpty()) return 0;
 
         // Convert DTOs to Job entities and save them
@@ -59,7 +61,14 @@ public class RemoteJobStorageService {
         // for each remoteJobDto and jobEntity, extract skills and save them
         for (RemoteOkJobResponse remoteJob : newJobs) {
             Job jobEntity = remoteOkJobResponseMapper.toJobEntity(remoteJob);
-            jobService.JobthroughLLM(jobEntity);
+            try{
+                jobService.jobThroughLLM(jobEntity);
+                if (remoteJob != newJobs.get(newJobs.size() - 1)) {
+                    Thread.sleep(250);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
             try {
                 jobEntity = jobService.extractSkills(jobEntity, true, false);
             } catch (Exception e) {
