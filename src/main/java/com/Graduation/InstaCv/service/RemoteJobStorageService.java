@@ -27,7 +27,7 @@ public class RemoteJobStorageService {
     private final RemoteOkJobResponseMapper remoteOkJobResponseMapper;
     private final JobService jobService;
     private final ProfileRepository profileRepository;
-    private static final Integer lastDaysCount = 3;
+    private static final Integer lastDaysCount = 6;
 
     /**
      * Fetches new jobs from RemoteOK API and saves them to the main job table
@@ -64,7 +64,7 @@ public class RemoteJobStorageService {
             try{
                 jobService.jobThroughLLM(jobEntity);
                 if (remoteJob != newJobs.get(newJobs.size() - 1)) {
-                    Thread.sleep(250);
+                    Thread.sleep(1000);
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

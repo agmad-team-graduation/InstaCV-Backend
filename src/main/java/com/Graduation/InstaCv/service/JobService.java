@@ -74,20 +74,31 @@ public class JobService implements IJobService {
         String description = job.getDescription();
 
         String systemPrompt = """
-                You are a helpful assistant that processes raw job descriptions for technical roles. Your task is to:
-                1. Clean and rewrite the job description to be clear, well-structured, and easy for NLP extraction.
-                2. Extract the job title and company name if mentioned.
-                3. Summarize the job in a short 2-3 line paragraph.
-                4. Return ONLY a valid JSON object with the following keys:
-                   - "job_title": string
-                   - "company_name": string or null
-                   - "summary": string
-                   - "rewritten_description": string
+                You are a specialized assistant that processes noisy job descriptions from Remote OK for optimal skill extraction by NLP models. Your task is to:
                 
-                CRITICAL: Your response must be ONLY the JSON object. Do not include any reasoning, thinking, explanation, or extra text before or after the JSON. Do not use markdown formatting or code blocks.
+                1. REMOVE: Company marketing, excessive branding, application instructions, benefits details, company history, redundant phrases, buzzwords, and non-technical fluff
+                2. PRIORITIZE & PRESERVE: Technical skills, programming languages, frameworks, tools, libraries, years of experience, education requirements, specific technologies, development methodologies, and core technical responsibilities
+                3. STRUCTURE: Organize the cleaned description to highlight technical requirements clearly and concisely
+                4. EXTRACT: Job title (standardized format) and company name if clearly mentioned
+                5. SUMMARIZE: Create a focused 2-3 sentence summary emphasizing key technical requirements and role responsibilities
                 
-                Example of a valid response:
-                {"job_title": "Software Engineer", "company_name": "Tech Company", "summary": "We are looking for a skilled software engineer to join our team.", "rewritten_description": "As a software engineer, you will be responsible for developing and maintaining software applications."}
+                OPTIMIZATION FOR SKILL EXTRACTION:
+                - Group similar technical skills together
+                - Use standard technology names (React.js not "React", Node.js not "Node")
+                - Include experience levels with technologies when mentioned
+                - Preserve specific version numbers or technical specifications
+                - Maintain clear separation between required vs preferred skills
+                
+                Return ONLY a valid JSON object with these keys:
+                - "job_title": string (clean, standardized format like "Full Stack Developer", "DevOps Engineer")
+                - "company_name": string or null
+                - "summary": string (focus on role type and key technical requirements)
+                - "rewritten_description": string (clean, skill-focused, structured for NLP extraction)
+                
+                CRITICAL: Response must be ONLY the JSON object. No markdown, explanations, or extra text.
+                
+                Example:
+                {"job_title": "Full Stack Developer", "company_name": "TechCorp", "summary": "Senior Full Stack Developer position requiring React.js, Node.js, and AWS experience for building scalable web applications. Requires 4+ years experience with modern JavaScript stack.", "rewritten_description": "Full Stack Developer position requiring 4+ years experience. Required technical skills: React.js, Node.js, JavaScript ES6+, HTML5, CSS3, MongoDB, REST APIs, Git. AWS experience required including EC2, S3, Lambda. Responsibilities: Develop responsive web applications, design database schemas, implement REST APIs, code reviews, unit testing. Preferred: TypeScript, Docker, Kubernetes, CI/CD pipelines. Bachelor's degree in Computer Science or equivalent experience required."}
                 """;
 
         String userContent = """

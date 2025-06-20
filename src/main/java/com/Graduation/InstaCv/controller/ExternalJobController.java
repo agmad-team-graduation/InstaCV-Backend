@@ -28,7 +28,6 @@ public class ExternalJobController {
     private final Mapper<Job, ScrapedJobSimpleDto> simpleScrapedJobMapper;
     private final ScrapedJobMapper scrapedJobMapper;
     private final ProfileService profileService;
-    private final JobsPaginationUtils jobsPaginationUtils;
 
     @GetMapping("/all")
     public ResponseEntity<PaginatedResponse<ScrapedJobSimpleDto>> getAllJobs(
