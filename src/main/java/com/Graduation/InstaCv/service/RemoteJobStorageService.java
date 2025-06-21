@@ -27,7 +27,7 @@ public class RemoteJobStorageService {
     private final RemoteOkJobResponseMapper remoteOkJobResponseMapper;
     private final JobService jobService;
     private final ProfileRepository profileRepository;
-    private static final Integer lastDaysCount = 6;
+    private static final Integer lastDaysCount = 10;
 
     /**
      * Fetches new jobs from RemoteOK API and saves them to the main job table
@@ -67,16 +67,16 @@ public class RemoteJobStorageService {
                 jobService.jobThroughLLM(jobEntity);
             } catch (Exception e) {
                 System.out.println("LLM analysis failed for job: " + remoteJob.getId() + ", skipping skill extraction.");
-//                skip = true;
+                skip = true;
             }
-//            try {
-//                if (skip || remoteJob != newJobs.get(newJobs.size() - 1)) {
-//                    Thread.sleep(2000);
-//                }
-//            } catch (InterruptedException e) {
-//                Thread.currentThread().interrupt();
-//            }
-//            if (skip) continue;
+            try {
+                if (skip || remoteJob != newJobs.get(newJobs.size() - 1)) {
+                    Thread.sleep(100);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            if (skip) continue;
 
             try {
                 jobEntity = jobService.extractSkills(jobEntity, true, false);
