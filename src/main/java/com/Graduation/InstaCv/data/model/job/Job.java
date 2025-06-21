@@ -29,7 +29,7 @@ public class Job {
     private Profile profile;
     private String title;
     private String company;
-    @Column(nullable = false, length = 2048)
+    @Column(length = 2048)
     private String summary;
     @Column(nullable = false, length = 20480)
     private String description;
