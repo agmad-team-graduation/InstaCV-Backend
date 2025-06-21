@@ -50,8 +50,6 @@ public class RemoteJobStorageService {
                 .filter(job -> !existingRemoteIds.contains(job.getId()))
                 .toList();
 
-        System.out.println("New jobs fetched from RemoteOK API: " + newJobs.size());
-
         if (newJobs.isEmpty()) return 0;
 
         // Convert DTOs to Job entities and save them

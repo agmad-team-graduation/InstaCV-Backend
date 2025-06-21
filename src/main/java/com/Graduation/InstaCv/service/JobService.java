@@ -133,7 +133,7 @@ public class JobService implements IJobService {
         String combinedContent = systemPrompt + userContent;
         int wordsCount = combinedContent.split("\\s+").length;
         int tokenCount = (int) Math.ceil(wordsCount / 0.75); // Rough estimate: 1 token ~ 0.75 words
-        return tokenCount > 6000;
+        return false; // return false for now!
     }
 
     private Job getJob(Long jobId, Long userId, boolean isExternalJob) {
@@ -260,26 +260,26 @@ public class JobService implements IJobService {
     public InterviewQuestionsResponse generateInterviewQuestions(Long jobId, Integer numberOfQuestions, Long userId) {
         // Get the job and verify ownership
         Job job = getJobByIdAndUserId(jobId, userId);
-        
+
         String systemPrompt = """
                 You are an expert HR professional and technical interviewer. Your task is to generate relevant interview questions for a specific job based on its description.
-                
+                                
                 Your goal is to create diverse, practical interview questions that would help assess a candidate's suitability for the role.
-                
+                                
                 Categories to consider:
                 - Technical Skills: Questions about specific technologies, programming languages, tools mentioned in the job
                 - Problem Solving: Scenario-based questions and coding challenges
                 - Experience: Questions about past projects and experiences
                 - Soft Skills: Communication, teamwork, leadership questions
                 - Company Culture: Questions about work style and cultural fit
-                
+                                
                 Difficulty levels:
                 - Easy: Basic knowledge and understanding
                 - Medium: Practical application and experience
                 - Hard: Advanced concepts and complex problem-solving
-                
+                                
                 For the expectedAnswer field: Provide the direct answer content WITHOUT prefacing phrases like "The answer should be", "The candidate should say", "A good answer would be", etc. Just provide the actual answer content directly.
-                
+                                
                 Return ONLY a valid JSON object with the following structure:
                 {
                   "questions": [
@@ -291,34 +291,34 @@ public class JobService implements IJobService {
                     }
                   ]
                 }
-                
+                                
                 CRITICAL: Your response must be ONLY the JSON object. No reasoning, thinking, explanation, or extra text. No markdown formatting or code blocks.
                 """;
 
         String userContent = """
                 Generate exactly %d interview questions for the following job:
-                
+                                
                 Job Title: %s
                 Company: %s
                 Job Description: %s
-                
+                                
                 Make sure to create a good mix of technical and soft skill questions with varying difficulty levels.
-                """.formatted(numberOfQuestions, 
-                              job.getTitle() != null ? job.getTitle() : "Not specified", 
-                              job.getCompany() != null ? job.getCompany() : "Not specified", 
-                              job.getDescription());
+                """.formatted(numberOfQuestions,
+                job.getTitle() != null ? job.getTitle() : "Not specified",
+                job.getCompany() != null ? job.getCompany() : "Not specified",
+                job.getDescription());
 
         // Call the LLM service to generate interview questions
         String llmResponse = llmClient.chatCompletion(systemPrompt, userContent);
 
         // Parse the JSON response
         InterviewQuestionsResponse response = llmClient.extractAndParseJson(llmResponse, InterviewQuestionsResponse.class);
-        
+
         // Set additional job information
         response.setJobId(job.getId());
         response.setJobTitle(job.getTitle());
         response.setCompany(job.getCompany());
-        
+
         return response;
     }
 }
