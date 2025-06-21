@@ -34,17 +34,16 @@ public class JobController {
     private final GroqChatCompletionClient llmClient;
 
     @GetMapping("/all")
-    public ResponseEntity<PaginatedResponse<JobSimpleDto>> getAllJobs(
+    public ResponseEntity<PaginatedResponse<JobDto>> getAllJobs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "DATE") JobSortField sortField,
             @RequestParam(defaultValue = "desc") String direction) {
-
         Pageable pageable = JobsPaginationUtils.buildPageable(page, size, sortField, direction);
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
 
         Page<Job> jobsPage = jobService.getJobsByUserId(userId, pageable);
-        Page<JobSimpleDto> dtoPage = jobsPage.map(jobSimpleMapper::mapTo);
+        Page<JobDto> dtoPage = jobsPage.map(jobMapper::mapTo);
 
         return ResponseEntity.ok(new PaginatedResponse<>(dtoPage));
     }
@@ -84,8 +83,8 @@ public class JobController {
             @Valid @RequestBody InterviewQuestionsRequest request) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         InterviewQuestionsResponse response = jobService.generateInterviewQuestions(
-                request.getJobId(), 
-                request.getNumberOfQuestions(), 
+                request.getJobId(),
+                request.getNumberOfQuestions(),
                 userId
         );
         return ResponseEntity.ok(response);

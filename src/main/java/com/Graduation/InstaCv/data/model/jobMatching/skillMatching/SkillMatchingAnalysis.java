@@ -55,6 +55,6 @@ public class SkillMatchingAnalysis {
     public float getMatchedSkillsPercentage() {
         if (matchedSkills == null || job.getJobSkills() == null || job.getJobSkills().isEmpty())
             return 0f;
-        return (float) matchedSkills.size() / job.getJobSkills().size() * 100;
+        return (float) matchedSkills.size() / job.getHardSkills().size() * 100;
     }
 }
