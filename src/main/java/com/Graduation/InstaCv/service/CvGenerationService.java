@@ -489,6 +489,7 @@ public class CvGenerationService implements ICvGenerationService {
             setOrderIndexOfSections(cv);
     }
 
+    @Transactional
     public TailoredCv generateCvFromProfileDto(ProfileDto profileDto) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         User user = userRepository.findById(userId)
@@ -498,7 +499,7 @@ public class CvGenerationService implements ICvGenerationService {
 
         // Start building tailored CV
         TailoredCv tailoredCv = TailoredCv.builder()
-                .profile(null)
+                .profile(user.getProfile())
                 .job(null)
                 .personalDetails(profile.getPersonalDetails())
                 .createdAt(LocalDateTime.now())
@@ -610,6 +611,7 @@ public class CvGenerationService implements ICvGenerationService {
 
         tailoredCv.setCvTitle("Resume # NEW" );
         tailoredCv = tailoredCvRepository.save(tailoredCv);
+        tailoredCvRepository.updateCvTitle(tailoredCv.getId(), "Resume #" + tailoredCv.getId());
 
         return tailoredCv;
     }
