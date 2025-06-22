@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.service;
 
+import com.Graduation.InstaCv.data.dto.ProfileDto;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.cv.*;
 import com.Graduation.InstaCv.data.model.cv.items.CvItem;
@@ -15,11 +16,13 @@ import com.Graduation.InstaCv.data.model.profile.*;
 import com.Graduation.InstaCv.data.dto.TailoredCvDto;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
 import com.Graduation.InstaCv.mappers.Mapper;
+import com.Graduation.InstaCv.mappers.impl.profile.ProfileMapper;
 import com.Graduation.InstaCv.repository.JobRepository;
 import com.Graduation.InstaCv.repository.ProfileRepository;
 import com.Graduation.InstaCv.repository.TailoredCvRepository;
 import com.Graduation.InstaCv.repository.UserRepository;
 import com.Graduation.InstaCv.service.Interfaces.ICvGenerationService;
+import com.Graduation.InstaCv.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +43,7 @@ public class CvGenerationService implements ICvGenerationService {
     private final Mapper<ExperienceCv, Experience> experienceCvMapper;
     private final Mapper<EducationCv, Education> educationCvMapper;
     private final Mapper<ProjectCv, Project> projectCvMapper;
+    private final ProfileMapper profileMapper;
 
 
     @Override
@@ -483,5 +487,130 @@ public class CvGenerationService implements ICvGenerationService {
         Integer maxOrderIndex = Collections.max(orderIndexes);
         if (orderIndexes.size() != 5 || orderIndexes.contains(null) || minOrderIndex <= 0 || maxOrderIndex > 5)
             setOrderIndexOfSections(cv);
+    }
+
+    public TailoredCv generateCvFromProfileDto(ProfileDto profileDto) {
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        Profile profile = profileMapper.mapFrom(profileDto, user);
+
+        // Start building tailored CV
+        TailoredCv tailoredCv = TailoredCv.builder()
+                .profile(null)
+                .job(null)
+                .personalDetails(profile.getPersonalDetails())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        // Handle potentially null collections
+        List<UserSkill> tailoredSkills = profile.getUserSkills() != null
+                ? profile.getUserSkills().stream()
+                .sorted(Comparator.comparing(UserSkill::getLevel, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                .toList()
+                : new ArrayList<>();
+
+        // convert to UserSkillCv
+        tailoredCv.setSkillSection(
+                SkillSection.builder().items(
+                        tailoredSkills.stream()
+                                .map(userSkillCvMapper::mapFrom)
+                                .toList()
+                ).sectionTitle("Skills").build());
+
+        // Sort experiences by date
+        List<Experience> tailoredExperience = profile.getExperienceList() != null
+                ? profile.getExperienceList().stream()
+                .sorted(Comparator.comparing(Experience::getStartDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                .toList()
+                : new ArrayList<>();
+
+        // Convert to ExperienceCv
+        tailoredCv.setExperienceSection(
+                ExperienceSection.builder().items(
+                        tailoredExperience.stream()
+                                .map(experienceCvMapper::mapFrom)
+                                .toList()
+                ).sectionTitle("Experience").build());
+
+        // Sort education by date
+        List<Education> tailoredEducation = profile.getEducationList() != null
+                ? profile.getEducationList().stream()
+                .sorted(Comparator.comparing(Education::getStartDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                .toList()
+                : new ArrayList<>();
+
+        // Convert to EducationCv
+        tailoredCv.setEducationSection(
+                EducationSection.builder().items(
+                        tailoredEducation.stream()
+                                .map(educationCvMapper::mapFrom)
+                                .toList()
+                ).sectionTitle("Education").build());
+
+        // Include relevant projects
+        List<Project> tailoredProjects = profile.getProjects() != null
+                ? profile.getProjects()
+                : new ArrayList<>();
+
+        // Convert to ProjectCv
+        tailoredCv.setProjectSection(
+                ProjectSection.builder().items(
+                        tailoredProjects.stream()
+                                .map(projectCvMapper::mapFrom)
+                                .toList()
+                ).sectionTitle("Projects").build());
+
+        // Generate summary
+        String summaryText = generateProfileSummary(profile, null);
+        tailoredCv.setSummarySection(
+                SummarySection.builder()
+                        .summary(summaryText)
+                        .sectionTitle("Summary")
+                        .build()
+        );
+
+        // Set order index for items
+        if (tailoredCv.getEducationSection() != null && tailoredCv.getEducationSection().getItems() != null) {
+            setOrderIndex(
+                    tailoredCv.getEducationSection().getItems().stream()
+                            .map(e -> (CvItem) e)
+                            .toList()
+            );
+        }
+
+        if (tailoredCv.getExperienceSection() != null && tailoredCv.getExperienceSection().getItems() != null) {
+            setOrderIndex(
+                    tailoredCv.getExperienceSection().getItems().stream()
+                            .map(e -> (CvItem) e)
+                            .toList()
+            );
+        }
+
+        if (tailoredCv.getProjectSection() != null && tailoredCv.getProjectSection().getItems() != null) {
+            setOrderIndex(
+                    tailoredCv.getProjectSection().getItems().stream()
+                            .map(e -> (CvItem) e)
+                            .toList()
+            );
+        }
+
+        if (tailoredCv.getSkillSection() != null && tailoredCv.getSkillSection().getItems() != null) {
+            setOrderIndex(
+                    tailoredCv.getSkillSection().getItems().stream()
+                            .map(e -> (CvItem) e)
+                            .toList()
+            );
+        }
+
+        // Set order index for sections
+        setOrderIndexOfSections(tailoredCv);
+
+        tailoredCv.setCvTitle("Resume # NEW" );
+        tailoredCv = tailoredCvRepository.save(tailoredCv);
+
+        return tailoredCv;
     }
 }

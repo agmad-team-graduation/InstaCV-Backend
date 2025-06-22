@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.service.Interfaces;
 
+import com.Graduation.InstaCv.data.dto.ProfileDto;
 import com.Graduation.InstaCv.data.model.cv.TailoredCv;
 import com.Graduation.InstaCv.data.dto.TailoredCvDto;
 
@@ -20,4 +21,6 @@ public interface ICvGenerationService {
 
     void deleteCv(Long cvId, Long userId);
     void updateCvTitle(Long cvId, Long userId, String title);
+
+    TailoredCv generateCvFromProfileDto(ProfileDto parsedProfile);
 }
