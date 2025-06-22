@@ -58,4 +58,9 @@ public class AuthController {
 
         return ResponseEntity.ok(registerResponse);
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getCurrentUser() {
+        return ResponseEntity.ok(mapper.mapTo(userService.getCurrentUser()));
+    }
 }
