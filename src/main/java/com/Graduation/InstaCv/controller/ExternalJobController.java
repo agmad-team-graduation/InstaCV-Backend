@@ -43,9 +43,10 @@ public class ExternalJobController {
 
 
     @GetMapping("/{jobId}")
-    public ResponseEntity<ScrapedJobDto> getJob(@PathVariable Long jobId) {
+    public ResponseEntity<ScrapedJobDto> getJob(@PathVariable Long jobId,
+                                                @RequestParam(defaultValue = "false") boolean forceAnalyze) {
         Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
-        Job job = jobService.fullAnalyze(jobId, profile.getUser().getId(), true, false, false);
+        Job job = jobService.fullAnalyze(jobId, profile.getUser().getId(), true, forceAnalyze, false);
         return ResponseEntity.ok(scrapedJobMapper.mapTo(job, profile));
     }
 
