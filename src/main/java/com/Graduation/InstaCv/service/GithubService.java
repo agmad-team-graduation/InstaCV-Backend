@@ -14,17 +14,16 @@ import com.Graduation.InstaCv.data.model.github.RepoSkill;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.exceptions.FetchErrorException;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
-import com.Graduation.InstaCv.gateways.github.GithubApiClient;
-import com.Graduation.InstaCv.gateways.github.GithubAuthClient;
 import com.Graduation.InstaCv.repository.GithubSkillRepository;
 import com.Graduation.InstaCv.repository.ProfileRepository;
 import com.Graduation.InstaCv.service.Interfaces.IGithubService;
 import com.Graduation.InstaCv.utils.SecurityUtils;
-import feign.FeignException;
 import io.netty.util.internal.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -34,8 +33,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class GithubService implements IGithubService {
-    private final GithubAuthClient githubAuthClient;
-    private final GithubApiClient githubApiClient;
     private final WebClient.Builder webClientBuilder;
 
     @Value("${github.client.id}")
@@ -53,9 +50,7 @@ public class GithubService implements IGithubService {
 
     private final UserService userService;
 
-    public GithubService(GithubAuthClient githubAuthClient, GithubApiClient githubApiClient, WebClient.Builder webClientBuilder, GithubSkillRepository githubSkillRepository, ProfileRepository profileRepository, UserService userService) {
-        this.githubAuthClient = githubAuthClient;
-        this.githubApiClient = githubApiClient;
+    public GithubService(WebClient.Builder webClientBuilder, GithubSkillRepository githubSkillRepository, ProfileRepository profileRepository, UserService userService) {
         this.webClientBuilder = webClientBuilder;
         this.githubSkillRepository = githubSkillRepository;
         this.profileRepository = profileRepository;
@@ -78,21 +73,6 @@ public class GithubService implements IGithubService {
         }
 
         String accessToken = tokenResponse.getAccessToken();
-        String tokenHeader = "token " + accessToken;
-        try {
-            return githubApiClient.getUser(tokenHeader);
-        } catch (FeignException.FeignClientException | WebClientResponseException e) {
-            logger.error("Error fetching user profile info: {}", e.getMessage());
-            throw new FetchErrorException("Failed to fetch GitHub profile info", e);
-        }
-    }
-
-    public GithubUserResponse getUserProfileInfo2(GithubAccessTokenResponse tokenResponse) {
-        if (tokenResponse == null || StringUtil.isNullOrEmpty(tokenResponse.getAccessToken())) {
-            throw new IllegalArgumentException("Access token is required to fetch GitHub profile info");
-        }
-
-        String accessToken = tokenResponse.getAccessToken();
 
         try {
             WebClient webClient = webClientBuilder.build();
@@ -104,7 +84,7 @@ public class GithubService implements IGithubService {
                     .bodyToMono(GithubUserResponse.class)
                     .block();
 
-        } catch (Exception e) {
+        } catch (WebClientResponseException e) {
             logger.error("Error fetching user profile info: {}", e.getMessage());
             throw new FetchErrorException("Failed to fetch GitHub profile info", e);
         }
@@ -116,7 +96,22 @@ public class GithubService implements IGithubService {
                 .clientSecret(clientSecret)
                 .code(code)
                 .build();
-        return githubAuthClient.getAccessToken(requestDto);
+        
+        try {
+            WebClient webClient = webClientBuilder.build();
+            
+            return webClient.post()
+                    .uri("https://github.com/login/oauth/access_token")
+                    .header("Accept", "application/json")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(requestDto)
+                    .retrieve()
+                    .bodyToMono(GithubAccessTokenResponse.class)
+                    .block();
+        } catch (Exception e) {
+            logger.error("Error exchanging code for access token: {}", e.getMessage());
+            throw new FetchErrorException("Failed to exchange code for access token", e);
+        }
     }
 
     public GithubProfile getUserProfile(GithubAccessTokenRequest request) {
@@ -144,8 +139,16 @@ public class GithubService implements IGithubService {
             }
 
             String accessToken = request.getAccessToken();
+            // Use WebClient instead of Feign client
             String tokenHeader = "token " + accessToken;
-            GithubUserResponse userDetails = githubApiClient.getUser(tokenHeader);
+            
+            WebClient webClient = webClientBuilder.build();
+            GithubUserResponse userDetails = webClient.get()
+                    .uri("https://api.github.com/user")
+                    .header("Authorization", tokenHeader)
+                    .retrieve()
+                    .bodyToMono(GithubUserResponse.class)
+                    .block();
 
             if (!userService.hasPhoto()) {
                 // Create a new UserPhoto with GitHub's avatar URL
@@ -197,7 +200,7 @@ public class GithubService implements IGithubService {
             profile.setGithubProfile(githubProfile);
 
             return profileRepository.save(profile).getGithubProfile();
-        } catch (FeignException.FeignClientException | WebClientResponseException e) {
+        } catch (WebClientResponseException e) {
             logger.error("Error fetching user profile: {}", e.getMessage());
             throw new FetchErrorException("Failed to fetch GitHub profile", e);
         }
@@ -235,8 +238,17 @@ public class GithubService implements IGithubService {
 
     private List<String> getLanguagesFromClient(String tokenHeader, String fullName) {
         try {
-            return new ArrayList<>(githubApiClient.getLanguages(tokenHeader, fullName).keySet());
-        } catch (FeignException.FeignClientException.NotFound e) {
+            WebClient webClient = webClientBuilder.build();
+            
+            Map<String, Long> languages = webClient.get()
+                    .uri("https://api.github.com/repos/" + fullName + "/languages")
+                    .header("Authorization", tokenHeader)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Long>>() {})
+                    .block();
+            
+            return new ArrayList<>(languages.keySet());
+        } catch (WebClientResponseException.NotFound e) {
             logger.warn("Languages not found for repository: {}", fullName);
             return Collections.emptyList();
         } catch (Exception e) {
@@ -250,9 +262,20 @@ public class GithubService implements IGithubService {
         final int perPage = 100; // Maximum allowed by GitHub API
         int currentPage = 1;
 
+        WebClient webClient = webClientBuilder.build();
+
         while (true) {
             try {
-                List<GithubRepoResponse> reposPage = githubApiClient.getRepos(tokenHeader, currentPage, perPage, "public");
+                String uri = String.format("https://api.github.com/user/repos?page=%d&per_page=%d&visibility=public", 
+                    currentPage, perPage);
+                
+                List<GithubRepoResponse> reposPage = webClient.get()
+                        .uri(uri)
+                        .header("Authorization", tokenHeader)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<List<GithubRepoResponse>>() {})
+                        .block();
+                
                 if (reposPage == null || reposPage.isEmpty()) break;
                 allRepos.addAll(reposPage);
                 if (reposPage.size() < perPage) break;

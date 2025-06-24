@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 import java.util.Map;
 
+// TODO: This will be removed, it's causing issues when sending the token!
 @FeignClient(name = "githubApiClient", url = "https://api.github.com")
 public interface GithubApiClient {
     @GetMapping("/user")

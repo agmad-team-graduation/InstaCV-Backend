@@ -47,7 +47,7 @@ public class GithubController {
     @GetMapping("/login-callback")
     public ResponseEntity<LoginResponse> loginCallback(@RequestParam String code) {
         GithubAccessTokenResponse tokenResponse = githubService.getAccessToken(code);
-        GithubUserResponse profileInfo = githubService.getUserProfileInfo2(tokenResponse);
+        GithubUserResponse profileInfo = githubService.getUserProfileInfo(tokenResponse);
         User user = authService.processOAuthPostLogin(
                 profileInfo.getEmail(),
                 profileInfo.getName(),
