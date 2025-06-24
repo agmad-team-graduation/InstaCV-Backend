@@ -14,6 +14,9 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface JobRepository extends JpaRepository<Job, Long> {
+
+    Page<Job> findJobsByProfileId(Long profileId, Pageable pageable);
+
     List<Job> findJobsByProfileId(Long profileId);
 
     Optional<Job> findJobByIdAndProfileId(Long jobId, Long profileId);
@@ -27,6 +30,9 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     @Query("SELECT j FROM Job j JOIN j.skillMatchingAnalyses a WHERE j.profile IS NULL AND a.profile.id = :profileId")
     List<Job> findAnalyzedScrapedJobsByProfileId(@Param("profileId") Long profileId);
+
+    @Query("SELECT j FROM Job j JOIN j.projectMatchingAnalyses a WHERE j.profile IS NULL AND a.profile.id = :profileId")
+    List<Job> findProjectAnalyzedScrapedJobsByProfileId(@Param("profileId") Long profileId);
 
     @Query("SELECT j FROM Job j JOIN j.skillMatchingAnalyses a WHERE j.profile IS NULL AND a.profile.id = :profileId")
     Page<Job> findAnalyzedScrapedJobsByProfileIdPaginated(@Param("profileId") Long profileId, Pageable pageable);
@@ -48,4 +54,10 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     @Query("SELECT j FROM Job j WHERE j.remoteJobData IS NOT NULL")
     Page<Job> findAllRemoteJobsPaginated(Pageable pageable);
+
+    @Query("SELECT COUNT(j) FROM Job j WHERE j.profile.user.id = :userId")
+    long countJobsByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT COUNT(j) FROM Job j WHERE j.profile.user.id = :userId AND j.addDate >= :fromDate")
+    long countJobsAddedAfterByUserId(@Param("userId") Long userId, @Param("fromDate") OffsetDateTime fromDate);
 }

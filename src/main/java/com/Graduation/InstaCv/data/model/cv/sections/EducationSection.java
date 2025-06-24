@@ -17,5 +17,6 @@ import java.util.List;
 public class EducationSection extends CvSection {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orderIndex ASC")
-    private List<EducationCv> items;
+    @Builder.Default
+    private List<EducationCv> items = List.of();
 } 

@@ -28,7 +28,6 @@ public class ExternalJobController {
     private final Mapper<Job, ScrapedJobSimpleDto> simpleScrapedJobMapper;
     private final ScrapedJobMapper scrapedJobMapper;
     private final ProfileService profileService;
-    private final JobsPaginationUtils jobsPaginationUtils;
 
     @GetMapping("/all")
     public ResponseEntity<PaginatedResponse<ScrapedJobSimpleDto>> getAllJobs(
@@ -36,7 +35,7 @@ public class ExternalJobController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "DATE") JobSortField sortField,
             @RequestParam(defaultValue = "desc") String direction) {
-        Pageable pageable = jobsPaginationUtils.buildPageable(page, size, sortField, direction);
+        Pageable pageable = JobsPaginationUtils.buildPageable(page, size, sortField, direction);
         Page<Job> jobsPage = storageService.getAllRemoteJobs(pageable);
         Page<ScrapedJobSimpleDto> dtoPage = jobsPage.map(simpleScrapedJobMapper::mapTo);
         return ResponseEntity.ok(new PaginatedResponse<>(dtoPage));
@@ -44,9 +43,10 @@ public class ExternalJobController {
 
 
     @GetMapping("/{jobId}")
-    public ResponseEntity<ScrapedJobDto> getJob(@PathVariable Long jobId) {
+    public ResponseEntity<ScrapedJobDto> getJob(@PathVariable Long jobId,
+                                                @RequestParam(defaultValue = "false") boolean forceAnalyze) {
         Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
-        Job job = jobService.fullAnalyze(jobId, profile.getUser().getId(), true, false, false);
+        Job job = jobService.fullAnalyze(jobId, profile.getUser().getId(), true, forceAnalyze, false);
         return ResponseEntity.ok(scrapedJobMapper.mapTo(job, profile));
     }
 
@@ -69,7 +69,7 @@ public class ExternalJobController {
             @RequestParam(defaultValue = "MATCH_SCORE") JobSortField sortField,
             @RequestParam(defaultValue = "desc") String direction) {
         Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
-        Pageable pageable = jobsPaginationUtils.buildPageable(page, size, sortField, direction);
+        Pageable pageable = JobsPaginationUtils.buildPageable(page, size, sortField, direction);
         Page<Job> jobPage = jobService.getRecommendedExternalJobsPaginated(profile.getId(), pageable, sortField);
         Page<ScrapedJobDto> dtoPage = jobPage.map(job -> scrapedJobMapper.mapTo(job, profile));
         return ResponseEntity.ok(new PaginatedResponse<>(dtoPage));

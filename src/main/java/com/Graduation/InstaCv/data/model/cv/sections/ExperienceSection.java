@@ -17,5 +17,6 @@ import java.util.List;
 public class ExperienceSection extends CvSection {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orderIndex ASC")
-    private List<ExperienceCv> items;
+    @Builder.Default
+    private List<ExperienceCv> items = List.of();
 } 

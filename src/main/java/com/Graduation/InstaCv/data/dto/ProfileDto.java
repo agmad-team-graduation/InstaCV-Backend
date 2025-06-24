@@ -19,4 +19,5 @@ public class ProfileDto {
     private List<Experience> experienceList;
     private List<UserSkill> userSkills;
     private List<Project> projects;
+    private boolean isGithubConnected = false;
 }

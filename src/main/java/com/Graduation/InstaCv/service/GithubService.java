@@ -7,23 +7,23 @@ import com.Graduation.InstaCv.data.dto.response.GithubUserResponse;
 import com.Graduation.InstaCv.data.dto.request.AccessTokenRequest;
 import com.Graduation.InstaCv.data.dto.response.GithubAccessTokenResponse;
 import com.Graduation.InstaCv.data.dto.response.GithubAuthLink;
+import com.Graduation.InstaCv.data.model.UserPhoto;
 import com.Graduation.InstaCv.data.model.github.GithubProfile;
 import com.Graduation.InstaCv.data.model.github.GithubRepository;
 import com.Graduation.InstaCv.data.model.github.RepoSkill;
 import com.Graduation.InstaCv.data.model.profile.Profile;
 import com.Graduation.InstaCv.exceptions.FetchErrorException;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
-import com.Graduation.InstaCv.gateways.github.GithubApiClient;
-import com.Graduation.InstaCv.gateways.github.GithubAuthClient;
 import com.Graduation.InstaCv.repository.GithubSkillRepository;
 import com.Graduation.InstaCv.repository.ProfileRepository;
 import com.Graduation.InstaCv.service.Interfaces.IGithubService;
 import com.Graduation.InstaCv.utils.SecurityUtils;
-import feign.FeignException;
 import io.netty.util.internal.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -33,8 +33,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class GithubService implements IGithubService {
-    private final GithubAuthClient githubAuthClient;
-    private final GithubApiClient githubApiClient;
     private final WebClient.Builder webClientBuilder;
 
     @Value("${github.client.id}")
@@ -43,24 +41,53 @@ public class GithubService implements IGithubService {
     private String clientSecret;
     @Value("${github.callback.url}")
     private String callbackUrl;
+    @Value("${github.login-callback.url}")
+    private String loginCallbackUrl;
 
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
     private final GithubSkillRepository githubSkillRepository;
     private final ProfileRepository profileRepository;
 
-    public GithubService(GithubAuthClient githubAuthClient, GithubApiClient githubApiClient, WebClient.Builder webClientBuilder, GithubSkillRepository githubSkillRepository, ProfileRepository profileRepository) {
-        this.githubAuthClient = githubAuthClient;
-        this.githubApiClient = githubApiClient;
+    private final UserService userService;
+
+    public GithubService(WebClient.Builder webClientBuilder, GithubSkillRepository githubSkillRepository, ProfileRepository profileRepository, UserService userService) {
         this.webClientBuilder = webClientBuilder;
         this.githubSkillRepository = githubSkillRepository;
         this.profileRepository = profileRepository;
+        this.userService = userService;
     }
 
-    public GithubAuthLink getAuthorizationUrl() {
+    public GithubAuthLink getAuthorizationUrl(boolean isLogin) {
         return GithubAuthLink.builder()
                 .authLink("https://github.com/login/oauth/authorize?client_id=" + clientId +
-                        "&scope=user,repo&redirect_uri=" + callbackUrl)
+                        "&scope=user,repo&redirect_uri="
+                        + (isLogin ? loginCallbackUrl : callbackUrl)
+                )
                 .build();
+    }
+
+    @Override
+    public GithubUserResponse getUserProfileInfo(GithubAccessTokenResponse tokenResponse) {
+        if (tokenResponse == null || StringUtil.isNullOrEmpty(tokenResponse.getAccessToken())) {
+            throw new IllegalArgumentException("Access token is required to fetch GitHub profile info");
+        }
+
+        String accessToken = tokenResponse.getAccessToken();
+
+        try {
+            WebClient webClient = webClientBuilder.build();
+
+            return webClient.get()
+                    .uri("https://api.github.com/user")
+                    .header("Authorization", "token " + accessToken)
+                    .retrieve()
+                    .bodyToMono(GithubUserResponse.class)
+                    .block();
+
+        } catch (WebClientResponseException e) {
+            logger.error("Error fetching user profile info: {}", e.getMessage());
+            throw new FetchErrorException("Failed to fetch GitHub profile info", e);
+        }
     }
 
     public GithubAccessTokenResponse getAccessToken(String code) {
@@ -69,10 +96,26 @@ public class GithubService implements IGithubService {
                 .clientSecret(clientSecret)
                 .code(code)
                 .build();
-        return githubAuthClient.getAccessToken(requestDto);
+        
+        try {
+            WebClient webClient = webClientBuilder.build();
+            
+            return webClient.post()
+                    .uri("https://github.com/login/oauth/access_token")
+                    .header("Accept", "application/json")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(requestDto)
+                    .retrieve()
+                    .bodyToMono(GithubAccessTokenResponse.class)
+                    .block();
+        } catch (Exception e) {
+            logger.error("Error exchanging code for access token: {}", e.getMessage());
+            throw new FetchErrorException("Failed to exchange code for access token", e);
+        }
     }
 
     public GithubProfile getUserProfile(GithubAccessTokenRequest request) {
+        boolean forceRefresh = request.isForceRefresh();
         try {
             Long userId = SecurityUtils.getCurrentUserDetails().getId();
             Profile profile = profileRepository.findByUserId(userId)
@@ -80,7 +123,7 @@ public class GithubService implements IGithubService {
 
             GithubProfile oldGithubProfile = profile.getGithubProfile();
 
-            if ((request == null || StringUtil.isNullOrEmpty(request.getAccessToken())) && oldGithubProfile != null)
+            if (!forceRefresh && oldGithubProfile != null)
                 // Make a copy to avoid lazy loading issues
                 return GithubProfile.builder()
                         .username(oldGithubProfile.getUsername())
@@ -91,10 +134,33 @@ public class GithubService implements IGithubService {
                         .skills(oldGithubProfile.getSkills())
                         .build();
 
-            assert request != null;
+            if (request == null || StringUtil.isNullOrEmpty(request.getAccessToken())) {
+                throw new IllegalArgumentException("Access token is required to fetch GitHub profile");
+            }
+
             String accessToken = request.getAccessToken();
+            // Use WebClient instead of Feign client
             String tokenHeader = "token " + accessToken;
-            GithubUserResponse userDetails = githubApiClient.getUser(tokenHeader);
+            
+            WebClient webClient = webClientBuilder.build();
+            GithubUserResponse userDetails = webClient.get()
+                    .uri("https://api.github.com/user")
+                    .header("Authorization", tokenHeader)
+                    .retrieve()
+                    .bodyToMono(GithubUserResponse.class)
+                    .block();
+
+            if (!userService.hasPhoto()) {
+                // Create a new UserPhoto with GitHub's avatar URL
+                UserPhoto githubPhoto = UserPhoto.builder()
+                        .user(userService.getCurrentUser())
+                        .photoUrl(userDetails.getAvatar_url())
+                        .photoFormat("url")  // Since it's a direct URL, not a file
+                        .uploadedAt(new Date())
+                        .build();
+                userService.saveUserPhoto(githubPhoto);
+            }
+
             // If accessToken is valid, we can fetch the user details and remove the old profile, else it throws error
             if (oldGithubProfile != null) {
                 profile.setGithubProfile(null);
@@ -124,6 +190,7 @@ public class GithubService implements IGithubService {
                                 .description(repo.getDescription())
                                 .languages(languages)
                                 .readmeContent(readmeContent)
+                                .htmlUrl(repo.getHtmlUrl())
                                 .build();
                     }).collect(Collectors.toList());
 
@@ -133,7 +200,7 @@ public class GithubService implements IGithubService {
             profile.setGithubProfile(githubProfile);
 
             return profileRepository.save(profile).getGithubProfile();
-        } catch (FeignException.FeignClientException | WebClientResponseException e) {
+        } catch (WebClientResponseException e) {
             logger.error("Error fetching user profile: {}", e.getMessage());
             throw new FetchErrorException("Failed to fetch GitHub profile", e);
         }
@@ -171,8 +238,17 @@ public class GithubService implements IGithubService {
 
     private List<String> getLanguagesFromClient(String tokenHeader, String fullName) {
         try {
-            return new ArrayList<>(githubApiClient.getLanguages(tokenHeader, fullName).keySet());
-        } catch (FeignException.FeignClientException.NotFound e) {
+            WebClient webClient = webClientBuilder.build();
+            
+            Map<String, Long> languages = webClient.get()
+                    .uri("https://api.github.com/repos/" + fullName + "/languages")
+                    .header("Authorization", tokenHeader)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Long>>() {})
+                    .block();
+            
+            return new ArrayList<>(languages.keySet());
+        } catch (WebClientResponseException.NotFound e) {
             logger.warn("Languages not found for repository: {}", fullName);
             return Collections.emptyList();
         } catch (Exception e) {
@@ -186,9 +262,20 @@ public class GithubService implements IGithubService {
         final int perPage = 100; // Maximum allowed by GitHub API
         int currentPage = 1;
 
+        WebClient webClient = webClientBuilder.build();
+
         while (true) {
             try {
-                List<GithubRepoResponse> reposPage = githubApiClient.getRepos(tokenHeader, currentPage, perPage, "public");
+                String uri = String.format("https://api.github.com/user/repos?page=%d&per_page=%d&visibility=public", 
+                    currentPage, perPage);
+                
+                List<GithubRepoResponse> reposPage = webClient.get()
+                        .uri(uri)
+                        .header("Authorization", tokenHeader)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<List<GithubRepoResponse>>() {})
+                        .block();
+                
                 if (reposPage == null || reposPage.isEmpty()) break;
                 allRepos.addAll(reposPage);
                 if (reposPage.size() < perPage) break;

@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
@@ -21,6 +22,7 @@ public class JobDto {
     private String title;
     private String company;
     private String description;
+    private OffsetDateTime addDate;
     private boolean isAnalyzed;
     private boolean isSkillMatchingAnalyzed;
     private SkillMatchingAnalysis skillMatchingAnalysis;

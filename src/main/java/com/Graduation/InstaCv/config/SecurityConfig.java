@@ -44,9 +44,11 @@ public class SecurityConfig {
             "/api/v1/email/send-verification",
             // Google OAuth endpoints
             "/api/auth/oauth2/authorize/**",
-
-
-            "/api/v1/jobs/allRemote"
+            "/api/v1/jobs/allRemote",
+            // Github OAuth endpoints
+            "/api/github/test/callback",
+            "/api/github/test/authorize",
+            "/api/github/test/login-callback",
     };
 
     @Bean

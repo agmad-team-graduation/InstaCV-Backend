@@ -1,13 +1,24 @@
 package com.Graduation.InstaCv.controller;
 
 import com.Graduation.InstaCv.data.dto.ProfileDto;
+import com.Graduation.InstaCv.data.model.BaseSkill;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.profile.Profile;
+import com.Graduation.InstaCv.data.model.profile.Project;
+import com.Graduation.InstaCv.data.model.profile.UserSkill;
 import com.Graduation.InstaCv.mappers.ContextAwareMapper;
+import com.Graduation.InstaCv.service.AiCvParserService;
 import com.Graduation.InstaCv.service.Interfaces.IProfileService;
 import com.Graduation.InstaCv.utils.SecurityUtils;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -15,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class ProfileController {
     private final IProfileService profileService;
     private final ContextAwareMapper<Profile, ProfileDto, User> profileMapper;
+    private final AiCvParserService aiCvParserService;
 
     @GetMapping("/me")
     public ProfileDto getProfile() {
@@ -22,6 +34,13 @@ public class ProfileController {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         Profile profile = profileService.getProfileByUserId(userId);
         return profileMapper.mapTo(profile);
+    }
+
+    @GetMapping("/me/skills")
+    public List<UserSkill> getSkills() {
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        Profile profile = profileService.getProfileByUserId(userId);
+        return profile.getUserSkills();
     }
 
     @PostMapping("/create")
@@ -36,9 +55,24 @@ public class ProfileController {
     public ProfileDto updateProfile(@RequestBody ProfileDto profileDto) {
         // Extract userId from the security context
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
-        Profile updatedProfile = profileService.updateProfile(userId, profileDto);
+        Profile updatedProfile = profileService.updateProfile(userId, profileDto, true);
         return profileMapper.mapTo(updatedProfile);
     }
+
+    @PutMapping("/add-skill")
+    public ProfileDto addSkillToProfile(@RequestBody UserSkill skill) {
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        Profile updatedProfile = profileService.addSkill(userId, skill);
+        return profileMapper.mapTo(updatedProfile);
+    }
+
+    @PutMapping("/add-project")
+    public ProfileDto addProjectToProfile(@RequestBody Project project) {
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        Profile updatedProfile = profileService.addProject(userId, project);
+        return profileMapper.mapTo(updatedProfile);
+    }
+
 
     @PutMapping("/add-github-skills")
     public ProfileDto addGithubSkillsIntoProfile() {
@@ -47,4 +81,23 @@ public class ProfileController {
         Profile updatedProfile = profileService.addGithubSkillsIntoProfile(userId);
         return profileMapper.mapTo(updatedProfile);
     }
+
+    @PostMapping("/upload-cv")
+    public ResponseEntity<ProfileDto> uploadCvAndCreateProfile(@RequestParam("file") MultipartFile file,
+                                                               @RequestParam("overwrite") boolean overwrite) {
+        try {
+            Long userId = SecurityUtils.getCurrentUserDetails().getId();
+            // Parse CV using AI
+            ProfileDto parsedProfile = aiCvParserService.parseCV(file);
+            // Update existing profile
+            Profile updatedProfile = profileService.updateProfile(userId, parsedProfile, overwrite);
+            return ResponseEntity.ok(profileMapper.mapTo(updatedProfile));
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to process CV");
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().<ProfileDto>build();
+        }
+    }
+
 }

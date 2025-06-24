@@ -21,6 +21,10 @@ public class UserSkillCv implements CvItem {
     @Enumerated(EnumType.STRING)
     private SkillLevel level;
 
+    @Column(name = "is_hidden")
+    @Builder.Default
+    private boolean isHidden = false;
+
     @Column(name = "order_index")
     private Integer orderIndex;
 }

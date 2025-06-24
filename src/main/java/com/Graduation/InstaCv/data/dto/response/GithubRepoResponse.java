@@ -12,4 +12,6 @@ public class GithubRepoResponse {
     @JsonProperty("full_name")
     private String fullName;
     private String description;
+    @JsonProperty("html_url")
+    private String htmlUrl;
 }

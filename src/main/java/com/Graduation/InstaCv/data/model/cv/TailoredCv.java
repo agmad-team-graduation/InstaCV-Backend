@@ -1,9 +1,6 @@
 package com.Graduation.InstaCv.data.model.cv;
 
-import com.Graduation.InstaCv.data.model.cv.sections.EducationSection;
-import com.Graduation.InstaCv.data.model.cv.sections.ExperienceSection;
-import com.Graduation.InstaCv.data.model.cv.sections.ProjectSection;
-import com.Graduation.InstaCv.data.model.cv.sections.SkillSection;
+import com.Graduation.InstaCv.data.model.cv.sections.*;
 import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.data.model.profile.PersonalDetails;
 import com.Graduation.InstaCv.data.model.profile.Profile;
@@ -26,6 +23,8 @@ public class TailoredCv {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String cvTitle;
+
     @ManyToOne
     @JoinColumn(name = "profile_id", referencedColumnName = "id")
     private Profile profile;
@@ -37,7 +36,8 @@ public class TailoredCv {
     @Embedded
     private PersonalDetails personalDetails;
 
-    private String summary;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private SummarySection summarySection;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private EducationSection educationSection;

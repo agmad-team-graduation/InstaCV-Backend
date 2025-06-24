@@ -34,4 +34,5 @@ public class GithubRepository {
     private List<RepoSkill> languages;
     @Column(length = 100000)
     private String readmeContent;
+    private String htmlUrl;
 }

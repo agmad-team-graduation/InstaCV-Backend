@@ -14,5 +14,7 @@ public class UserDto {
     private Long id;
     private String name;
     private String email;
-    private ProfileDto profile;
+    private String photoUrl;
+    private boolean isProfileCreated;
+    private boolean isGithubConnected;
 }

@@ -36,7 +36,7 @@ public class Project {
 
     @Column(name = "is_present")
     private boolean isPresent;
-
+    @Column(length = 20480)
     private String description;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)

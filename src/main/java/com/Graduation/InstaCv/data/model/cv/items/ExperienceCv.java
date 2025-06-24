@@ -29,6 +29,11 @@ public class ExperienceCv implements CvItem {
     @Column(name = "is_present")
     private boolean isPresent;
 
+    @Column(name = "is_hidden")
+    @Builder.Default
+    private boolean isHidden = false;
+
+    @Column(name = "description", length = 4000)
     private String description;
 
     @Column(name = "order_index")

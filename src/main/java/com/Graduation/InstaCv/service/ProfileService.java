@@ -78,7 +78,7 @@ public class ProfileService implements IProfileService {
     }
 
     @Override
-    public Profile updateProfile(Long userId, ProfileDto updatedProfile) {
+    public Profile updateProfile(Long userId, ProfileDto updatedProfile, boolean overwrite) {
         Profile existingProfile = getProfileByUserId(userId);
         if (existingProfile == null)
             throw new ResourceNotFoundException("Profile not found for user to update with id " + userId);
@@ -88,7 +88,7 @@ public class ProfileService implements IProfileService {
 
         if (updatedProfile.getEducationList() != null) {
             List<Education> existingEducationList = existingProfile.getEducationList();
-            existingEducationList.clear();
+            if (overwrite) existingEducationList.clear();
             updatedProfile.getEducationList().forEach(education -> {
                 education.setId(null);
                 education.setProfile(existingProfile);
@@ -97,7 +97,7 @@ public class ProfileService implements IProfileService {
         }
         if (updatedProfile.getExperienceList() != null) {
             List<Experience> existingExperienceList = existingProfile.getExperienceList();
-            existingExperienceList.clear();
+            if (overwrite) existingExperienceList.clear();
             updatedProfile.getExperienceList().forEach(experience -> {
                 experience.setId(null);
                 experience.setProfile(existingProfile);
@@ -125,8 +125,28 @@ public class ProfileService implements IProfileService {
         }
 
         if (updatedProfile.getProjects() != null) {
+            // remove project skills usages in projectAnalysis, and any job
+            List<Job> profileJobs = jobRepository.findJobsByProfileId(existingProfile.getId());
+            for (Job job : profileJobs) {
+                job.getProjectMatchingAnalyses().clear();
+            }
+            jobRepository.saveAll(profileJobs);
+            // TODO: Remove all matching for external jobs also, Test it
+            List<Job> analyzedScrapedJobsByProfileId = jobRepository.findProjectAnalyzedScrapedJobsByProfileId(existingProfile.getId());
+            for (Job job : analyzedScrapedJobsByProfileId) {
+                job.getProjectMatchingAnalyses().remove(
+                        job.getProjectMatchingAnalyses().stream()
+                                .filter(analysis -> analysis.getProfile().getId().equals(existingProfile.getId()))
+                                .findFirst()
+                                .orElse(null)
+                );
+            }
+            jobRepository.saveAll(analyzedScrapedJobsByProfileId);
+        }
+
+        if (updatedProfile.getProjects() != null) {
             List<Project> existingProjects = existingProfile.getProjects();
-            existingProjects.clear();
+            if (overwrite) existingProjects.clear();
             updatedProfile.getProjects().forEach(project -> {
                 project.setId(null);
                 project.setProfile(existingProfile);
@@ -141,7 +161,7 @@ public class ProfileService implements IProfileService {
         }
         if (updatedProfile.getUserSkills() != null) {
             List<UserSkill> existingUserSkills = existingProfile.getUserSkills();
-            existingUserSkills.clear();
+            if (overwrite) existingUserSkills.clear();
             updatedProfile.getUserSkills().forEach(userSkill -> {
                 userSkill.setId(null);
                 userSkill.setProfile(existingProfile);
@@ -181,5 +201,75 @@ public class ProfileService implements IProfileService {
 
         // Save the updated profile
         return profileRepository.save(profile);
+    }
+
+    @Override
+    public Profile addSkill(Long userId, UserSkill skill) {
+        // Fetch the user's profile
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id " + userId));
+
+        // Check if the skill already exists in the profile
+        boolean skillExists = profile.getUserSkills().stream()
+                .anyMatch(existingSkill -> existingSkill.getSkill().equalsIgnoreCase(skill.getSkill()));
+
+        if (skillExists) {
+            throw new IllegalStateException("Skill already exists in the profile");
+        }
+
+        // Set the profile for the new skill
+        skill.setProfile(profile);
+        skill.setId(null); // Ensure the ID is null for a new entry
+
+        // Add the new skill to the profile
+        profile.getUserSkills().add(skill);
+
+        // Save the updated profile
+        return profileRepository.save(profile);
+    }
+
+    @Override
+    public Profile addProject(Long userId, Project project) {
+        // Fetch the user's profile
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id " + userId));
+
+        // Set the profile for the new project
+        project.setProfile(profile);
+        project.setId(null); // Ensure the ID is null for a new entry
+
+        // Initialize skills if they are null
+        if (project.getSkills() == null) {
+            project.setSkills(List.of());
+        }
+
+        project.getSkills().forEach(skill -> {
+            skill.setProject(project);
+            skill.setId(null); // Ensure the ID is null for a new entry
+        });
+
+        // Add the new project to the profile
+        profile.getProjects().add(project);
+
+        // Save the updated profile
+        return profileRepository.save(profile);
+    }
+
+    @Override
+    public void deleteGithubProfile(Long userId) {
+        // Fetch the user's profile
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user with id " + userId));
+
+        // Check if the GitHub profile exists
+        if (profile.getGithubProfile() == null) {
+            throw new IllegalStateException("GitHub profile does not exist for user with id " + userId);
+        }
+
+        // Remove the GitHub profile from the user's profile
+        profile.setGithubProfile(null);
+
+        // Save the updated profile
+        profileRepository.save(profile);
     }
 }

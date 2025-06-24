@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.OffsetDateTime;
+
 
 @Data
 @Builder
@@ -16,4 +18,5 @@ public class JobSimpleDto {
     private String title;
     private String company;
     private String description;
+    private OffsetDateTime addDate;
 }

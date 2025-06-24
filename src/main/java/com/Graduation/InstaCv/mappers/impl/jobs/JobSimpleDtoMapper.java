@@ -14,6 +14,7 @@ public class JobSimpleDtoMapper implements ContextAwareMapper<Job, JobSimpleDto,
                 .id(job.getId())
                 .profileId(job.getProfile().getId())
                 .title(job.getTitle())
+                .addDate(job.getAddDate())
                 .company(job.getCompany())
                 .description(job.getDescription())
                 .build();
@@ -25,6 +26,7 @@ public class JobSimpleDtoMapper implements ContextAwareMapper<Job, JobSimpleDto,
                 .id(jobSimpleDto.getId())
                 .profile(profile)
                 .title(jobSimpleDto.getTitle())
+                .addDate(jobSimpleDto.getAddDate())
                 .company(jobSimpleDto.getCompany())
                 .description(jobSimpleDto.getDescription())
                 .build();

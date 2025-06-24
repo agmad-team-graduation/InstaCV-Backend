@@ -21,6 +21,7 @@ public class ProfileMapper implements ContextAwareMapper<Profile, ProfileDto, Us
                 .experienceList(profile.getExperienceList())
                 .userSkills(profile.getUserSkills())
                 .projects(profile.getProjects())
+                .isGithubConnected(profile.getGithubProfile() != null)
                 .build();
     }
 
