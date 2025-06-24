@@ -3,6 +3,7 @@ package com.Graduation.InstaCv.service.Interfaces;
 import com.Graduation.InstaCv.data.dto.request.GithubAccessTokenRequest;
 import com.Graduation.InstaCv.data.dto.response.GithubAccessTokenResponse;
 import com.Graduation.InstaCv.data.dto.response.GithubAuthLink;
+import com.Graduation.InstaCv.data.dto.response.GithubUserResponse;
 import com.Graduation.InstaCv.data.model.github.GithubProfile;
 
 public interface IGithubService {
@@ -10,5 +11,7 @@ public interface IGithubService {
 
     GithubAccessTokenResponse getAccessToken(String code);
 
-    GithubAuthLink getAuthorizationUrl();
+    GithubAuthLink getAuthorizationUrl(boolean isAuth);
+
+    GithubUserResponse getUserProfileInfo(GithubAccessTokenResponse tokenResponse);
 }
