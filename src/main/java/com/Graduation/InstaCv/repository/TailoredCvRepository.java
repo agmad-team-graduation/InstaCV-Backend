@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,4 +17,10 @@ public interface TailoredCvRepository extends JpaRepository<TailoredCv, Long> {
     @Modifying
     @Query("UPDATE TailoredCv t SET t.cvTitle = :title WHERE t.id = :id")
     void updateCvTitle(@Param("id") Long id, @Param("title") String title);
+
+    @Query("SELECT COUNT(t) FROM TailoredCv t WHERE t.profile.user.id = :userId")
+    long countByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT COUNT(t) FROM TailoredCv t WHERE t.profile.user.id = :userId AND t.createdAt >= :fromDate")
+    long countCvsCreatedAfterByUserId(@Param("userId") Long userId, @Param("fromDate") LocalDateTime fromDate);
 }
