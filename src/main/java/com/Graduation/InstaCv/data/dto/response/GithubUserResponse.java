@@ -11,4 +11,5 @@ public class GithubUserResponse {
     private String name;
     private String bio;
     private String avatar_url;
+    private String email;
 }

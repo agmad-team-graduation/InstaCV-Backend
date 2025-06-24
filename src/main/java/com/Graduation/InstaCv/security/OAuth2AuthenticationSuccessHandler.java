@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.security;
 
 import com.Graduation.InstaCv.config.FrontendProperties;
+import com.Graduation.InstaCv.data.enums.AuthProvider;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,7 +33,7 @@ public class OAuth2AuthenticationSuccessHandler
                                         Authentication authentication) throws IOException {
         OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
         // 1. register or fetch local user
-        User user = authService.processOAuthPostLogin(oauthUser.getAttribute("email"), oauthUser.getAttribute("name"));
+        User user = authService.processOAuthPostLogin(oauthUser.getAttribute("email"), oauthUser.getAttribute("name"), AuthProvider.GOOGLE); // only Google for now
         // 2. generate JWT
         String token = authService.generateToken(new UserDetailsImpl(UserDetailsInfo.builder()
                 .id(user.getId())
@@ -44,6 +45,7 @@ public class OAuth2AuthenticationSuccessHandler
                 .fromUriString(frontendProps.getOauth2SuccessUrl())
                 .queryParam("token", token)
                 .queryParam("expiresIn", expiration)
+                .queryParam("provider", "google") // only Google for now
                 .build().toUriString();
 
         response.sendRedirect(redirectUrl);

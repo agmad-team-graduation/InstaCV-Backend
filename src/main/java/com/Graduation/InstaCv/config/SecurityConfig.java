@@ -47,6 +47,8 @@ public class SecurityConfig {
             "/api/v1/jobs/allRemote",
             // Github OAuth endpoints
             "/api/github/test/callback",
+            "/api/github/test/authorize",
+            "/api/github/test/login-callback",
     };
 
     @Bean

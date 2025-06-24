@@ -44,6 +44,8 @@ public class GithubService implements IGithubService {
     private String clientSecret;
     @Value("${github.callback.url}")
     private String callbackUrl;
+    @Value("${github.login-callback.url}")
+    private String loginCallbackUrl;
 
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
     private final GithubSkillRepository githubSkillRepository;
@@ -60,11 +62,52 @@ public class GithubService implements IGithubService {
         this.userService = userService;
     }
 
-    public GithubAuthLink getAuthorizationUrl() {
+    public GithubAuthLink getAuthorizationUrl(boolean isLogin) {
         return GithubAuthLink.builder()
                 .authLink("https://github.com/login/oauth/authorize?client_id=" + clientId +
-                        "&scope=user,repo&redirect_uri=" + callbackUrl)
+                        "&scope=user,repo&redirect_uri="
+                        + (isLogin ? loginCallbackUrl : callbackUrl)
+                )
                 .build();
+    }
+
+    @Override
+    public GithubUserResponse getUserProfileInfo(GithubAccessTokenResponse tokenResponse) {
+        if (tokenResponse == null || StringUtil.isNullOrEmpty(tokenResponse.getAccessToken())) {
+            throw new IllegalArgumentException("Access token is required to fetch GitHub profile info");
+        }
+
+        String accessToken = tokenResponse.getAccessToken();
+        String tokenHeader = "token " + accessToken;
+        try {
+            return githubApiClient.getUser(tokenHeader);
+        } catch (FeignException.FeignClientException | WebClientResponseException e) {
+            logger.error("Error fetching user profile info: {}", e.getMessage());
+            throw new FetchErrorException("Failed to fetch GitHub profile info", e);
+        }
+    }
+
+    public GithubUserResponse getUserProfileInfo2(GithubAccessTokenResponse tokenResponse) {
+        if (tokenResponse == null || StringUtil.isNullOrEmpty(tokenResponse.getAccessToken())) {
+            throw new IllegalArgumentException("Access token is required to fetch GitHub profile info");
+        }
+
+        String accessToken = tokenResponse.getAccessToken();
+
+        try {
+            WebClient webClient = webClientBuilder.build();
+
+            return webClient.get()
+                    .uri("https://api.github.com/user")
+                    .header("Authorization", "token " + accessToken)
+                    .retrieve()
+                    .bodyToMono(GithubUserResponse.class)
+                    .block();
+
+        } catch (Exception e) {
+            logger.error("Error fetching user profile info: {}", e.getMessage());
+            throw new FetchErrorException("Failed to fetch GitHub profile info", e);
+        }
     }
 
     public GithubAccessTokenResponse getAccessToken(String code) {
