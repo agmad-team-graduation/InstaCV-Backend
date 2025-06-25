@@ -77,13 +77,41 @@ public class GithubService implements IGithubService {
         try {
             WebClient webClient = webClientBuilder.build();
 
-            return webClient.get()
+            // Fetch user profile
+            GithubUserResponse userResponse = webClient.get()
                     .uri("https://api.github.com/user")
                     .header("Authorization", "token " + accessToken)
                     .retrieve()
                     .bodyToMono(GithubUserResponse.class)
                     .block();
 
+            // If email is null, fetch from /user/emails
+            if (userResponse != null && (userResponse.getEmail() == null || userResponse.getEmail().isEmpty())) {
+                List<Map<String, Object>> emails = webClient.get()
+                        .uri("https://api.github.com/user/emails")
+                        .header("Authorization", "token " + accessToken)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
+                        .block();
+                if (emails != null) {
+                    // Find the primary, verified email
+                    String primaryEmail = emails.stream()
+                            .filter(e -> Boolean.TRUE.equals(e.get("primary")) && Boolean.TRUE.equals(e.get("verified")))
+                            .map(e -> (String) e.get("email"))
+                            .findFirst()
+                            .orElse(null);
+                    if (primaryEmail == null) {
+                        // fallback: any verified email
+                        primaryEmail = emails.stream()
+                                .filter(e -> Boolean.TRUE.equals(e.get("verified")))
+                                .map(e -> (String) e.get("email"))
+                                .findFirst()
+                                .orElse(null);
+                    }
+                    userResponse.setEmail(primaryEmail);
+                }
+            }
+            return userResponse;
         } catch (WebClientResponseException e) {
             logger.error("Error fetching user profile info: {}", e.getMessage());
             throw new FetchErrorException("Failed to fetch GitHub profile info", e);

@@ -50,7 +50,7 @@ public class GithubController {
         GithubUserResponse profileInfo = githubService.getUserProfileInfo(tokenResponse);
         User user = authService.processOAuthPostLogin(
                 profileInfo.getEmail(),
-                profileInfo.getName(),
+                profileInfo.getName() != null ? profileInfo.getName() : profileInfo.getLogin(),
                 AuthProvider.GITHUB
         );
         String token = authService.generateToken(new UserDetailsImpl(UserDetailsInfo.builder()
