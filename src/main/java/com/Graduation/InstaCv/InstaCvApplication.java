@@ -14,5 +14,4 @@ public class InstaCvApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(InstaCvApplication.class, args);
 	}
-
 }
