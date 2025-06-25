@@ -44,7 +44,7 @@ public class JobService implements IJobService {
         job.setId(null);
         job.setProfile(profile);
         job.setAddDate(java.time.OffsetDateTime.now());
-        jobThroughLLM(job);
+//        jobThroughLLM(job);
         return jobRepository.save(job);
     }
 
