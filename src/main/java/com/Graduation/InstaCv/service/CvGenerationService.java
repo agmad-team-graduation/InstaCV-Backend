@@ -104,12 +104,12 @@ public class CvGenerationService implements ICvGenerationService {
                 .filter(skill -> matchedSkills.stream().noneMatch(matchedSkill -> matchedSkill.getUserSkill().getId().equals(skill.getId())))
                 .toList();
         // Add unmatched skills to the skill section, but hide them
-        tailoredCv.getSkillSection().getItems().addAll(
-                unmatchedSkills.stream()
-                        .map(userSkillCvMapper::mapFrom)
-                        .peek(skill -> skill.setHidden(true))
-                        .toList()
-        );
+//        tailoredCv.getSkillSection().getItems().addAll(
+//                unmatchedSkills.stream()
+//                        .map(userSkillCvMapper::mapFrom)
+//                        .peek(skill -> skill.setHidden(true))
+//                        .toList()
+//        );
 
 
         // Sort experiences by date
