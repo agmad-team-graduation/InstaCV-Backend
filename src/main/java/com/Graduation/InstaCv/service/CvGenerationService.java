@@ -92,11 +92,24 @@ public class CvGenerationService implements ICvGenerationService {
 
         // convert to UserSkillCv
         tailoredCv.setSkillSection(
-                SkillSection.builder().items(
-                        tailoredSkills.stream().
-                                map(userSkillCvMapper::mapFrom).
-                                toList()
-                ).sectionTitle("Skills").build());
+                SkillSection.builder().sectionTitle("Skills").build()
+        );
+        tailoredCv.getSkillSection().getItems().addAll(
+                tailoredSkills.stream().
+                        map(userSkillCvMapper::mapFrom).
+                        toList()
+        );
+
+        List<UserSkill> unmatchedSkills = profile.getUserSkills().stream()
+                .filter(skill -> matchedSkills.stream().noneMatch(matchedSkill -> matchedSkill.getUserSkill().getId().equals(skill.getId())))
+                .toList();
+        // Add unmatched skills to the skill section, but hide them
+        tailoredCv.getSkillSection().getItems().addAll(
+                unmatchedSkills.stream()
+                        .map(userSkillCvMapper::mapFrom)
+                        .peek(skill -> skill.setHidden(true))
+                        .toList()
+        );
 
 
         // Sort experiences by date
@@ -609,7 +622,7 @@ public class CvGenerationService implements ICvGenerationService {
         // Set order index for sections
         setOrderIndexOfSections(tailoredCv);
 
-        tailoredCv.setCvTitle("Resume # NEW" );
+        tailoredCv.setCvTitle("Resume # NEW");
         tailoredCv = tailoredCvRepository.save(tailoredCv);
         tailoredCvRepository.updateCvTitle(tailoredCv.getId(), "Resume #" + tailoredCv.getId());
 
