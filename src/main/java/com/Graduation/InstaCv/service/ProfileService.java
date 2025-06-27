@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.service;
 
 import com.Graduation.InstaCv.data.dto.ProfileDto;
+import com.Graduation.InstaCv.data.dto.response.UserSkillWithPercentageResponse;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.github.RepoSkill;
 import com.Graduation.InstaCv.data.model.job.Job;
@@ -271,5 +272,26 @@ public class ProfileService implements IProfileService {
 
         // Save the updated profile
         profileRepository.save(profile);
+    }
+
+    public List<UserSkillWithPercentageResponse> getUserSkillsWithMarketDemand(Long userId) {
+        Profile profile = getProfileByUserId(userId);
+        List<UserSkill> userSkills = profile.getUserSkills();
+        
+        long totalJobs = jobRepository.countAllJobs();
+        
+        return userSkills.stream()
+                .map(userSkill -> {
+                    long jobsWithSkill = jobRepository.countJobsContainingSkill(userSkill.getSkill());
+                    double percentage = totalJobs > 0 ? (double) jobsWithSkill / totalJobs * 100 : 0.0;
+                    
+                    return UserSkillWithPercentageResponse.builder()
+                            .id(userSkill.getId())
+                            .skill(userSkill.getSkill())
+                            .level(userSkill.getLevel())
+                            .marketDemandPercentage(Math.round(percentage * 100.0) / 100.0) // Round to 2 decimal places
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }
