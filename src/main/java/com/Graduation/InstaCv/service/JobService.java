@@ -164,6 +164,7 @@ public class JobService implements IJobService {
     // TODO: Just see how to handle with external jobs, I don't like this function, make it safe even if extractSkills returned newthings
     public Job analyzeSkillsMatchingNoSave(Job job, Profile profile, boolean forceAnalyze) {
         if (!forceAnalyze && jobRepository.existsJobSkillMatchingAnalysis(job.getId(), profile.getId())) return job;
+        job.getSkillMatchingAnalyses().removeIf(analysis -> analysis.getProfile().equals(profile));
         job.getSkillMatchingAnalyses().add(jobSkillService.analyzeSkillsMatching(job, profile.getUser()));
         job.getSkillMatchingAnalyses().getLast().setJob(job);
         job.getSkillMatchingAnalyses().getLast().setProfile(profile);
