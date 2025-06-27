@@ -269,7 +269,13 @@ public class JobService implements IJobService {
 
     public InterviewQuestionsResponse generateInterviewQuestions(Long jobId, Integer numberOfQuestions, Long userId) {
         // Get the job and verify ownership
-        Job job = getJobByIdAndUserId(jobId, userId);
+        Job job;
+        try {
+            job = getJobByIdAndUserId(jobId, userId);
+        } catch (ResourceNotFoundException e) {
+            job = jobRepository.findJobByIdAndProfileIsNull(jobId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId + " for user with id: " + userId));
+        }
 
         String systemPrompt = """
                 You are an expert HR professional and technical interviewer. Your task is to generate relevant interview questions for a specific job based on its description.
