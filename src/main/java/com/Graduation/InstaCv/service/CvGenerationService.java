@@ -162,6 +162,9 @@ public class CvGenerationService implements ICvGenerationService {
                         .build()
         );
 
+        // Initialize CvSettings
+        tailoredCv.setCvSettings(CvSettings.builder().build());
+
         // Set order index
         setOrderIndex(
                 tailoredCv.getEducationSection().getItems().stream()
@@ -227,6 +230,7 @@ public class CvGenerationService implements ICvGenerationService {
             tailoredCv.setExperienceSection(ExperienceSection.builder().sectionTitle("Experience").build());
             tailoredCv.setEducationSection(EducationSection.builder().sectionTitle("Education").build());
             tailoredCv.setProjectSection(ProjectSection.builder().sectionTitle("Projects").build());
+            tailoredCv.setCvSettings(CvSettings.builder().build());
             setOrderIndexOfSections(tailoredCv);
 
             tailoredCv = tailoredCvRepository.save(tailoredCv);
@@ -294,6 +298,9 @@ public class CvGenerationService implements ICvGenerationService {
                         .sectionTitle("Summary")
                         .build()
         );
+
+        // Initialize CvSettings
+        tailoredCv.setCvSettings(CvSettings.builder().build());
 
         // Set order index
         setOrderIndex(
@@ -437,6 +444,12 @@ public class CvGenerationService implements ICvGenerationService {
             });
             validateOrSetOrderIndex(tailoredCv.getProjectSection().getItems().stream().map(e -> (CvItem) e).toList());
         }
+        
+        if (tailoredCvDto.getCvSettings() != null) {
+            if (tailoredCv.getCvSettings() == null) tailoredCv.setCvSettings(new CvSettings());
+            tailoredCv.getCvSettings().setTemplate(tailoredCvDto.getCvSettings().getTemplate());
+        }
+        
         // Validate or set order index of sections
         validateOrSetOrderIndexOfSections(tailoredCv);
         // Set created and updated timestamps
@@ -585,6 +598,9 @@ public class CvGenerationService implements ICvGenerationService {
                         .sectionTitle("Summary")
                         .build()
         );
+
+        // Initialize CvSettings
+        tailoredCv.setCvSettings(CvSettings.builder().build());
 
         // Set order index for items
         if (tailoredCv.getEducationSection() != null && tailoredCv.getEducationSection().getItems() != null) {

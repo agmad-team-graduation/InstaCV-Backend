@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.data.dto;
 
+import com.Graduation.InstaCv.data.model.cv.CvSettings;
 import com.Graduation.InstaCv.data.model.cv.sections.*;
 import com.Graduation.InstaCv.data.model.profile.PersonalDetails;
 import lombok.AllArgsConstructor;
@@ -24,6 +25,7 @@ public class TailoredCvDto {
     private ExperienceSection experienceSection;
     private SkillSection skillSection;
     private ProjectSection projectSection;
+    private CvSettings cvSettings;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Map<String, Integer> sectionsOrder;

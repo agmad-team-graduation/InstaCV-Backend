@@ -31,6 +31,7 @@ public class TailoredCvMapper implements ContextAwareMapper<TailoredCv, Tailored
                 .skillSection(tailoredCv.getSkillSection())
                 .projectSection(tailoredCv.getProjectSection())
                 .summarySection(tailoredCv.getSummarySection())
+                .cvSettings(tailoredCv.getCvSettings())
                 .createdAt(tailoredCv.getCreatedAt())
                 .updatedAt(tailoredCv.getUpdatedAt())
                 .sectionsOrder(sectionsOrder);
@@ -50,6 +51,7 @@ public class TailoredCvMapper implements ContextAwareMapper<TailoredCv, Tailored
                 .skillSection(tailoredCvDto.getSkillSection())
                 .projectSection(tailoredCvDto.getProjectSection())
                 .summarySection(tailoredCvDto.getSummarySection())
+                .cvSettings(tailoredCvDto.getCvSettings())
                 .createdAt(tailoredCvDto.getCreatedAt())
                 .updatedAt(tailoredCvDto.getUpdatedAt())
                 .build();
