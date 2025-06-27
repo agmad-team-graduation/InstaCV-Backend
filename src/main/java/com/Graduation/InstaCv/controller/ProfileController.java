@@ -1,6 +1,7 @@
 package com.Graduation.InstaCv.controller;
 
 import com.Graduation.InstaCv.data.dto.ProfileDto;
+import com.Graduation.InstaCv.data.dto.response.UserSkillWithPercentageResponse;
 import com.Graduation.InstaCv.data.model.BaseSkill;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.profile.Profile;
@@ -9,6 +10,7 @@ import com.Graduation.InstaCv.data.model.profile.UserSkill;
 import com.Graduation.InstaCv.mappers.ContextAwareMapper;
 import com.Graduation.InstaCv.service.AiCvParserService;
 import com.Graduation.InstaCv.service.Interfaces.IProfileService;
+import com.Graduation.InstaCv.service.ProfileService;
 import com.Graduation.InstaCv.utils.SecurityUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,7 @@ import java.util.Map;
 @RequestMapping(path = "/api/v1/profiles/")
 public class ProfileController {
     private final IProfileService profileService;
+    private final ProfileService concreteProfileService;
     private final ContextAwareMapper<Profile, ProfileDto, User> profileMapper;
     private final AiCvParserService aiCvParserService;
 
@@ -37,10 +40,9 @@ public class ProfileController {
     }
 
     @GetMapping("/me/skills")
-    public List<UserSkill> getSkills() {
+    public List<UserSkillWithPercentageResponse> getSkills() {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
-        Profile profile = profileService.getProfileByUserId(userId);
-        return profile.getUserSkills();
+        return concreteProfileService.getUserSkillsWithMarketDemand(userId);
     }
 
     @PostMapping("/create")

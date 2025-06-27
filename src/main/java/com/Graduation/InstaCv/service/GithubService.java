@@ -77,13 +77,46 @@ public class GithubService implements IGithubService {
         try {
             WebClient webClient = webClientBuilder.build();
 
-            return webClient.get()
+            // Fetch user profile
+            GithubUserResponse userResponse = webClient.get()
                     .uri("https://api.github.com/user")
                     .header("Authorization", "token " + accessToken)
                     .retrieve()
                     .bodyToMono(GithubUserResponse.class)
                     .block();
 
+            if (userResponse.getLogin() != null && profileRepository.existsByGithubProfileUsername(userResponse.getLogin())) {
+                throw new FetchErrorException("GitHub profile with username " + userResponse.getLogin() + " already exists");
+            }
+
+            // If email is null, fetch from /user/emails
+            if (userResponse != null && (userResponse.getEmail() == null || userResponse.getEmail().isEmpty())) {
+                List<Map<String, Object>> emails = webClient.get()
+                        .uri("https://api.github.com/user/emails")
+                        .header("Authorization", "token " + accessToken)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {
+                        })
+                        .block();
+                if (emails != null) {
+                    // Find the primary, verified email
+                    String primaryEmail = emails.stream()
+                            .filter(e -> Boolean.TRUE.equals(e.get("primary")) && Boolean.TRUE.equals(e.get("verified")))
+                            .map(e -> (String) e.get("email"))
+                            .findFirst()
+                            .orElse(null);
+                    if (primaryEmail == null) {
+                        // fallback: any verified email
+                        primaryEmail = emails.stream()
+                                .filter(e -> Boolean.TRUE.equals(e.get("verified")))
+                                .map(e -> (String) e.get("email"))
+                                .findFirst()
+                                .orElse(null);
+                    }
+                    userResponse.setEmail(primaryEmail);
+                }
+            }
+            return userResponse;
         } catch (WebClientResponseException e) {
             logger.error("Error fetching user profile info: {}", e.getMessage());
             throw new FetchErrorException("Failed to fetch GitHub profile info", e);
@@ -96,10 +129,10 @@ public class GithubService implements IGithubService {
                 .clientSecret(clientSecret)
                 .code(code)
                 .build();
-        
+
         try {
             WebClient webClient = webClientBuilder.build();
-            
+
             return webClient.post()
                     .uri("https://github.com/login/oauth/access_token")
                     .header("Accept", "application/json")
@@ -141,7 +174,7 @@ public class GithubService implements IGithubService {
             String accessToken = request.getAccessToken();
             // Use WebClient instead of Feign client
             String tokenHeader = "token " + accessToken;
-            
+
             WebClient webClient = webClientBuilder.build();
             GithubUserResponse userDetails = webClient.get()
                     .uri("https://api.github.com/user")
@@ -149,6 +182,10 @@ public class GithubService implements IGithubService {
                     .retrieve()
                     .bodyToMono(GithubUserResponse.class)
                     .block();
+
+            if (userDetails.getLogin() != null && profileRepository.existsByGithubProfileUsername(userDetails.getLogin())) {
+                throw new FetchErrorException("GitHub profile with username " + userDetails.getLogin() + " already exists");
+            }
 
             if (!userService.hasPhoto()) {
                 // Create a new UserPhoto with GitHub's avatar URL
@@ -239,14 +276,15 @@ public class GithubService implements IGithubService {
     private List<String> getLanguagesFromClient(String tokenHeader, String fullName) {
         try {
             WebClient webClient = webClientBuilder.build();
-            
+
             Map<String, Long> languages = webClient.get()
                     .uri("https://api.github.com/repos/" + fullName + "/languages")
                     .header("Authorization", tokenHeader)
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<Map<String, Long>>() {})
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Long>>() {
+                    })
                     .block();
-            
+
             return new ArrayList<>(languages.keySet());
         } catch (WebClientResponseException.NotFound e) {
             logger.warn("Languages not found for repository: {}", fullName);
@@ -266,16 +304,17 @@ public class GithubService implements IGithubService {
 
         while (true) {
             try {
-                String uri = String.format("https://api.github.com/user/repos?page=%d&per_page=%d&visibility=public", 
-                    currentPage, perPage);
-                
+                String uri = String.format("https://api.github.com/user/repos?page=%d&per_page=%d&visibility=public",
+                        currentPage, perPage);
+
                 List<GithubRepoResponse> reposPage = webClient.get()
                         .uri(uri)
                         .header("Authorization", tokenHeader)
                         .retrieve()
-                        .bodyToMono(new ParameterizedTypeReference<List<GithubRepoResponse>>() {})
+                        .bodyToMono(new ParameterizedTypeReference<List<GithubRepoResponse>>() {
+                        })
                         .block();
-                
+
                 if (reposPage == null || reposPage.isEmpty()) break;
                 allRepos.addAll(reposPage);
                 if (reposPage.size() < perPage) break;

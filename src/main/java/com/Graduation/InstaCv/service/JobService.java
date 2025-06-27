@@ -44,7 +44,7 @@ public class JobService implements IJobService {
         job.setId(null);
         job.setProfile(profile);
         job.setAddDate(java.time.OffsetDateTime.now());
-        jobThroughLLM(job);
+//        jobThroughLLM(job);
         return jobRepository.save(job);
     }
 
@@ -164,6 +164,7 @@ public class JobService implements IJobService {
     // TODO: Just see how to handle with external jobs, I don't like this function, make it safe even if extractSkills returned newthings
     public Job analyzeSkillsMatchingNoSave(Job job, Profile profile, boolean forceAnalyze) {
         if (!forceAnalyze && jobRepository.existsJobSkillMatchingAnalysis(job.getId(), profile.getId())) return job;
+        job.getSkillMatchingAnalyses().removeIf(analysis -> analysis.getProfile().equals(profile));
         job.getSkillMatchingAnalyses().add(jobSkillService.analyzeSkillsMatching(job, profile.getUser()));
         job.getSkillMatchingAnalyses().getLast().setJob(job);
         job.getSkillMatchingAnalyses().getLast().setProfile(profile);
@@ -208,7 +209,16 @@ public class JobService implements IJobService {
                 Collections.reverse(sorted);
             }
 
-            return jobsPaginationUtils.createPageFromList(sorted, pageable);
+            // filter by non-null and non-zero match score
+            List<Job> nonZeroFiltered = sorted.stream()
+                    .filter(job -> job.getSkillMatchingAnalyses().stream()
+                            .filter(a -> a.getProfile().getId().equals(profileId))
+                            .findFirst()
+                            .map(SkillMatchingAnalysis::getMatchedSkillsPercentage)
+                            .orElse(0f) > 0)
+                    .toList();
+
+            return jobsPaginationUtils.createPageFromList(nonZeroFiltered, pageable);
         } else {
             return jobRepository.findAnalyzedScrapedJobsByProfileIdPaginated(profileId, pageable);
         }
@@ -259,7 +269,13 @@ public class JobService implements IJobService {
 
     public InterviewQuestionsResponse generateInterviewQuestions(Long jobId, Integer numberOfQuestions, Long userId) {
         // Get the job and verify ownership
-        Job job = getJobByIdAndUserId(jobId, userId);
+        Job job;
+        try {
+            job = getJobByIdAndUserId(jobId, userId);
+        } catch (ResourceNotFoundException e) {
+            job = jobRepository.findJobByIdAndProfileIsNull(jobId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId + " for user with id: " + userId));
+        }
 
         String systemPrompt = """
                 You are an expert HR professional and technical interviewer. Your task is to generate relevant interview questions for a specific job based on its description.

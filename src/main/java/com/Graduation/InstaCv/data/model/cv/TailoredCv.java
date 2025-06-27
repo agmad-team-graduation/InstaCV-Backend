@@ -51,6 +51,9 @@ public class TailoredCv {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private ProjectSection projectSection;
 
+    @Embedded
+    private CvSettings cvSettings;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

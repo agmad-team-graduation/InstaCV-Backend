@@ -60,4 +60,10 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     @Query("SELECT COUNT(j) FROM Job j WHERE j.profile.user.id = :userId AND j.addDate >= :fromDate")
     long countJobsAddedAfterByUserId(@Param("userId") Long userId, @Param("fromDate") OffsetDateTime fromDate);
+
+    @Query("SELECT COUNT(DISTINCT j) FROM Job j JOIN j.jobSkills js WHERE LOWER(js.skill) = LOWER(:skillName)")
+    long countJobsContainingSkill(@Param("skillName") String skillName);
+
+    @Query("SELECT COUNT(j) FROM Job j")
+    long countAllJobs();
 }

@@ -92,11 +92,24 @@ public class CvGenerationService implements ICvGenerationService {
 
         // convert to UserSkillCv
         tailoredCv.setSkillSection(
-                SkillSection.builder().items(
-                        tailoredSkills.stream().
-                                map(userSkillCvMapper::mapFrom).
-                                toList()
-                ).sectionTitle("Skills").build());
+                SkillSection.builder().sectionTitle("Skills").build()
+        );
+        tailoredCv.getSkillSection().getItems().addAll(
+                tailoredSkills.stream().
+                        map(userSkillCvMapper::mapFrom).
+                        toList()
+        );
+
+        List<UserSkill> unmatchedSkills = profile.getUserSkills().stream()
+                .filter(skill -> matchedSkills.stream().noneMatch(matchedSkill -> matchedSkill.getUserSkill().getId().equals(skill.getId())))
+                .toList();
+        // Add unmatched skills to the skill section, but hide them
+//        tailoredCv.getSkillSection().getItems().addAll(
+//                unmatchedSkills.stream()
+//                        .map(userSkillCvMapper::mapFrom)
+//                        .peek(skill -> skill.setHidden(true))
+//                        .toList()
+//        );
 
 
         // Sort experiences by date
@@ -148,6 +161,9 @@ public class CvGenerationService implements ICvGenerationService {
                         .sectionTitle("Summary")
                         .build()
         );
+
+        // Initialize CvSettings
+        tailoredCv.setCvSettings(CvSettings.builder().build());
 
         // Set order index
         setOrderIndex(
@@ -214,6 +230,7 @@ public class CvGenerationService implements ICvGenerationService {
             tailoredCv.setExperienceSection(ExperienceSection.builder().sectionTitle("Experience").build());
             tailoredCv.setEducationSection(EducationSection.builder().sectionTitle("Education").build());
             tailoredCv.setProjectSection(ProjectSection.builder().sectionTitle("Projects").build());
+            tailoredCv.setCvSettings(CvSettings.builder().build());
             setOrderIndexOfSections(tailoredCv);
 
             tailoredCv = tailoredCvRepository.save(tailoredCv);
@@ -281,6 +298,9 @@ public class CvGenerationService implements ICvGenerationService {
                         .sectionTitle("Summary")
                         .build()
         );
+
+        // Initialize CvSettings
+        tailoredCv.setCvSettings(CvSettings.builder().build());
 
         // Set order index
         setOrderIndex(
@@ -424,6 +444,12 @@ public class CvGenerationService implements ICvGenerationService {
             });
             validateOrSetOrderIndex(tailoredCv.getProjectSection().getItems().stream().map(e -> (CvItem) e).toList());
         }
+        
+        if (tailoredCvDto.getCvSettings() != null) {
+            if (tailoredCv.getCvSettings() == null) tailoredCv.setCvSettings(new CvSettings());
+            tailoredCv.getCvSettings().setTemplate(tailoredCvDto.getCvSettings().getTemplate());
+        }
+        
         // Validate or set order index of sections
         validateOrSetOrderIndexOfSections(tailoredCv);
         // Set created and updated timestamps
@@ -573,6 +599,9 @@ public class CvGenerationService implements ICvGenerationService {
                         .build()
         );
 
+        // Initialize CvSettings
+        tailoredCv.setCvSettings(CvSettings.builder().build());
+
         // Set order index for items
         if (tailoredCv.getEducationSection() != null && tailoredCv.getEducationSection().getItems() != null) {
             setOrderIndex(
@@ -609,7 +638,7 @@ public class CvGenerationService implements ICvGenerationService {
         // Set order index for sections
         setOrderIndexOfSections(tailoredCv);
 
-        tailoredCv.setCvTitle("Resume # NEW" );
+        tailoredCv.setCvTitle("Resume # NEW");
         tailoredCv = tailoredCvRepository.save(tailoredCv);
         tailoredCvRepository.updateCvTitle(tailoredCv.getId(), "Resume #" + tailoredCv.getId());
 

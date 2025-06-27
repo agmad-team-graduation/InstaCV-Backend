@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -18,5 +19,5 @@ public class SkillSection extends CvSection {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orderIndex ASC")
     @Builder.Default
-    private List<UserSkillCv> items = List.of();
+    private List<UserSkillCv> items = new ArrayList<>();
 } 
