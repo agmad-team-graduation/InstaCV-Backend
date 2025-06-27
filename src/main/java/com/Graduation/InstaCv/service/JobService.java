@@ -209,7 +209,16 @@ public class JobService implements IJobService {
                 Collections.reverse(sorted);
             }
 
-            return jobsPaginationUtils.createPageFromList(sorted, pageable);
+            // filter by non-null and non-zero match score
+            List<Job> nonZeroFiltered = sorted.stream()
+                    .filter(job -> job.getSkillMatchingAnalyses().stream()
+                            .filter(a -> a.getProfile().getId().equals(profileId))
+                            .findFirst()
+                            .map(SkillMatchingAnalysis::getMatchedSkillsPercentage)
+                            .orElse(0f) > 0)
+                    .toList();
+
+            return jobsPaginationUtils.createPageFromList(nonZeroFiltered, pageable);
         } else {
             return jobRepository.findAnalyzedScrapedJobsByProfileIdPaginated(profileId, pageable);
         }
