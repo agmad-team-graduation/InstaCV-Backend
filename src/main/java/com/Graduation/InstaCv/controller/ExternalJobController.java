@@ -47,6 +47,8 @@ public class ExternalJobController {
                                                 @RequestParam(defaultValue = "false") boolean forceAnalyze) {
         Profile profile = profileService.getProfileByUserId(SecurityUtils.getCurrentUserDetails().getId());
         Job job = jobService.fullAnalyze(jobId, profile.getUser().getId(), true, forceAnalyze, false);
+        if (jobService.isAnalysisInvalid(jobId, profile.getUser().getId()))
+            job = jobService.fullAnalyze(jobId, profile.getUser().getId(), true, true, false);
         return ResponseEntity.ok(scrapedJobMapper.mapTo(job, profile));
     }
 
