@@ -59,8 +59,8 @@ public class JobController {
     public JobDto getJob(@PathVariable Long jobId, @RequestParam(defaultValue = "false") boolean forceAnalyze) {
         Long userId = SecurityUtils.getCurrentUserDetails().getId();
         Job jobFound = jobService.getJobByIdAndUserId(jobId, userId);
-        if (jobFound.getSkillMatchingAnalyses().isEmpty() || forceAnalyze)
-            jobFound = jobService.fullAnalyze(jobId, userId, false, forceAnalyze, false);
+        if (jobService.isAnalysisInvalid(jobId, userId) || forceAnalyze)
+            jobFound = jobService.fullAnalyze(jobId, userId, false, true, false);
         return jobMapper.mapTo(jobFound);
     }
 
