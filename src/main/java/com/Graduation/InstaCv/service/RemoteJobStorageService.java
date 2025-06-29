@@ -70,6 +70,7 @@ public class RemoteJobStorageService {
             try {
                 if (skip || remoteJob != newJobs.get(newJobs.size() - 1)) {
                     Thread.sleep(100);
+                    if (skip) Thread.sleep(1000); // Additional delay if skip is true
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
