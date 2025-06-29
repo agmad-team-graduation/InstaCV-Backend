@@ -85,10 +85,6 @@ public class GithubService implements IGithubService {
                     .bodyToMono(GithubUserResponse.class)
                     .block();
 
-            if (userResponse.getLogin() != null && profileRepository.existsByGithubProfileUsername(userResponse.getLogin())) {
-                throw new FetchErrorException("GitHub profile with username " + userResponse.getLogin() + " already exists");
-            }
-
             // If email is null, fetch from /user/emails
             if (userResponse != null && (userResponse.getEmail() == null || userResponse.getEmail().isEmpty())) {
                 List<Map<String, Object>> emails = webClient.get()
@@ -183,7 +179,9 @@ public class GithubService implements IGithubService {
                     .bodyToMono(GithubUserResponse.class)
                     .block();
 
-            if (userDetails.getLogin() != null && profileRepository.existsByGithubProfileUsername(userDetails.getLogin())) {
+            if (userDetails != null && userDetails.getLogin() != null &&
+                    profileRepository.existsByGithubProfileUsername(userDetails.getLogin()) &&
+                    (oldGithubProfile == null || !Objects.equals(oldGithubProfile.getUsername(), userDetails.getLogin()))) {
                 throw new FetchErrorException("GitHub profile with username " + userDetails.getLogin() + " already exists");
             }
 
