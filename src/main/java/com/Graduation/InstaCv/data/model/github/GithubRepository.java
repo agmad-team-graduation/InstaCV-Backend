@@ -17,7 +17,9 @@ public class GithubRepository {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(length = 100000)
     private String name;
+    @Column(length = 100000)
     private String description;
     @ManyToOne
     @JoinColumn(name = "github_profile_username", nullable = false)
@@ -32,7 +34,8 @@ public class GithubRepository {
             inverseJoinColumns = @JoinColumn(name = "repo_skill_id")
     )
     private List<RepoSkill> languages;
-    @Column(length = 100000)
+    @Column(length = 1000000)
     private String readmeContent;
+    @Column(length = 50000)
     private String htmlUrl;
 }
