@@ -109,7 +109,7 @@ public class JobService implements IJobService {
         }
 
         // Call the LLM service to process the job description
-        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent);
+        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent, "gemma2-9b-it");
 
         // Parse the JSON response into DTO
         JobllmResponseDTO jobllmResponseDTO = llmClient.extractAndParseJson(llmResponse, JobllmResponseDTO.class);
@@ -334,7 +334,7 @@ public class JobService implements IJobService {
                 job.getDescription());
 
         // Call the LLM service to generate interview questions
-        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent);
+        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent, "qwen/qwen3-32b");
 
         // Parse the JSON response
         InterviewQuestionsResponse response = llmClient.extractAndParseJson(llmResponse, InterviewQuestionsResponse.class);
