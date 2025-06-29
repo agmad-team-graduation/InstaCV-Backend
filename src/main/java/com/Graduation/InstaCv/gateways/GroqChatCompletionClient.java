@@ -28,15 +28,15 @@ public interface GroqChatCompletionClient {
     String chatCompletion(@RequestBody GroqChatCompletionRequest request);
 
     /**
-     * Convenience wrapper that builds the {@link GroqChatCompletionRequest} from the provided message contents.
+     * Convenience wrapper that builds the {@link GroqChatCompletionRequest} from the provided message contents and model.
      */
-    default String chatCompletion(String systemContent, String userContent) {
+    default String chatCompletion(String systemContent, String userContent, String model) {
         GroqChatCompletionRequest request = GroqChatCompletionRequest.builder()
                 .messages(List.of(
                         new GroqChatCompletionRequest.Message("system", systemContent),
                         new GroqChatCompletionRequest.Message("user", userContent)
                 ))
-                .model("gemma2-9b-it")
+                .model(model)
                 .temperature(0.6)
                 .maxCompletionTokens(4096)
                 .topP(0.95)
