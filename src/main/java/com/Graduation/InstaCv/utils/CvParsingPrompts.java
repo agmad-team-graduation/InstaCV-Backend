@@ -56,7 +56,7 @@ public class CvParsingPrompts {
                 "userSkills": [
                     {
                         "skill": "skill name",
-                        "level": "EXPERT"
+                        "level": "INTERMEDIATE"
                     }
                 ],
                 "projects": [
