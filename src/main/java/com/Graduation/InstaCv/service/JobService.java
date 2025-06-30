@@ -227,7 +227,7 @@ public class JobService implements IJobService {
                             .orElse(0f) > 0)
                     .toList();
 
-            return jobsPaginationUtils.createPageFromList(nonZeroFiltered, pageable);
+            return jobsPaginationUtils.createPageFromList(sorted, pageable);
         } else {
             return jobRepository.findAnalyzedScrapedJobsByProfileIdPaginated(profileId, pageable);
         }
@@ -351,7 +351,7 @@ public class JobService implements IJobService {
     public boolean isAnalysisInvalid(Long jobId, Long userId) {
         Job job = getJobByIdAndUserIdOrExternal(jobId, userId);
         Profile profile = profileService.getProfileByUserId(userId);
-        if (job.getSkillExtractionStatus() != AnalyzeStatus.COMPLETED)
+        if (job.getSkillExtractionStatus() != AnalyzeStatus.COMPLETED || job.getHardSkills().isEmpty())
             return true;
         Optional<SkillMatchingAnalysis> analysis = job.getSkillMatchingAnalyses().stream()
                 .filter(a -> a.getProfile().getId().equals(profile.getId()))
