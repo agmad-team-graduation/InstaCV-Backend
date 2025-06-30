@@ -3,6 +3,8 @@ package com.Graduation.InstaCv.service;
 import com.Graduation.InstaCv.data.dto.ProfileDto;
 import com.Graduation.InstaCv.utils.CvParsingPrompts;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
 import lombok.RequiredArgsConstructor;
 import okhttp3.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -127,7 +129,7 @@ public class AiCvParserService {
         generationConfig.put("temperature", 0.1);
         generationConfig.put("topK", 1);
         generationConfig.put("topP", 1);
-        generationConfig.put("maxOutputTokens", 2048);
+        generationConfig.put("maxOutputTokens", 10000);
         requestBody.put("generationConfig", generationConfig);
 
         String jsonBody = objectMapper.writeValueAsString(requestBody);
