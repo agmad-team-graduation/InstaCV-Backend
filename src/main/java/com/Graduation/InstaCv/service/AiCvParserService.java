@@ -3,8 +3,6 @@ package com.Graduation.InstaCv.service;
 import com.Graduation.InstaCv.data.dto.ProfileDto;
 import com.Graduation.InstaCv.utils.CvParsingPrompts;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.json.bind.Jsonb;
-import jakarta.json.bind.JsonbBuilder;
 import lombok.RequiredArgsConstructor;
 import okhttp3.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -26,7 +24,7 @@ public class AiCvParserService {
     @Value("${gemini.model:gemini-1.5-flash}")
     private String modelName;
 
-    @Value("${cv.parser.max.text.length:4000}")
+    @Value("${cv.parser.max.text.length:10000}")
     private int maxTextLength;
 
     private final ObjectMapper objectMapper;
