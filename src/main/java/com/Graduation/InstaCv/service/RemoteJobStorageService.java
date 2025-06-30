@@ -120,7 +120,7 @@ public class RemoteJobStorageService {
                 .orElseThrow(() -> new IllegalArgumentException("Profile not found with ID: " + profileId));
 
         for (Job job : recentJobs) {
-            if (jobService.isAnalysisInvalid(job.getId(), profile.getUser().getId()) || !jobRepository.existsJobSkillMatchingAnalysis(job.getId(), profile.getId())) {
+            if (jobService.isAnalysisInvalid(job.getId(), profile.getUser().getId())) {
 //                if (job.getSkillExtractionStatus() != AnalyzeStatus.COMPLETED || job.getHardSkills().isEmpty())
 //                    jobService.extractSkills(job, true, false);
 //                jobService.analyzeSkillsMatchingNoSave(job, profile, true);
