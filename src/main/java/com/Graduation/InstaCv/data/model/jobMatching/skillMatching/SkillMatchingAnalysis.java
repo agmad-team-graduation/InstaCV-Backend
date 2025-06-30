@@ -57,6 +57,7 @@ public class SkillMatchingAnalysis {
 
     @JsonIgnore
     public boolean isInvalid() {
-        return matchedSkills.size() + unmatchedJobSkills.size() < job.getHardSkills().size() || matchedSkills.isEmpty();
+        return matchedSkills.size() + unmatchedJobSkills.size() < job.getHardSkills().size()
+                || (matchedSkills.size() + unmatchedUserSkills.size() < profile.getUserSkills().size());
     }
 }
