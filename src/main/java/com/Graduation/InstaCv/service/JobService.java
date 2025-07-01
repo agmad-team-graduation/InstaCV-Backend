@@ -23,10 +23,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import javax.swing.text.html.Option;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -111,7 +109,7 @@ public class JobService implements IJobService {
         }
 
         // Call the LLM service to process the job description
-        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent);
+        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent, "gemma2-9b-it");
 
         // Parse the JSON response into DTO
         JobllmResponseDTO jobllmResponseDTO = llmClient.extractAndParseJson(llmResponse, JobllmResponseDTO.class);
@@ -172,6 +170,17 @@ public class JobService implements IJobService {
     }
 
     @Override
+    public Job getJobByIdAndUserIdOrExternal(Long jobId, Long userId) {
+        try {
+            return getJobByIdAndUserId(jobId, userId);
+        } catch (ResourceNotFoundException e) {
+            // If not found for the user, try to find it as an external job
+            return jobRepository.findJobByIdAndProfileIsNull(jobId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Job not found with id: " + jobId + " for user with id: " + userId));
+        }
+    }
+
+    @Override
     public Job getJobByIdAndUserId(Long jobId, Long userId) {
         Profile profile = profileService.getProfileByUserId(userId);
         return jobRepository.findJobByIdAndProfileId(jobId, profile.getId())
@@ -218,7 +227,7 @@ public class JobService implements IJobService {
                             .orElse(0f) > 0)
                     .toList();
 
-            return jobsPaginationUtils.createPageFromList(nonZeroFiltered, pageable);
+            return jobsPaginationUtils.createPageFromList(sorted, pageable);
         } else {
             return jobRepository.findAnalyzedScrapedJobsByProfileIdPaginated(profileId, pageable);
         }
@@ -326,7 +335,7 @@ public class JobService implements IJobService {
                 job.getDescription());
 
         // Call the LLM service to generate interview questions
-        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent);
+        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent, "qwen/qwen3-32b");
 
         // Parse the JSON response
         InterviewQuestionsResponse response = llmClient.extractAndParseJson(llmResponse, InterviewQuestionsResponse.class);
@@ -337,5 +346,17 @@ public class JobService implements IJobService {
         response.setCompany(job.getCompany());
 
         return response;
+    }
+
+    @Override
+    public boolean isAnalysisInvalid(Long jobId, Long userId) {
+        Job job = getJobByIdAndUserIdOrExternal(jobId, userId);
+        Profile profile = profileService.getProfileByUserId(userId);
+        if (job.getSkillExtractionStatus() != AnalyzeStatus.COMPLETED || job.getHardSkills().isEmpty())
+            return true;
+        Optional<SkillMatchingAnalysis> analysis = job.getSkillMatchingAnalyses().stream()
+                .filter(a -> a.getProfile().getId().equals(profile.getId()))
+                .findFirst();
+        return analysis.isEmpty() || analysis.get().isInvalid();
     }
 }

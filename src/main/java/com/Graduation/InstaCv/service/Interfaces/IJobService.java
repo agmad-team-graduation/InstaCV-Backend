@@ -18,6 +18,8 @@ public interface IJobService {
 
     Job jobThroughLLM(Long jobID);
 
+    Job getJobByIdAndUserIdOrExternal(Long jobId, Long userId);
+
     Job getJobByIdAndUserId(Long jobId, Long userId);
 
     void deleteJobByIdAndUserId(Long jobId, Long userId);
@@ -25,4 +27,6 @@ public interface IJobService {
     Page<Job> getRecommendedExternalJobsPaginated(Long profileId, Pageable pageable, JobSortField sortField);
 
     InterviewQuestionsResponse generateInterviewQuestions(Long jobId, Integer numberOfQuestions, Long userId);
+
+    boolean isAnalysisInvalid(Long jobId, Long userId);
 }

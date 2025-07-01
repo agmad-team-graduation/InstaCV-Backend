@@ -8,8 +8,6 @@ import com.Graduation.InstaCv.data.model.profile.UserSkill;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Cascade;
-
 
 import java.util.List;
 
@@ -20,7 +18,6 @@ import java.util.List;
 @Builder
 @Table(name = "skill_matching_analyses")
 public class SkillMatchingAnalysis {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -56,5 +53,11 @@ public class SkillMatchingAnalysis {
         if (matchedSkills == null || job.getJobSkills() == null || job.getJobSkills().isEmpty())
             return 0f;
         return (float) matchedSkills.size() / job.getHardSkills().size() * 100;
+    }
+
+    @JsonIgnore
+    public boolean isInvalid() {
+        return matchedSkills.size() + unmatchedJobSkills.size() < job.getHardSkills().size()
+                || (matchedSkills.size() + unmatchedUserSkills.size() < profile.getUserSkills().size());
     }
 }

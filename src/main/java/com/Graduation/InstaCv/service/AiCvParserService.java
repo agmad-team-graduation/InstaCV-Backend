@@ -21,10 +21,10 @@ public class AiCvParserService {
     @Value("${gemini.api.key}")
     private String apiKey;
 
-    @Value("${gemini.model:gemini-1.5-flash}")
+    @Value("${gemini.model:gemini-2.5-flash}")
     private String modelName;
 
-    @Value("${cv.parser.max.text.length:4000}")
+    @Value("${cv.parser.max.text.length:10000}")
     private int maxTextLength;
 
     private final ObjectMapper objectMapper;
@@ -127,7 +127,7 @@ public class AiCvParserService {
         generationConfig.put("temperature", 0.1);
         generationConfig.put("topK", 1);
         generationConfig.put("topP", 1);
-        generationConfig.put("maxOutputTokens", 2048);
+        generationConfig.put("maxOutputTokens", 10000);
         requestBody.put("generationConfig", generationConfig);
 
         String jsonBody = objectMapper.writeValueAsString(requestBody);

@@ -70,6 +70,7 @@ public class RemoteJobStorageService {
             try {
                 if (skip || remoteJob != newJobs.get(newJobs.size() - 1)) {
                     Thread.sleep(100);
+                    if (skip) Thread.sleep(1000); // Additional delay if skip is true
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -119,11 +120,14 @@ public class RemoteJobStorageService {
                 .orElseThrow(() -> new IllegalArgumentException("Profile not found with ID: " + profileId));
 
         for (Job job : recentJobs) {
-            if (!jobRepository.existsJobSkillMatchingAnalysis(job.getId(), profile.getId())) {
-                jobService.analyzeSkillsMatchingNoSave(job, profile, false);
+            if (jobService.isAnalysisInvalid(job.getId(), profile.getUser().getId())) {
+//                if (job.getSkillExtractionStatus() != AnalyzeStatus.COMPLETED || job.getHardSkills().isEmpty())
+//                    jobService.extractSkills(job, true, false);
+//                jobService.analyzeSkillsMatchingNoSave(job, profile, true);
+                jobService.fullAnalyze(job.getId(), profile.getUser().getId(), true, true, false);
             }
         }
-        jobRepository.saveAll(recentJobs);
+//        jobRepository.saveAll(recentJobs);
     }
 
     public Page<Job> getAllRemoteJobs(Pageable pageable) {
