@@ -279,23 +279,27 @@ public class JobService implements IJobService {
 
         String systemPrompt = """
                 You are an expert HR professional and technical interviewer. Your task is to generate relevant interview questions for a specific job based on its description.
-                                
+                
                 Your goal is to create diverse, practical interview questions that would help assess a candidate's suitability for the role.
-                                
+                
                 Categories to consider:
                 - Technical Skills: Questions about specific technologies, programming languages, tools mentioned in the job
                 - Problem Solving: Scenario-based questions and coding challenges
-                - Experience: Questions about past projects and experiences
                 - Soft Skills: Communication, teamwork, leadership questions
-                - Company Culture: Questions about work style and cultural fit
-                                
+                
                 Difficulty levels:
                 - Easy: Basic knowledge and understanding
                 - Medium: Practical application and experience
                 - Hard: Advanced concepts and complex problem-solving
                                 
-                For the expectedAnswer field: Provide the direct answer content WITHOUT prefacing phrases like "The answer should be", "The candidate should say", "A good answer would be", etc. Just provide the actual answer content directly.
-                                
+                For each question, include an expectedAnswer that:
+                - Is written in full sentences and paragraphs.
+                - Includes detailed explanations (why certain tools or approaches are chosen).
+                - Demonstrates best practices and alternative considerations.
+                - Provides examples or pseudo‑code when relevant.
+                
+                Reflects how a strong candidate would structure and articulate their response in an actual interview.
+                
                 Return ONLY a valid JSON object with the following structure:
                 {
                   "questions": [
@@ -313,12 +317,9 @@ public class JobService implements IJobService {
 
         String userContent = """
                 Generate exactly %d interview questions for the following job:
-                                
                 Job Title: %s
                 Company: %s
                 Job Description: %s
-                                
-                Make sure to create a good mix of technical and soft skill questions with varying difficulty levels.
                 """.formatted(numberOfQuestions,
                 job.getTitle() != null ? job.getTitle() : "Not specified",
                 job.getCompany() != null ? job.getCompany() : "Not specified",
