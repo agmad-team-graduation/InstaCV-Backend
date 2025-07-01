@@ -109,7 +109,7 @@ public class JobService implements IJobService {
         }
 
         // Call the LLM service to process the job description
-        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent, "gemma2-9b-it");
+        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent, "meta-llama/llama-guard-4-12b");
 
         // Parse the JSON response into DTO
         JobllmResponseDTO jobllmResponseDTO = llmClient.extractAndParseJson(llmResponse, JobllmResponseDTO.class);
