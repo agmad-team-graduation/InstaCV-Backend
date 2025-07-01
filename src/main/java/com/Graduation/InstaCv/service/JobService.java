@@ -335,7 +335,7 @@ public class JobService implements IJobService {
                 job.getDescription());
 
         // Call the LLM service to generate interview questions
-        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent, "qwen/qwen3-32b");
+        String llmResponse = llmClient.chatCompletion(systemPrompt, userContent, "deepseek-r1-distill-llama-70b");
 
         // Parse the JSON response
         InterviewQuestionsResponse response = llmClient.extractAndParseJson(llmResponse, InterviewQuestionsResponse.class);
