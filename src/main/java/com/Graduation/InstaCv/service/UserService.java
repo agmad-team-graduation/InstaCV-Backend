@@ -6,33 +6,42 @@ import com.Graduation.InstaCv.data.model.UserPhoto;
 import com.Graduation.InstaCv.data.model.VerificationToken;
 import com.Graduation.InstaCv.data.model.profile.PersonalDetails;
 import com.Graduation.InstaCv.data.model.profile.Profile;
+import com.Graduation.InstaCv.data.model.cv.TailoredCv;
+import com.Graduation.InstaCv.data.model.job.Job;
 import com.Graduation.InstaCv.exceptions.InvalidRegistrationDataException;
 import com.Graduation.InstaCv.exceptions.InvalidTokenException;
 import com.Graduation.InstaCv.exceptions.ResourceNotFoundException;
-import com.Graduation.InstaCv.repository.UserPhotoRepository;
-import com.Graduation.InstaCv.repository.UserRepository;
-import com.Graduation.InstaCv.repository.VerificationTokenRepository;
+import com.Graduation.InstaCv.repository.*;
 import com.Graduation.InstaCv.service.Interfaces.IUserService;
 import com.Graduation.InstaCv.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService implements IUserService {
 
     private final UserRepository userRepository;
     private final EmailVerificationService emailVerificationService;
     private final VerificationTokenRepository verificationTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserPhotoRepository userPhotoRepository;
     private final CloudinaryService cloudinaryService;
+    private final ProfileRepository profileRepository;
+    private final TailoredCvRepository tailoredCvRepository;
+    private final JobRepository jobRepository;
+    private final GithubProfileRepository githubProfileRepository;
 
     @Override
     public User registerUser(RegistrationRequest request) {
@@ -147,7 +156,7 @@ public class UserService implements IUserService {
             }
             userPhotoRepository.delete(oldPhoto);
         });
-        
+
         // Save new photo
         user.setPhoto(photo);
         userPhotoRepository.save(photo);
@@ -156,5 +165,60 @@ public class UserService implements IUserService {
     public User getUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + userId));
+    }
+
+    @Transactional
+    public void deleteUser(Long userId) {
+        // Check if user exists
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + userId));
+
+        // Delete user photo from Cloudinary and database
+//        userPhotoRepository.findByUserId(userId).ifPresent(userPhoto -> {
+//            log.info("Deleting user photo from Cloudinary and database");
+//            if (userPhoto.getPhotoPublicId() != null) {
+//                cloudinaryService.deletePhoto(userPhoto.getPhotoPublicId());
+//            }
+//            userPhotoRepository.delete(userPhoto);
+//        });
+//
+
+        // Delete profile and all related data (cascade will handle most of it)
+        profileRepository.findByUserId(userId).ifPresent(profile -> {
+            // Delete skill and project matching analyses for external jobs (scraped jobs)
+            List<Job> analyzedScrapedJobs = jobRepository.findAnalyzedScrapedJobsByProfileId(profile.getId());
+            analyzedScrapedJobs.forEach(job -> {
+                // Remove skill matching analyses for this profile
+                job.getSkillMatchingAnalyses().removeIf(analysis -> analysis.getProfile().getId().equals(profile.getId()));
+                // Remove project matching analyses for this profile
+                job.getProjectMatchingAnalyses().removeIf(analysis -> analysis.getProfile().getId().equals(profile.getId()));
+                jobRepository.save(job);
+            });
+
+            // Delete all CVs associated with this profile
+            List<TailoredCv> cvs = tailoredCvRepository.findByProfileId(profile.getId());
+            log.info("Deleting {} CVs associated with profile", cvs.size());
+            tailoredCvRepository.deleteAll(cvs);
+
+            List<Job> scrapedJobs = jobRepository.findJobsByProfileId(profile.getId());
+            log.info("Deleting {} scraped jobs associated with profile", scrapedJobs.size());
+            jobRepository.deleteAll(scrapedJobs);
+
+            // Delete all jobs added by this user (jobs with profile_id = profile.getId())
+            List<Job> userJobs = jobRepository.findJobsByProfileId(profile.getId());
+            log.info("Deleting {} jobs added by user", userJobs.size());
+            jobRepository.deleteAll(userJobs);
+
+            // Delete GitHub profile if exists
+            if (profile.getGithubProfile() != null) {
+                log.info("Deleting GitHub profile: {}", profile.getGithubProfile().getUsername());
+                githubProfileRepository.delete(profile.getGithubProfile());
+            }
+
+            // Delete the profile (this will cascade delete education, experience, skills, projects)
+            profileRepository.delete(profile);
+        });
+
+        userRepository.delete(user);
     }
 } 
