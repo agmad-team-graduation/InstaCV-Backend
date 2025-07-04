@@ -1,5 +1,6 @@
 package com.Graduation.InstaCv.service;
 
+import com.Graduation.InstaCv.data.enums.AuthProvider;
 import com.Graduation.InstaCv.data.model.User;
 import com.Graduation.InstaCv.data.model.auth.PasswordResetToken;
 import com.Graduation.InstaCv.exceptions.InvalidTokenException;
@@ -28,6 +29,11 @@ public class PasswordResetService implements IPasswordResetService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
 
+        // Check if user is an OAuth user
+        if (user.getAuthProvider() != null && user.getAuthProvider() != AuthProvider.LOCAL) {
+            throw new InvalidTokenException("Password reset is not available for social login accounts. Please use the social login option.");
+        }
+
         PasswordResetToken token = PasswordResetToken.builder()
                 // Generate unique token
                 .token(UUID.randomUUID().toString())
@@ -51,6 +57,13 @@ public class PasswordResetService implements IPasswordResetService {
             throw new InvalidTokenException("Password Reset Token has expired");
         }
         User user = tokenEntity.getUser();
+        
+        // Check if user is an OAuth user (additional safety check)
+        if (user.getAuthProvider() != null && user.getAuthProvider() != AuthProvider.LOCAL) {
+            passwordResetTokenRepository.delete(tokenEntity);
+            throw new InvalidTokenException("Password reset is not available for social login accounts. Please use the social login option.");
+        }
+        
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         passwordResetTokenRepository.delete(tokenEntity);

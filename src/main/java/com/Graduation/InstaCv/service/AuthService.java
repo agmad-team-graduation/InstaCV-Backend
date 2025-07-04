@@ -45,6 +45,9 @@ public class AuthService implements IAuthService {
             return (UserDetails) authentication.getPrincipal();
         } catch (BadCredentialsException e) {
             throw new InvalidCredentialsException("Invalid email or password");
+        } catch (InvalidCredentialsException e) {
+            // Re-throw InvalidCredentialsException from UserDetailsServiceImpl
+            throw e;
         }
     }
 
