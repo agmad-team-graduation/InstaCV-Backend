@@ -28,9 +28,12 @@ public class EmailVerificationService {
         }
 
         // Delete any existing tokens for this email
-        tokenRepository.findByEmail(email).ifPresent(token ->
-                tokenRepository.deleteById(token.getId())
-        );
+        tokenRepository.findAllByEmail(email).forEach(token -> {
+            tokenRepository.deleteById(token.getId());
+        });
+//        tokenRepository.findByEmail(email).ifPresent(token ->
+//                tokenRepository.deleteById(token.getId())
+//        );
 
         // Create new verification token
         String tokenValue = UUID.randomUUID().toString();
