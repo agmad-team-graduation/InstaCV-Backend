@@ -12,6 +12,7 @@ import com.Graduation.InstaCv.security.UserDetailsImpl;
 import com.Graduation.InstaCv.service.Interfaces.IAuthService;
 import com.Graduation.InstaCv.service.Interfaces.IUserService;
 import com.Graduation.InstaCv.service.UserService;
+import com.Graduation.InstaCv.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -62,5 +63,19 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<UserDto> getCurrentUser() {
         return ResponseEntity.ok(mapper.mapTo(userService.getCurrentUser()));
+    }
+
+    @DeleteMapping("/account")
+    public ResponseEntity<Void> deleteAccount() {
+        Long userId = SecurityUtils.getCurrentUserDetails().getId();
+        userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // delete by id
+    @DeleteMapping("/account/{id}")
+    public ResponseEntity<Void> deleteAccountById(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }
