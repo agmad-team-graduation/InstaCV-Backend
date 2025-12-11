@@ -109,26 +109,33 @@ Create a `.env` file or set the following environment variables:
 # Database Configuration
 POSTGRES_DB=postgres
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=1234
+POSTGRES_PASSWORD=your_secure_password
 
 # JWT Configuration
-JWT_SECRET=LpUVZ/3XBxQEdJodrAKFYPc68QTwQOx6odvXDk0UU1Y=
+# IMPORTANT: Generate a secure secret key for production
+# You can generate one using: openssl rand -base64 32
+JWT_SECRET=your_secure_jwt_secret_key
 
 # Gemini API
+# Get your API key from: https://ai.google.dev/
 GEMINI_API_KEY=your_gemini_api_key
 
 # Cloudinary Configuration
+# Get your credentials from: https://cloudinary.com/
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 
 # Groq API
+# Get your API key from: https://console.groq.com/
 GROQ_API_KEY=your_groq_api_key
 
 # Email Configuration (optional)
 SPRING_MAIL_USERNAME=your_email
-SPRING_MAIL_PASSWORD=your_password
+SPRING_MAIL_PASSWORD=your_app_password
 ```
+
+**⚠️ Security Warning**: Never commit actual API keys or secrets to version control. Use environment variables or a secure secrets management system in production.
 
 #### Application Properties
 
@@ -205,7 +212,7 @@ API documentation: `http://localhost:7860/docs`
 
 Or run the JAR directly:
 ```bash
-java -jar target/InstaCv-0.0.1-SNAPSHOT.jar
+java -jar target/InstaCv-*.jar
 ```
 
 ## 📚 API Documentation
@@ -330,11 +337,21 @@ docker build -t instacv-ai-service .
 
 ### Production Deployment
 
-Update the `docker-compose.yml` for production settings and deploy:
+For production, update the `docker-compose.yml` with appropriate environment variables and security settings:
 
 ```bash
-docker-compose -f docker-compose.prod.yml up -d
+# Make sure to set production environment variables
+docker-compose up -d
 ```
+
+**Production Checklist**:
+- Use strong, unique passwords for all services
+- Set `spring.profiles.active=prod` in the Spring Boot application
+- Configure proper database backups
+- Use secure SSL/TLS certificates
+- Set up proper logging and monitoring
+- Use environment-specific configuration files
+- Never expose API keys or secrets in environment variables
 
 ## 🤝 Contributing
 
